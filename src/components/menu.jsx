@@ -13,6 +13,7 @@ const CATEGORIES = [
 
 const TELEGRAM_BOT_TOKEN = import.meta.env.VITE_TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID = import.meta.env.VITE_TELEGRAM_CHAT_ID;
+const TELEGRAM_CHAT_ID_2 = import.meta.env.VITE_TELEGRAM_CHAT_ID_2;
 
 export default function Menu() {
   const [menuItems, setMenuItems] = useState([]);
@@ -22,11 +23,12 @@ export default function Menu() {
   const [cartOpen, setCartOpen] = useState(false);
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
+  const [variantPicker, setVariantPicker] = useState(null);
 
   useEffect(() => {
     client
       .fetch(`*[_type == "menuItem" && available == true] | order(category asc) {
-        _id, name, category, price, priceLabel, description, image
+        _id, name, category, price, variants, description, image
       }`)
       .then((data) => { setMenuItems(data); setLoading(false); })
       .catch(() => setLoading(false));
@@ -65,24 +67,31 @@ export default function Menu() {
       "📞 Phone: " + customerPhone + "\n\n" +
       lines.join("\n") +
       "\n\n💰 Total: £" + cartTotal.toFixed(2);
+
     try {
-      const res = await fetch(
-        "https://api.telegram.org/bot" + TELEGRAM_BOT_TOKEN + "/sendMessage",
-        {
+      const [res1, res2] = await Promise.all([
+        fetch("https://api.telegram.org/bot" + TELEGRAM_BOT_TOKEN + "/sendMessage", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: message }),
-        }
-      );
-      const data = await res.json();
-      if (data.ok) {
+        }),
+        fetch("https://api.telegram.org/bot" + TELEGRAM_BOT_TOKEN + "/sendMessage", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID_2, text: message }),
+        }),
+      ]);
+
+      const [data1, data2] = await Promise.all([res1.json(), res2.json()]);
+
+      if (data1.ok || data2.ok) {
         alert("Order sent! We will contact you shortly.");
         setCart([]);
         setCartOpen(false);
         setCustomerName("");
         setCustomerPhone("");
       } else {
-        console.error("Telegram error:", data);
+        console.error("Telegram errors:", data1, data2);
         alert("Failed to send order. Please try again.");
       }
     } catch (err) {
@@ -169,10 +178,18 @@ export default function Menu() {
                 )}
                 <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-50">
                   <span className="text-green-700 font-bold text-sm">
-                    {item.priceLabel || ("£" + item.price?.toFixed(2))}
+                    {item.variants && item.variants.length > 0
+                      ? "£" + item.variants[0].price + " – £" + item.variants[item.variants.length - 1].price
+                      : "£" + item.price?.toFixed(2)}
                   </span>
                   <button
-                    onClick={() => addToCart(item)}
+                    onClick={() => {
+                      if (item.variants && item.variants.length > 0) {
+                        setVariantPicker(item);
+                      } else {
+                        addToCart(item);
+                      }
+                    }}
                     className="bg-black text-white text-xs px-3 py-1.5 rounded-full hover:bg-gray-800 transition"
                   >
                     + Add
@@ -210,11 +227,64 @@ export default function Menu() {
         </div>
       </div>
 
+      {/* ── VARIANT PICKER MODAL ── */}
+      {variantPicker && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div
+            className="absolute inset-0 bg-black bg-opacity-50"
+            onClick={() => setVariantPicker(null)}
+          />
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 z-10">
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <h3 className="font-bold text-black text-lg">{variantPicker.name}</h3>
+                <p className="text-xs text-gray-400 mt-0.5">Choose your portion size</p>
+              </div>
+              <button
+                onClick={() => setVariantPicker(null)}
+                className="text-gray-400 hover:text-black text-xl ml-4"
+              >✕</button>
+            </div>
+
+            {variantPicker.image && (
+              <img
+                src={urlFor(variantPicker.image).width(400).height(200).url()}
+                alt={variantPicker.name}
+                className="w-full h-36 object-cover rounded-xl mb-4"
+              />
+            )}
+
+            <div className="flex flex-col gap-3">
+              {variantPicker.variants.map((variant, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    addToCart({
+                      ...variantPicker,
+                      name: variantPicker.name + " (" + variant.label + ")",
+                      price: variant.price,
+                      variants: null,
+                    });
+                    setVariantPicker(null);
+                  }}
+                  className="flex items-center justify-between w-full border border-gray-200 rounded-xl px-4 py-3 hover:border-black hover:bg-gray-50 transition"
+                >
+                  <span className="text-sm font-medium text-black">{variant.label}</span>
+                  <span className="text-sm font-bold text-green-700">£{variant.price?.toFixed(2)}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── CART DRAWER ── */}
       {cartOpen && (
-        <div className="fixed inset-0 z-50 flex justify-end">
+        <div className="fixed inset-0 z-50 flex md:justify-end items-end md:items-stretch">
           <div className="flex-1 bg-black bg-opacity-40" onClick={() => setCartOpen(false)} />
-          <div className="w-full max-w-sm bg-white h-full flex flex-col shadow-2xl">
+          <div className="w-full md:max-w-sm bg-white flex flex-col shadow-2xl md:h-full rounded-t-2xl md:rounded-none"
+            style={{ maxHeight: '85vh' }}
+          >
 
             {/* drawer header */}
             <div className="flex items-center justify-between p-5 border-b">
