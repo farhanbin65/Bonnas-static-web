@@ -16,35 +16,51 @@ const [ytVideos, setYtVideos] = useState([]);
   useEffect(() => {
     const fetchAll = async () => {
       try {
-        // YouTube latest videos
-        const ytVideosRes = await fetch(
-          `https://www.googleapis.com/youtube/v3/search?key=${YT_KEY}&channelId=${YT_CHANNEL_ID}&part=snippet,id&order=date&maxResults=4&type=video`
-        );
-        const ytVideosData = await ytVideosRes.json();
-        setYtVideos(ytVideosData.items || []);
+        // ── YOUTUBE with cache ──
+        const YT_CACHE_KEY = "yt_cache";
+        const YT_CACHE_TTL = 1000 * 60 * 60 * 3; // 3 hours
+        const cached = localStorage.getItem(YT_CACHE_KEY);
+        const cachedTime = localStorage.getItem(YT_CACHE_KEY + "_time");
+        const isExpired = !cachedTime || Date.now() - parseInt(cachedTime) > YT_CACHE_TTL;
 
-        // YouTube channel stats
-        const ytStatsRes = await fetch(
-          `https://www.googleapis.com/youtube/v3/channels?key=${YT_KEY}&id=${YT_CHANNEL_ID}&part=statistics`
-        );
-        const ytStatsData = await ytStatsRes.json();
-        setYtStats(ytStatsData.items?.[0]?.statistics || null);
+        if (cached && !isExpired) {
+          const { videos, stats } = JSON.parse(cached);
+          setYtVideos(videos);
+          setYtStats(stats);
+        } else {
+          const ytVideosRes = await fetch(
+            "https://www.googleapis.com/youtube/v3/search?key=" + YT_KEY + "&channelId=" + YT_CHANNEL_ID + "&part=snippet,id&order=date&maxResults=4&type=video"
+          );
+          const ytVideosData = await ytVideosRes.json();
 
-        // Facebook page stats
+          const ytStatsRes = await fetch(
+            "https://www.googleapis.com/youtube/v3/channels?key=" + YT_KEY + "&id=" + YT_CHANNEL_ID + "&part=statistics"
+          );
+          const ytStatsData = await ytStatsRes.json();
+
+          const videos = ytVideosData.items || [];
+          const stats = ytStatsData.items?.[0]?.statistics || null;
+
+          setYtVideos(videos);
+          setYtStats(stats);
+
+          localStorage.setItem(YT_CACHE_KEY, JSON.stringify({ videos, stats }));
+          localStorage.setItem(YT_CACHE_KEY + "_time", Date.now().toString());
+        }
+
+        // ── FACEBOOK (no cache needed, low rate limit) ──
         const fbStatsRes = await fetch(
           "https://graph.facebook.com/v25.0/" + FB_PAGE_ID + "?fields=fan_count,followers_count,name&access_token=" + FB_TOKEN
         );
         const fbStatsData = await fbStatsRes.json();
         setFbStats(fbStatsData);
 
-        // Facebook latest posts
         const fbPostsRes = await fetch(
           "https://graph.facebook.com/v25.0/" + FB_PAGE_ID + "/posts?fields=id,message,created_time,full_picture,permalink_url&limit=8&access_token=" + FB_TOKEN
         );
         const fbPostsData = await fbPostsRes.json();
         setFbPosts(fbPostsData.data || []);
 
-        // Facebook live check
         const fbLiveRes = await fetch(
           "https://graph.facebook.com/v25.0/" + FB_PAGE_ID + "/live_videos?status=LIVE&fields=id,title,embed_html&access_token=" + FB_TOKEN
         );
