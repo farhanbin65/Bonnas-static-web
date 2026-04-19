@@ -179,8 +179,10 @@ export default function Menu() {
                 <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-50">
                   <span className="text-green-700 font-bold text-sm">
                     {item.variants && item.variants.length > 0
-                      ? "£" + item.variants[0].price + " – £" + item.variants[item.variants.length - 1].price
-                      : "£" + item.price?.toFixed(2)}
+                      ? "£" + item.variants[0].price.toFixed(2) + " – £" + item.variants[item.variants.length - 1].price.toFixed(2)
+                      : item.price
+                      ? "£" + item.price.toFixed(2)
+                      : "See options"}
                   </span>
                   <button
                     onClick={() => {
