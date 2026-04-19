@@ -6,12 +6,7 @@ const YT_KEY = import.meta.env.VITE_YT_API_KEY;
 const YT_CHANNEL_ID = import.meta.env.VITE_YT_CHANNEL_ID;
 
 export default function Social() {
-  console.log("FB_PAGE_ID:", import.meta.env.VITE_FB_PAGE_ID);
-  console.log("FB_TOKEN:", import.meta.env.VITE_FB_ACCESS_TOKEN);
-  console.log("YT_KEY:", import.meta.env.VITE_YT_API_KEY);
-  console.log("YT_CHANNEL_ID:", import.meta.env.VITE_YT_CHANNEL_ID);
-
-  const [ytVideos, setYtVideos] = useState([]);
+const [ytVideos, setYtVideos] = useState([]);
   const [ytStats, setYtStats] = useState(null);
   const [fbPosts, setFbPosts] = useState([]);
   const [fbStats, setFbStats] = useState(null);
