@@ -32,21 +32,21 @@ const [ytVideos, setYtVideos] = useState([]);
 
         // Facebook page stats
         const fbStatsRes = await fetch(
-          "https://graph.facebook.com/v19.0/" + FB_PAGE_ID + "?fields=fan_count,followers_count,name&access_token=" + FB_TOKEN
+          "https://graph.facebook.com/v25.0/" + FB_PAGE_ID + "?fields=fan_count,followers_count,name&access_token=" + FB_TOKEN
         );
         const fbStatsData = await fbStatsRes.json();
         setFbStats(fbStatsData);
 
         // Facebook latest posts
         const fbPostsRes = await fetch(
-          "https://graph.facebook.com/v19.0/" + FB_PAGE_ID + "/posts?fields=id,message,created_time,full_picture,permalink_url&limit=8&access_token=" + FB_TOKEN
+          "https://graph.facebook.com/v25.0/" + FB_PAGE_ID + "/posts?fields=id,message,created_time,full_picture,permalink_url&limit=8&access_token=" + FB_TOKEN
         );
         const fbPostsData = await fbPostsRes.json();
         setFbPosts(fbPostsData.data || []);
 
         // Facebook live check
         const fbLiveRes = await fetch(
-          "https://graph.facebook.com/v19.0/" + FB_PAGE_ID + "/live_videos?status=LIVE&fields=id,title,embed_html&access_token=" + FB_TOKEN
+          "https://graph.facebook.com/v25.0/" + FB_PAGE_ID + "/live_videos?status=LIVE&fields=id,title,embed_html&access_token=" + FB_TOKEN
         );
         const fbLiveData = await fbLiveRes.json();
         setFbLive(fbLiveData.data?.[0] || null);
