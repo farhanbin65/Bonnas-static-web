@@ -8,8 +8,6 @@ export default function Contact() {
       </h2>
 
       <div className="text-center space-y-4 mb-6">
-        <p className="text-black">Phone: +123 456 789</p>
-        <p className="text-black">WhatsApp: +123 456 789</p>
         <p className="text-black">Email: sbcuicuisine@gmail.com</p>
         <p className="text-black">Location: London, UK</p>
       </div>
