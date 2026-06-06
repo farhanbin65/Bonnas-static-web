@@ -14,100 +14,81 @@ export default function Hero() {
     const interval = setInterval(() => {
       setCurrent((prev) => (prev + 1) % images.length);
     }, 4000);
-
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <section className="relative flex flex-col items-center py-10">
+    <section className="relative w-full h-[92vh] overflow-hidden">
 
-      {/* Carousel Container */}
-      <div className="relative w-4/5 aspect-[16/7] overflow-hidden rounded-2xl">
+      {/* Carousel images */}
+      {images.map((img, i) => (
+        <img
+          key={i}
+          src={img}
+          alt="Bonna's food"
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
+            i === current ? "opacity-100" : "opacity-0"
+          }`}
+        />
+      ))}
 
-        {/* Images */}
-        {images.map((img, index) => (
-          <img
-            key={index}
-            src={img}
-            alt="Bonna's food"
-            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000
-              ${index === current ? "opacity-100" : "opacity-0"}`}
-          />
-        ))}
+      {/* Dark overlay */}
+      <div className="absolute inset-0 bg-black/60" />
 
-        {/* Dark overlay */}
-        <div className="absolute inset-0 bg-black/40"></div>
+      {/* Bottom gradient */}
+      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-night to-transparent" />
 
-        {/* Text Content - Desktop Only */}
-        <div className="hidden md:flex absolute inset-0 items-center px-6 sm:px-10 md:px-20">
-          <div className="max-w-xl text-white backdrop-blur-md bg-white/10 p-6 sm:p-8 rounded-2xl shadow-lg text-left">
-            
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold">
-              Welcome to Bonna's
-            </h1>
+      {/* Content */}
+      <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6">
 
-            <p className="mt-4 text-base sm:text-lg md:text-xl">
-              Authentic home-made catering, prepared with love and passion.
-            </p>
+        {/* Tag */}
+        <span className="inline-block bg-pink-bonnas/20 border border-pink-bonnas/40 text-pink-bonnas text-xs font-semibold tracking-widest uppercase px-4 py-1.5 rounded-full mb-6">
+          Authentic Bangladeshi Home Cooking
+        </span>
 
-            <div className="mt-6 flex flex-col sm:flex-row gap-4">
-              <a
-                href="#contact"
-                className="btn btn-outline btn-white"
-              >
-                Order Now
-              </a>
+        {/* Headline */}
+        <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold text-white leading-tight max-w-3xl">
+          Welcome to{" "}
+          <span className="text-pink-bonnas">Bonna's</span>
+        </h1>
 
-              <a
-                href="/menu.pdf"
-                download
-                className="btn btn-outline btn-white"
-              >
-                Download Menu
-              </a>
-            </div>
-          </div>
-        </div>
+        {/* Subheadline */}
+        <p className="mt-4 text-sand text-base sm:text-lg md:text-xl max-w-xl leading-relaxed">
+          Home-made catering prepared with love — from biryani to desserts, 
+          for every occasion.
+        </p>
 
-        {/* Dots Indicator */}
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex gap-3">
-          {images.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrent(index)}
-              className={`w-3 h-3 rounded-full transition-all
-                ${current === index ? "bg-white scale-125" : "bg-white/50"}`}
-            />
-          ))}
+        {/* CTA buttons */}
+        <div className="mt-8 flex flex-col sm:flex-row gap-4">
+          <a
+            href="#menu"
+            className="bg-pink-bonnas text-night px-8 py-3 rounded-full text-sm font-bold hover:bg-pink-dark transition-colors duration-200"
+          >
+            Order Now
+          </a>
+          <a
+            href="/menu.pdf"
+            download
+            className="border border-cream/40 text-cream px-8 py-3 rounded-full text-sm font-medium hover:border-pink-bonnas hover:text-pink-bonnas transition-colors duration-200"
+          >
+            Download Menu
+          </a>
         </div>
       </div>
 
-      {/* Text Content - Mobile & Tablet */}
-      <div className="mt-6 w-4/5 md:hidden">
-        <div className="bg-black/60 text-white backdrop-blur-md p-6 rounded-2xl shadow-lg text-center">
-          <h1 className="text-3xl sm:text-4xl font-bold">
-            Welcome to Bonna's
-          </h1>
-          <p className="mt-4 text-base sm:text-lg">
-            Authentic home-made catering, prepared with love and passion.
-          </p>
-          <div className="mt-6 flex flex-col sm:flex-row gap-4 justify-center">
-            <a
-              href="#contact"
-              className="btn btn-outline btn-white"
-            >
-              Order Now
-            </a>
-
-            <a
-              href="/menu.pdf"
-              download
-              className="btn btn-outline btn-white"
-            >
-              Download Menu
-            </a>
-          </div>
-        </div>
+      {/* Dot indicators */}
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+        {images.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => setCurrent(i)}
+            className={`rounded-full transition-all duration-300 ${
+              i === current
+                ? "bg-pink-bonnas w-6 h-2"
+                : "bg-white/30 w-2 h-2 hover:bg-white/60"
+            }`}
+          />
+        ))}
       </div>
 
     </section>
