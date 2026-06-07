@@ -1,64 +1,226 @@
+import { useEffect, useRef, useState } from "react";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import L from "leaflet";
 import { FaFacebookF, FaInstagram, FaTiktok, FaYoutube } from "react-icons/fa";
 
+import "leaflet/dist/leaflet.css";
+
+const BONNAS_POS = [51.5265, -0.0554];
+
+const SOCIALS = [
+  { icon: <FaFacebookF />,  href: "https://www.facebook.com/bonnas.cooking1",  label: "Facebook"  },
+  { icon: <FaInstagram />,  href: "https://instagram.com/bonnas_cuisine",       label: "Instagram" },
+  { icon: <FaTiktok />,     href: "https://www.tiktok.com/@sharanika.cuisine",  label: "TikTok"    },
+  { icon: <FaYoutube />,    href: "https://www.youtube.com/@bonnas.cooking",    label: "YouTube"   },
+];
+
+const HOURS = [
+  { day: "Monday – Friday", time: "12:00 – 21:00" },
+  { day: "Saturday",        time: "11:00 – 22:00" },
+  { day: "Sunday",          time: "11:00 – 21:00" },
+];
+
+const bonnasIcon = new L.DivIcon({
+  html: `<div style="
+    width:38px;height:38px;border-radius:50%;
+    background:#F2A8B5;border:3px solid #fff;
+    display:flex;align-items:center;justify-content:center;
+    font-size:18px;box-shadow:0 0 0 4px rgba(242,168,181,0.35);">
+    🍲
+  </div>`,
+  className: "",
+  iconSize: [38, 38],
+  iconAnchor: [19, 19],
+});
+
+const userIcon = new L.DivIcon({
+  html: `<div style="
+    width:16px;height:16px;border-radius:50%;
+    background:#fff;border:3px solid #F2A8B5;
+    box-shadow:0 0 0 4px rgba(242,168,181,0.35);">
+  </div>`,
+  className: "",
+  iconSize: [16, 16],
+  iconAnchor: [8, 8],
+});
+
+function FlyTo({ pos }) {
+  const map = useMap();
+  useEffect(() => {
+    if (pos) {
+      map.flyToBounds([BONNAS_POS, pos], { padding: [60, 60], duration: 1.4 });
+    }
+  }, [pos, map]);
+  return null;
+}
+
 export default function Contact() {
+  const [userPos, setUserPos] = useState(null);
+  const [locating, setLocating] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleLocate = () => {
+    setError("");
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserPos([pos.coords.latitude, pos.coords.longitude]);
+        setLocating(false);
+      },
+      () => {
+        setError("Could not get your location. Please allow location access.");
+        setLocating(false);
+      }
+    );
+  };
+
   return (
-    <section id="contact" className="py-20 px-8 md:px-20">
-      <h2 className="text-3xl md:text-4xl font-bold mb-10 text-center text-black">
-        Contact Us
-      </h2>
+    <section id="contact" className="py-20 px-6 md:px-20 bg-ember">
+      <div className="max-w-7xl mx-auto">
 
-      <div className="text-center space-y-4 mb-6">
-        <p className="text-black">Email: sbcuicuisine@gmail.com</p>
-        <p className="text-black">Location: London, UK</p>
-      </div>
+        {/* Header */}
+        <div className="text-center mb-12">
+          <p className="text-pink-bonnas text-sm font-semibold tracking-widest uppercase mb-2">Get In Touch</p>
+          <h2 className="text-3xl md:text-4xl font-bold text-cream">Contact Us</h2>
+          <p className="text-sand text-sm mt-2">Find us on the map or reach out directly</p>
+        </div>
 
-      {/* Email Us Button */}
-      <div className="text-center mb-6">
-        <a
-          href="mailto:sbcuicuisine@gmail.com"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-block px-6 py-3 bg-black text-white font-semibold rounded hover:bg-gray-800 transition"
-        >
-          Email Us
-        </a>
-      </div>
+        <div className="grid md:grid-cols-2 gap-10">
 
+          {/* MAP */}
+          <div className="flex flex-col gap-3">
 
-      {/* Social Links */}
-      <div className="flex justify-center space-x-6 text-black text-2xl">
-        <a
-          href="https://www.facebook.com/bonnas.cooking1"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="hover:text-gray-600 transition"
-        >
-          <FaFacebookF />
-        </a>
-        <a
-          href="https://instagram.com/bonnas_cuisine"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="hover:text-gray-600 transition"
-        >
-          <FaInstagram />
-        </a>
-        <a
-          href="https://www.tiktok.com/@sharanika.cuisine"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="hover:text-gray-600 transition"
-        >
-          <FaTiktok />
-        </a>
-        <a
-          href="https://www.youtube.com/@bonnas.cooking"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="hover:text-gray-600 transition"
-        >
-          <FaYoutube />
-        </a>
+            {/* Locate button */}
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleLocate}
+                disabled={locating}
+                className="flex items-center gap-2 bg-pink-bonnas text-night px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-pink-dark transition-colors disabled:opacity-50"
+              >
+                {locating ? "Locating…" : "📍 Show my location"}
+              </button>
+              {userPos && (
+                <span className="text-sand text-xs">Location found — map updated</span>
+              )}
+              {error && (
+                <span className="text-red-400 text-xs">{error}</span>
+              )}
+            </div>
+
+            {/* Map */}
+            <div className="rounded-2xl overflow-hidden border border-gold-dust" style={{ height: "420px" }}>
+              <MapContainer
+                center={BONNAS_POS}
+                zoom={14}
+                style={{ height: "100%", width: "100%", background: "#0D0A07" }}
+                zoomControl={false}
+                scrollWheelZoom={false}
+              >
+                <TileLayer
+                  url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                  attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+                  className="golden-tiles"
+                />
+
+                {/* Bonna's marker */}
+                <Marker position={BONNAS_POS} icon={bonnasIcon}>
+                  <Popup className="bonnas-popup">
+                    <div style={{ background: "#1E160D", color: "#F5ECD7", padding: "6px 10px", borderRadius: "8px", fontSize: "13px", fontWeight: 600 }}>
+                      🍲 Bonna's — London E2
+                    </div>
+                  </Popup>
+                </Marker>
+
+                {/* User marker */}
+                {userPos && (
+                  <Marker position={userPos} icon={userIcon}>
+                    <Popup>
+                      <div style={{ background: "#1E160D", color: "#F5ECD7", padding: "6px 10px", borderRadius: "8px", fontSize: "13px" }}>
+                        You are here
+                      </div>
+                    </Popup>
+                  </Marker>
+                )}
+
+                {userPos && <FlyTo pos={userPos} />}
+              </MapContainer>
+            </div>
+          </div>
+
+          {/* RIGHT — details */}
+          <div className="flex flex-col gap-5">
+
+            {/* Address */}
+            <a
+              href="https://maps.google.com/?q=E2+London+UK"
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-start gap-4 bg-night border border-gold-dust hover:border-pink-bonnas/50 rounded-2xl p-5 transition-colors group"
+            >
+              <div className="w-10 h-10 rounded-full bg-pink-bonnas/10 border border-pink-bonnas/30 flex items-center justify-center shrink-0 text-lg">
+                📍
+              </div>
+              <div>
+                <p className="text-cream font-semibold text-sm">Location</p>
+                <p className="text-sand text-xs mt-0.5">London, E2, UK</p>
+                <p className="text-pink-bonnas text-xs mt-1 group-hover:underline">Get directions →</p>
+              </div>
+            </a>
+
+            {/* Email */}
+            <a
+              href="mailto:sbcuicuisine@gmail.com"
+              className="flex items-start gap-4 bg-night border border-gold-dust hover:border-pink-bonnas/50 rounded-2xl p-5 transition-colors group"
+            >
+              <div className="w-10 h-10 rounded-full bg-pink-bonnas/10 border border-pink-bonnas/30 flex items-center justify-center shrink-0 text-lg">
+                ✉️
+              </div>
+              <div>
+                <p className="text-cream font-semibold text-sm">Email</p>
+                <p className="text-sand text-xs mt-0.5">sbcuicuisine@gmail.com</p>
+                <p className="text-pink-bonnas text-xs mt-1 group-hover:underline">Send us an email →</p>
+              </div>
+            </a>
+
+            {/* Hours */}
+            <div className="bg-night border border-gold-dust rounded-2xl p-5">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-pink-bonnas/10 border border-pink-bonnas/30 flex items-center justify-center shrink-0 text-lg">
+                  🕐
+                </div>
+                <p className="text-cream font-semibold text-sm">Opening Hours</p>
+              </div>
+              <div className="flex flex-col gap-2">
+                {HOURS.map((h) => (
+                  <div key={h.day} className="flex justify-between items-center border-b border-gold-dust pb-2 last:border-0 last:pb-0">
+                    <span className="text-sand text-xs">{h.day}</span>
+                    <span className="text-cream text-xs font-medium">{h.time}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Socials */}
+            <div className="bg-night border border-gold-dust rounded-2xl p-5">
+              <p className="text-cream font-semibold text-sm mb-4">Follow Us</p>
+              <div className="flex gap-3">
+                {SOCIALS.map((s) => (
+                  <a
+                    key={s.label}
+                    href={s.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={s.label}
+                    className="w-10 h-10 rounded-full bg-pink-bonnas/10 border border-pink-bonnas/30 hover:bg-pink-bonnas hover:text-night text-pink-bonnas flex items-center justify-center transition-colors text-sm"
+                  >
+                    {s.icon}
+                  </a>
+                ))}
+              </div>
+            </div>
+
+          </div>
+        </div>
       </div>
     </section>
   );

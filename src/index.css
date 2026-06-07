@@ -6,3 +6,6 @@ body {
   color: black;
   font-family: 'Inter', sans-serif;
 }
+.golden-tiles img {
+  filter: sepia(1) hue-rotate(10deg) saturate(9) brightness(1.25);
+}
