@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@sanity/client": "^7.21.0",
+    "@sanity/client": "^7.22.1",
     "@sanity/image-url": "^2.1.1",
     "daisyui": "^5.5.14",
     "leaflet": "^1.9.4",

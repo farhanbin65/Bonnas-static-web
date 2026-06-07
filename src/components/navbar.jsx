@@ -6,11 +6,11 @@ const NAV_ITEMS = [
   { label: "About",        href: "/#about",        route: false },
   { label: "Services",     href: "/#services",     route: false },
   { label: "Menu",         href: "/menu",           route: true  },
+  { label: "Blog",         href: "/blog",           route: true  },
   { label: "Gallery",      href: "/#gallery",      route: false },
   { label: "Reservations", href: "/#reservations", route: false },
   { label: "Contact",      href: "/#contact",      route: false },
 ];
-
 export default function Navbar() {
   const [open, setOpen] = useState(false);
 
