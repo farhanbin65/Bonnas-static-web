@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 const SOCIALS = [
   { icon: <FaFacebookF />, href: "https://www.facebook.com/bonnas.cooking1", label: "Facebook" },
   { icon: <FaInstagram />, href: "https://instagram.com/bonnas_cuisine",      label: "Instagram" },
-  { icon: <FaTiktok />,    href: "https://www.tiktok.com/@sharanika.cuisine", label: "TikTok" },
+  { icon: <FaTiktok />,    href: "https://www.tiktok.com/@bonnas.cuisine",     label: "TikTok" },
   { icon: <FaYoutube />,   href: "https://www.youtube.com/@bonnas.cooking",   label: "YouTube" },
 ];
 
@@ -61,8 +61,8 @@ export default function Footer() {
           <div>
             <p className="text-cream font-semibold text-sm mb-4 tracking-wide">Contact</p>
             <div className="flex flex-col gap-3">
-              <a href="mailto:sbcuicuisine@gmail.com" className="flex items-center gap-2 text-sand text-xs hover:text-pink-bonnas transition-colors">
-                <span className="text-pink-bonnas">✉</span> sbcuicuisine@gmail.com
+              <a href="mailto:info@bonnas.co.uk" className="flex items-center gap-2 text-sand text-xs hover:text-pink-bonnas transition-colors">
+                <span className="text-pink-bonnas">✉</span> info@bonnas.co.uk
               </a>
               <p className="flex items-center gap-2 text-sand text-xs">
                 <span className="text-pink-bonnas">📍</span> London, E2, UK

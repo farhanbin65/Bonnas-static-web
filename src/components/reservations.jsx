@@ -107,14 +107,14 @@ export default function Reservations() {
 
         {/* Contact options */}
         <div className="grid sm:grid-cols-2 gap-4 mb-10">
-          <a href="mailto:sbcuicuisine@gmail.com"
+          <a href="mailto:orders@bonnas.co.uk"
             className="flex items-center gap-4 bg-ember border border-gold-dust hover:border-pink-bonnas/50 rounded-2xl p-5 text-left transition-colors group">
             <div className="w-11 h-11 rounded-full bg-pink-bonnas/10 border border-pink-bonnas/30 flex items-center justify-center text-xl shrink-0">
               ✉️
             </div>
             <div>
               <p className="text-cream font-semibold text-sm">Email Us</p>
-              <p className="text-sand text-xs mt-0.5">sbcuicuisine@gmail.com</p>
+              <p className="text-sand text-xs mt-0.5">orders@bonnas.co.uk</p>
               <p className="text-pink-bonnas text-xs mt-1 group-hover:underline">Send a message →</p>
             </div>
           </a>

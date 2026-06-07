@@ -10,7 +10,7 @@ const BONNAS_POS = [51.5265, -0.0554];
 const SOCIALS = [
   { icon: <FaFacebookF />,  href: "https://www.facebook.com/bonnas.cooking1",  label: "Facebook"  },
   { icon: <FaInstagram />,  href: "https://instagram.com/bonnas_cuisine",       label: "Instagram" },
-  { icon: <FaTiktok />,     href: "https://www.tiktok.com/@sharanika.cuisine",  label: "TikTok"    },
+  { icon: <FaTiktok />,     href: "https://www.tiktok.com/@bonnas.cuisine",     label: "TikTok"    },
   { icon: <FaYoutube />,    href: "https://www.youtube.com/@bonnas.cooking",    label: "YouTube"   },
 ];
 
@@ -169,7 +169,7 @@ export default function Contact() {
 
             {/* Email */}
             <a
-              href="mailto:sbcuicuisine@gmail.com"
+              href="mailto:info@bonnas.co.uk"
               className="flex items-start gap-4 bg-night border border-gold-dust hover:border-pink-bonnas/50 rounded-2xl p-5 transition-colors group"
             >
               <div className="w-10 h-10 rounded-full bg-pink-bonnas/10 border border-pink-bonnas/30 flex items-center justify-center shrink-0 text-lg">
@@ -177,7 +177,7 @@ export default function Contact() {
               </div>
               <div>
                 <p className="text-cream font-semibold text-sm">Email</p>
-                <p className="text-sand text-xs mt-0.5">sbcuicuisine@gmail.com</p>
+                <p className="text-sand text-xs mt-0.5">info@bonnas.co.uk</p>
                 <p className="text-pink-bonnas text-xs mt-1 group-hover:underline">Send us an email →</p>
               </div>
             </a>
