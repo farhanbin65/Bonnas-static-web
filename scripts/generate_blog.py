@@ -94,7 +94,7 @@ def post_to_sanity(data):
         "publishedAt": datetime.utcnow().isoformat() + "Z",
     }
 
-    url = f"https://{SANITY_PROJECT_ID}.api.sanity.io/v2024-01-01/data/mutate/{SANITY_DATASET}"
+    url = f"https://{VITE_SANITY_PROJECT_ID}.api.sanity.io/v2024-01-01/data/mutate/{VITE_SANITY_DATASET}"
 
     res = requests.post(
         url,
