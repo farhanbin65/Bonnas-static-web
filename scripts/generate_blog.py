@@ -7,7 +7,8 @@ from datetime import datetime
 from groq import Groq
 
 GROQ_API_KEY      = os.environ["GROQ_API_KEY"]
-SANITY_PROJECT_ID = os.environ["SANITY_PROJECT_ID"]
+SANITY_PROJECT_ID = os.environ.get("SANITY_PROJECT_ID", "MISSING")
+print(f"Project ID: {SANITY_PROJECT_ID}")
 SANITY_DATASET    = os.environ.get("SANITY_DATASET", "production")
 SANITY_WRITE_TOKEN= os.environ["SANITY_WRITE_TOKEN"]
 
