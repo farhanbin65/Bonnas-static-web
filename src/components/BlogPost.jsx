@@ -93,7 +93,13 @@ export default function BlogPost() {
                 "url": "https://www.bonnas.co.uk/logo.PNG"
               }
             },
-            "keywords": "${post.keywords?.join(", ")}"
+            "keywords": "${post.keywords?.join(", ")}",
+            "image": {
+              "@type": "ImageObject",
+              "url": "https://www.bonnas.co.uk/logo.PNG",
+              "width": 1200,
+              "height": 630
+            }
           }
         `}</script>
       </Helmet>
