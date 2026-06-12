@@ -141,7 +141,7 @@ Return ONLY a raw JSON object, no backticks, no markdown:
     raw = response.choices[0].message.content.strip()
     raw = re.sub(r"```json|```", "", raw).strip()
 
-    return json.loads(raw)
+    return json.loads(raw, strict=False)
 
 # ---------------------------------------------------------------
 # 4. SLUG + SANITY
