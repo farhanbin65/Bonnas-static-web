@@ -28,7 +28,7 @@
     {
       "keyword": "bengali sweets london",
       "intent": "informational",
-      "used": false
+      "used": true
     },
     {
       "keyword": "what to serve at a desi dinner party",
