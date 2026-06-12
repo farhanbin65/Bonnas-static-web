@@ -136,12 +136,18 @@ Return ONLY a raw JSON object, no backticks, no markdown:
         messages=[{"role": "user", "content": prompt}],
         temperature=0.7,
         max_tokens=2500,
+        response_format={"type": "json_object"},
     )
 
     raw = response.choices[0].message.content.strip()
     raw = re.sub(r"```json|```", "", raw).strip()
 
-    return json.loads(raw, strict=False)
+    try:
+        return json.loads(raw, strict=False)
+    except json.JSONDecodeError as e:
+        print(f"JSON parse failed: {e}")
+        print(f"Raw response:\n{raw}")
+        raise
 
 # ---------------------------------------------------------------
 # 4. SLUG + SANITY
