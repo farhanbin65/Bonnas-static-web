@@ -13,7 +13,7 @@ print(f"Project ID: {VITE_SANITY_PROJECT_ID}")
 VITE_SANITY_DATASET    = os.environ.get("SANITY_DATASET", "production")
 SANITY_WRITE_TOKEN     = os.environ["SANITY_WRITE_TOKEN"]
 
-KEYWORDS_FILE = "keywords.json"
+KEYWORDS_FILE = "scripts/keywords.json"
 
 RSS_FEEDS = [
     "https://trends.google.com/trends/trendingsearches/daily/rss?geo=GB",
