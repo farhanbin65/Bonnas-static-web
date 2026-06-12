@@ -10,7 +10,7 @@ from groq import Groq
 GROQ_API_KEY           = os.environ["GROQ_API_KEY"]
 VITE_SANITY_PROJECT_ID = os.environ.get("SANITY_PROJECT_ID", "MISSING")
 print(f"Project ID: {VITE_SANITY_PROJECT_ID}")
-VITE_SANITY_DATASET    = os.environ.get("SANITY_DATASET", "production")
+VITE_SANITY_DATASET = "production"
 SANITY_WRITE_TOKEN     = os.environ["SANITY_WRITE_TOKEN"]
 
 KEYWORDS_FILE = "scripts/keywords.json"
