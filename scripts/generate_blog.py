@@ -185,6 +185,9 @@ if __name__ == "__main__":
     post_data = generate_post(headlines, target)
     print(f"Title: {post_data['title']}")
 
+    print("Formatting body...")
+    post_data["body"] = format_body(post_data["body"], target)
+
     print("Saving to Sanity...")
     post_to_sanity(post_data, target)
     print("Done!")
