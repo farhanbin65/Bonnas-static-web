@@ -2,16 +2,17 @@ import os
 import json
 import re
 import random
+import time
 import feedparser
 import requests
 from datetime import datetime, timezone
 from groq import Groq
 
-GROQ_API_KEY           = os.environ["GROQ_API_KEY"]
-VITE_SANITY_PROJECT_ID = os.environ.get("SANITY_PROJECT_ID", "MISSING")
-print(f"Project ID: {VITE_SANITY_PROJECT_ID}")
-VITE_SANITY_DATASET = "production"
-SANITY_WRITE_TOKEN     = os.environ["SANITY_WRITE_TOKEN"]
+GROQ_API_KEY        = os.environ["GROQ_API_KEY"]
+SANITY_WRITE_TOKEN  = os.environ["SANITY_WRITE_TOKEN"]
+
+VITE_SANITY_PROJECT_ID = "u5i02ojt"
+VITE_SANITY_DATASET    = "production"
 
 KEYWORDS_FILE = "scripts/keywords.json"
 
@@ -25,13 +26,11 @@ RSS_FEEDS = [
 # 1. TARGET KEYWORD SELECTION
 # ---------------------------------------------------------------
 def get_target_keyword():
-    """Pick an unused keyword from the bank. Reset when all used."""
     with open(KEYWORDS_FILE, "r", encoding="utf-8") as f:
         data = json.load(f)
 
     unused = [k for k in data["keyword_bank"] if not k.get("used", False)]
 
-    # All keywords used — reset the cycle
     if not unused:
         print("All keywords used — resetting bank")
         for k in data["keyword_bank"]:
@@ -40,7 +39,6 @@ def get_target_keyword():
 
     target = random.choice(unused)
 
-    # Mark as used and persist
     for k in data["keyword_bank"]:
         if k["keyword"] == target["keyword"]:
             k["used"] = True
@@ -69,17 +67,17 @@ def fetch_headlines():
     return headlines[:15]
 
 # ---------------------------------------------------------------
-# 3. GENERATE POST
+# 3. GENERATE POST (with retries)
 # ---------------------------------------------------------------
-def generate_post(headlines, target):
+def generate_post(headlines, target, max_attempts=3):
     client = Groq(api_key=GROQ_API_KEY)
     topics = "\n".join(["- " + h for h in headlines])
 
     intent_guidance = {
         "informational": "Write an educational guide that genuinely teaches the reader. Answer the question fully. Soft-sell Bonna's only at the end.",
-        "commercial":    "Write a helpful comparison/decision guide for someone researching this service. Build trust with practical details (what to expect, questions to ask, rough considerations). Position Bonna's as the natural choice without being pushy.",
+        "commercial":    "Write a helpful comparison/decision guide for someone researching this service. Build trust with practical details. Position Bonna's as the natural choice without being pushy.",
         "transactional": "Write for someone ready to order. Be practical: how it works, what's available, delivery areas, how to place an order with Bonna's.",
-        "local":         "Write with strong London focus. Mention specific areas naturally (East London, Tower Hamlets, Bethnal Green, Whitechapel). Help a local reader find what they need nearby.",
+        "local":         "Write with strong London focus. Mention specific areas naturally (East London, Tower Hamlets, Bethnal Green, Whitechapel).",
     }
 
     prompt = f"""You are an SEO content writer for Bonna's — an authentic Bangladeshi home catering service based in London E2. All food is halal and homemade.
@@ -88,66 +86,54 @@ PRIMARY TARGET KEYWORD: "{target['keyword']}"
 SEARCH INTENT: {target['intent']}
 INTENT GUIDANCE: {intent_guidance.get(target['intent'], intent_guidance['informational'])}
 
-Today's trending UK food topics (INSPIRATION ONLY — connect to one if natural, ignore if not relevant):
+Today's trending UK food topics (INSPIRATION ONLY — use if relevant, otherwise ignore):
 {topics}
 
-STRICT RULES:
+Return a JSON object with these exact fields:
+- "title": SEO title containing the target keyword near the start, max 60 characters, written like a real search result (not poetic)
+- "excerpt": meta description, 150-160 characters, contains the target keyword
+- "body": the full blog post as ONE continuous block of plain text paragraphs separated by double spaces. 600-900 words. Use the target keyword in the first 100 words and 3-5 times total, naturally. Mention London and East London areas where natural. Warm, personal tone from Bonna's perspective. End with a short FAQ written inline as part of the text (e.g. "A common question is... The answer is..."). Finish with a soft call to action to order online at Bonna's. Do NOT use line breaks, markdown, bullet points, or headings inside this field — plain prose only.
+- "keywords": array of 4 strings, first one must be exactly "{target['keyword']}", followed by 3 close search variations
+- "trendSource": the trending topic used as inspiration, or "evergreen" if none fit
 
-1. TITLE:
-   - Must contain the exact target keyword (or a very close natural variation) near the beginning
-   - Write like a real Google search result, NOT poetry
-   - GOOD: "Halal Catering in London: What to Expect and How to Order"
-   - BAD: "Savoring the Flavors of Bengal"
-   - Max 60 characters if possible
+IMPORTANT: Output must be valid JSON. The "body" field must be a single-line string with no literal line breaks, no unescaped quotes, and no markdown formatting."""
 
-2. EXCERPT (meta description):
-   - 150-160 characters
-   - Must contain the target keyword
-   - Must make someone want to click
+    last_error = None
+    for attempt in range(1, max_attempts + 1):
+        print(f"Groq attempt {attempt}/{max_attempts}...")
+        try:
+            response = client.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.6,
+                max_tokens=2500,
+                response_format={"type": "json_object"},
+            )
 
-3. BODY:
-   - 700-1000 words
-   - Use the exact target keyword in the FIRST 100 words
-   - Use the target keyword 3-5 times total across the post — never stuff
-   - Include 4-6 subheadings written as plain text lines ending with a colon (no markdown #)
-   - At least 2 subheadings should contain a natural variation of the keyword
-   - End with a short FAQ section: 3 questions real customers would type into Google, each with a 2-3 sentence answer
-   - Mention "London" naturally; reference East London areas where it fits
-   - Warm, personal, written from Bonna's perspective
-   - Finish with a soft call to action: order online at Bonna's
-   - Do NOT use markdown formatting in the body
-   - Do NOT copy anything from the trending topics
+            raw = response.choices[0].message.content.strip()
+            raw = re.sub(r"```json|```", "", raw).strip()
 
-4. KEYWORDS ARRAY:
-   - First item must be the exact target keyword
-   - Then 3 close variations someone might actually search
+            data = json.loads(raw, strict=False)
 
-Return ONLY a raw JSON object, no backticks, no markdown:
-{{
-  "title": "post title here",
-  "excerpt": "meta description here",
-  "body": "full blog post text here",
-  "keywords": ["{target['keyword']}", "variation2", "variation3", "variation4"],
-  "trendSource": "trending topic used as inspiration, or 'evergreen' if none"
-}}"""
+            # Validate required fields are present and non-empty
+            required = ["title", "excerpt", "body", "keywords"]
+            for field in required:
+                if not data.get(field):
+                    raise ValueError(f"Missing or empty field: {field}")
 
-    response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.7,
-        max_tokens=2500,
-        response_format={"type": "json_object"},
-    )
+            return data
 
-    raw = response.choices[0].message.content.strip()
-    raw = re.sub(r"```json|```", "", raw).strip()
+        except (json.JSONDecodeError, ValueError) as e:
+            last_error = e
+            print(f"Attempt {attempt} failed: {e}")
+            time.sleep(2)
+        except Exception as e:
+            # Groq's own json_validate_failed (BadRequestError) etc.
+            last_error = e
+            print(f"Attempt {attempt} failed (API error): {e}")
+            time.sleep(2)
 
-    try:
-        return json.loads(raw, strict=False)
-    except json.JSONDecodeError as e:
-        print(f"JSON parse failed: {e}")
-        print(f"Raw response:\n{raw}")
-        raise
+    raise RuntimeError(f"All {max_attempts} attempts failed. Last error: {last_error}")
 
 # ---------------------------------------------------------------
 # 4. SLUG + SANITY
