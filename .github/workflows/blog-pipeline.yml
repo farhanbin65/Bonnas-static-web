@@ -1,15 +1,23 @@
-name: Blog Post Pipeline
+name: Bonna's Blog Generator
 
 on:
   schedule:
-    - cron: '0 9 * * 1,3,5'
-  workflow_dispatch:
+    # Runs at 08:00 UTC on Monday, Wednesday, Friday
+    - cron: '0 8 * * 1,3,5'
+  workflow_dispatch: {}  # allows manual trigger from GitHub Actions tab
+
+permissions:
+  contents: write  # required so the workflow can commit keywords.json back
 
 jobs:
   generate-post:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -17,12 +25,22 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install feedparser groq requests
+        run: |
+          pip install groq feedparser requests
 
-      - name: Run pipeline
+      - name: Run blog generator
         env:
-          GROQ_API_KEY:       ${{ secrets.GROQ_API_KEY }}
-          SANITY_PROJECT_ID:  ${{ secrets.VITE_SANITY_PROJECT_ID }}
-          SANITY_DATASET:     ${{ secrets.VITE_SANITY_DATASET }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          SANITY_PROJECT_ID: ${{ secrets.SANITY_PROJECT_ID }}
+          SANITY_DATASET: ${{ secrets.SANITY_DATASET }}
           SANITY_WRITE_TOKEN: ${{ secrets.SANITY_WRITE_TOKEN }}
-        run: python scripts/generate_blog.py
+        run: |
+          python scripts/generate_blog.py
+
+      - name: Commit updated keyword bank
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add scripts/keywords.json
+          git diff --staged --quiet || git commit -m "chore: update keyword usage [skip ci]"
+          git push
