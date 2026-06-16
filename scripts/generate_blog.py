@@ -80,6 +80,24 @@ def generate_post(headlines, target, max_attempts=3):
         "local":         "Write with strong London focus. Mention specific areas naturally (East London, Tower Hamlets, Bethnal Green, Whitechapel).",
     }
 
+    listicle_triggers = ["dishes to try", "ideas", "tips", "best", "must-try", "ways to", "things to"]
+    is_listicle = any(trigger in target["keyword"].lower() for trigger in listicle_triggers)
+
+    if is_listicle:
+        structure_instruction = (
+            'Structure this as a numbered list. Write 2-3 sentences of intro first, '
+            'then 5-7 numbered items in the format "N. ItemName: 1-2 sentence description.", '
+            'each item separated by the paragraph break marker [PARA]. '
+            'After the list, write a short closing section with 2-3 sentences plus an inline FAQ, '
+            'separated from the list by [PARA].'
+        )
+    else:
+        structure_instruction = (
+            'Structure this as 5-7 short paragraphs, each 2-4 sentences, separated by the '
+            'paragraph break marker [PARA]. The last paragraph should include a short inline FAQ '
+            'and a soft call to action.'
+        )
+
     prompt = f"""You are an SEO content writer for Bonna's — an authentic Bangladeshi home catering service based in London E2. All food is halal and homemade.
 
 PRIMARY TARGET KEYWORD: "{target['keyword']}"
@@ -92,11 +110,11 @@ Today's trending UK food topics (INSPIRATION ONLY — use if relevant, otherwise
 Return a JSON object with these exact fields:
 - "title": SEO title containing the target keyword near the start, max 60 characters, written like a real search result (not poetic)
 - "excerpt": meta description, 150-160 characters, contains the target keyword
-- "body": the full blog post as ONE continuous block of plain text paragraphs separated by double spaces. 600-900 words. Use the target keyword in the first 100 words and 3-5 times total, naturally. Mention London and East London areas where natural. Warm, personal tone from Bonna's perspective. End with a short FAQ written inline as part of the text (e.g. "A common question is... The answer is..."). Finish with a soft call to action to order online at Bonna's. Do NOT use line breaks, markdown, bullet points, or headings inside this field — plain prose only.
+- "body": the full blog post as plain text, 600-900 words. Use the target keyword in the first 100 words and 3-5 times total, naturally. Mention London and East London areas where natural. Warm, personal tone from Bonna's perspective. {structure_instruction} Do NOT use markdown, asterisks, hash symbols, or real line breaks — use the literal text "[PARA]" as the only separator between paragraphs/items.
 - "keywords": array of 4 strings, first one must be exactly "{target['keyword']}", followed by 3 close search variations
 - "trendSource": the trending topic used as inspiration, or "evergreen" if none fit
 
-IMPORTANT: Output must be valid JSON. The "body" field must be a single-line string with no literal line breaks, no unescaped quotes, and no markdown formatting."""
+IMPORTANT: Output must be valid JSON. The "body" field must be a single-line string with no real line breaks — use "[PARA]" wherever a paragraph or list item break should go."""
 
     last_error = None
     for attempt in range(1, max_attempts + 1):
@@ -115,7 +133,6 @@ IMPORTANT: Output must be valid JSON. The "body" field must be a single-line str
 
             data = json.loads(raw, strict=False)
 
-            # Validate required fields are present and non-empty
             required = ["title", "excerpt", "body", "keywords"]
             for field in required:
                 if not data.get(field):
@@ -128,7 +145,6 @@ IMPORTANT: Output must be valid JSON. The "body" field must be a single-line str
             print(f"Attempt {attempt} failed: {e}")
             time.sleep(2)
         except Exception as e:
-            # Groq's own json_validate_failed (BadRequestError) etc.
             last_error = e
             print(f"Attempt {attempt} failed (API error): {e}")
             time.sleep(2)
@@ -136,7 +152,33 @@ IMPORTANT: Output must be valid JSON. The "body" field must be a single-line str
     raise RuntimeError(f"All {max_attempts} attempts failed. Last error: {last_error}")
 
 # ---------------------------------------------------------------
-# 4. SLUG + SANITY
+# 4. BODY FORMATTING
+# ---------------------------------------------------------------
+def format_body(body):
+    """Convert [PARA] markers into real paragraph breaks. Falls back to
+    sentence-chunking if the model didn't use the marker."""
+
+    if "[PARA]" in body:
+        parts = [p.strip() for p in body.split("[PARA]") if p.strip()]
+        return "\n\n".join(parts)
+
+    # Fallback: no markers found, chunk every 3 sentences
+    text = body.strip()
+    sentences = re.split(r'(?<=[.!?])\s+', text)
+    paragraphs = []
+    chunk = []
+    for sentence in sentences:
+        chunk.append(sentence)
+        if len(chunk) >= 3:
+            paragraphs.append(" ".join(chunk))
+            chunk = []
+    if chunk:
+        paragraphs.append(" ".join(chunk))
+
+    return "\n\n".join(paragraphs)
+
+# ---------------------------------------------------------------
+# 5. SLUG + SANITY
 # ---------------------------------------------------------------
 def slugify(title):
     slug = title.lower()
@@ -186,7 +228,7 @@ if __name__ == "__main__":
     print(f"Title: {post_data['title']}")
 
     print("Formatting body...")
-    post_data["body"] = format_body(post_data["body"], target)
+    post_data["body"] = format_body(post_data["body"])
 
     print("Saving to Sanity...")
     post_to_sanity(post_data, target)
