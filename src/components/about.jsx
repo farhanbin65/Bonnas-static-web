@@ -1,3 +1,7 @@
+import { motion } from "framer-motion";
+import { fadeInLeft, fadeInRight, scrollRevealViewport } from "../lib/motion";
+import TiltCard from "./TiltCard";
+
 export default function About() {
   return (
     <section id="about" className="py-20 px-6 md:px-20 bg-night">
@@ -5,24 +9,35 @@ export default function About() {
 
         <div className="grid md:grid-cols-2 gap-12 items-center">
 
-          {/* Image side */}
-          <div className="relative">
-            <div className="rounded-2xl overflow-hidden border border-gold-dust">
+          {/* Image side — enters from left, with 3D tilt hover */}
+          <motion.div
+            className="relative"
+            variants={fadeInLeft}
+            initial="hidden"
+            whileInView="visible"
+            viewport={scrollRevealViewport}
+          >
+            <TiltCard className="rounded-2xl overflow-hidden border border-gold-dust">
               <img
                 src="/photos/f1.jpeg"
                 alt="Bonna's home cooking"
                 className="w-full h-80 object-cover"
               />
-            </div>
+            </TiltCard>
             {/* Floating badge */}
             <div className="absolute -bottom-4 -right-4 bg-pink-bonnas text-night rounded-2xl px-5 py-3 shadow-lg">
               <p className="text-xs font-medium">Home cooked</p>
               <p className="text-lg font-bold leading-tight">with love</p>
             </div>
-          </div>
+          </motion.div>
 
-          {/* Text side */}
-          <div>
+          {/* Text side — enters from right */}
+          <motion.div
+            variants={fadeInRight}
+            initial="hidden"
+            whileInView="visible"
+            viewport={scrollRevealViewport}
+          >
             <p className="text-pink-bonnas text-sm font-semibold tracking-widest uppercase mb-3">Our Story</p>
             <h2 className="text-3xl md:text-4xl font-bold text-cream mb-6">
               About Bonna's
@@ -50,7 +65,7 @@ export default function About() {
                 </div>
               ))}
             </div>
-          </div>
+          </motion.div>
 
         </div>
       </div>
