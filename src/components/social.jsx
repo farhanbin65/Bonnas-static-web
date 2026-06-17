@@ -1,4 +1,8 @@
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { PlayCircle, ThumbsUp, Radio } from "lucide-react";
+import { fadeUp, fadeInLeft, fadeInRight, staggerContainer, staggerItem, scrollRevealViewport } from "../lib/motion";
+import TiltCard from "./TiltCard";
 
 const FB_PAGE_ID = import.meta.env.VITE_FB_PAGE_ID;
 const FB_TOKEN = import.meta.env.VITE_FB_ACCESS_TOKEN;
@@ -91,19 +95,31 @@ export default function Social() {
       <div className="max-w-7xl mx-auto">
 
         {/* Header */}
-        <div className="text-center mb-12">
+        <motion.div
+          className="text-center mb-12"
+          variants={fadeUp}
+          initial="hidden"
+          whileInView="visible"
+          viewport={scrollRevealViewport}
+        >
           <p className="text-pink-bonnas text-sm font-semibold tracking-widest uppercase mb-2">Follow Along</p>
           <h2 className="text-3xl md:text-4xl font-bold text-cream">Our Social Media</h2>
           <p className="text-sand text-sm mt-2">Stay connected with Bonna's latest content</p>
-        </div>
+        </motion.div>
 
         {/* STATS */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
 
           {/* YouTube */}
-          <div className="bg-ember border border-gold-dust rounded-2xl p-6">
+          <motion.div
+            className="bg-ember border border-gold-dust rounded-2xl p-6"
+            variants={fadeInLeft}
+            initial="hidden"
+            whileInView="visible"
+            viewport={scrollRevealViewport}
+          >
             <div className="flex items-center gap-2 mb-5">
-              <span className="text-xl">▶️</span>
+              <PlayCircle className="w-5 h-5 text-pink-bonnas" strokeWidth={1.75} />
               <p className="text-cream font-semibold text-sm">YouTube</p>
               <a href={"https://youtube.com/@bonnas.cooking"} target="_blank" rel="noreferrer"
                 className="ml-auto text-pink-bonnas text-xs hover:underline">Visit Channel →</a>
@@ -113,12 +129,18 @@ export default function Social() {
               <StatCard label="Total Views"  value={formatCount(ytStats?.viewCount)}       sub="All time" />
               <StatCard label="Videos"       value={formatCount(ytStats?.videoCount)}      sub="Published" />
             </div>
-          </div>
+          </motion.div>
 
           {/* Facebook */}
-          <div className="bg-ember border border-gold-dust rounded-2xl p-6">
+          <motion.div
+            className="bg-ember border border-gold-dust rounded-2xl p-6"
+            variants={fadeInRight}
+            initial="hidden"
+            whileInView="visible"
+            viewport={scrollRevealViewport}
+          >
             <div className="flex items-center gap-2 mb-5">
-              <span className="text-xl">📘</span>
+              <ThumbsUp className="w-5 h-5 text-pink-bonnas" strokeWidth={1.75} />
               <p className="text-cream font-semibold text-sm">Facebook</p>
               <a href={"https://facebook.com/" + FB_PAGE_ID} target="_blank" rel="noreferrer"
                 className="ml-auto text-pink-bonnas text-xs hover:underline">Visit Page →</a>
@@ -128,16 +150,22 @@ export default function Social() {
               <StatCard label="Page Likes" value={formatCount(fbStats?.fan_count)}       sub="All time" />
               <StatCard label="Page"       value={fbStats?.name || "Bonna's"}            sub="Name" />
             </div>
-          </div>
+          </motion.div>
 
         </div>
 
         {/* FACEBOOK LIVE */}
         {fbLive && (
-          <div className="mb-12 border-2 border-red-500/60 bg-ember rounded-2xl p-6">
+          <motion.div
+            className="mb-12 border-2 border-red-500/60 bg-ember rounded-2xl p-6"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
             <div className="flex items-center gap-3 mb-4">
-              <span className="bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full animate-pulse">
-                🔴 LIVE NOW
+              <span className="bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full animate-pulse flex items-center gap-1.5">
+                <Radio className="w-3 h-3" />
+                LIVE NOW
               </span>
               <span className="font-semibold text-cream text-sm">
                 {fbLive.title || "Live on Facebook"}
@@ -151,7 +179,7 @@ export default function Social() {
                 Watch Live on Facebook →
               </a>
             )}
-          </div>
+          </motion.div>
         )}
 
         {/* FACEBOOK POSTS */}
@@ -162,26 +190,36 @@ export default function Social() {
               <a href={"https://facebook.com/" + FB_PAGE_ID} target="_blank" rel="noreferrer"
                 className="text-pink-bonnas text-xs hover:underline">See all →</a>
             </div>
-            <div className="grid gap-5 sm:grid-cols-2 md:grid-cols-4">
+            <motion.div
+              className="grid gap-5 sm:grid-cols-2 md:grid-cols-4"
+              variants={staggerContainer}
+              initial="hidden"
+              whileInView="visible"
+              viewport={scrollRevealViewport}
+            >
               {fbPosts.map((post) => (
-                <a key={post.id} href={post.permalink_url} target="_blank" rel="noreferrer"
-                  className="bg-ember border border-gold-dust hover:border-pink-bonnas/50 rounded-2xl overflow-hidden transition-colors group">
-                  {post.full_picture && (
-                    <div className="h-44 overflow-hidden">
-                      <img src={post.full_picture} alt="post" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                    </div>
-                  )}
-                  <div className="p-4">
-                    <p className="text-xs text-sand line-clamp-3 mb-2">
-                      {post.message || "View post on Facebook"}
-                    </p>
-                    <p className="text-xs text-pink-bonnas/60">
-                      {new Date(post.created_time).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
-                    </p>
-                  </div>
-                </a>
+                <motion.div key={post.id} variants={staggerItem}>
+                  <TiltCard className="h-full">
+                    <a href={post.permalink_url} target="_blank" rel="noreferrer"
+                      className="block h-full bg-ember border border-gold-dust hover:border-pink-bonnas/50 rounded-2xl overflow-hidden transition-colors group">
+                      {post.full_picture && (
+                        <div className="h-44 overflow-hidden">
+                          <img src={post.full_picture} alt="post" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        </div>
+                      )}
+                      <div className="p-4">
+                        <p className="text-xs text-sand line-clamp-3 mb-2">
+                          {post.message || "View post on Facebook"}
+                        </p>
+                        <p className="text-xs text-pink-bonnas/60">
+                          {new Date(post.created_time).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
+                        </p>
+                      </div>
+                    </a>
+                  </TiltCard>
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           </div>
         )}
 
@@ -198,9 +236,15 @@ export default function Social() {
               <div className="w-8 h-8 rounded-full border-2 border-pink-bonnas border-t-transparent animate-spin" />
             </div>
           ) : ytVideos.length > 0 ? (
-            <div className="grid gap-5 md:grid-cols-2">
+            <motion.div
+              className="grid gap-5 md:grid-cols-2"
+              variants={staggerContainer}
+              initial="hidden"
+              whileInView="visible"
+              viewport={scrollRevealViewport}
+            >
               {ytVideos.map((video) => (
-                <div key={video.id.videoId} className="rounded-2xl overflow-hidden border border-gold-dust">
+                <motion.div key={video.id.videoId} variants={staggerItem} className="rounded-2xl overflow-hidden border border-gold-dust">
                   <iframe
                     src={"https://www.youtube.com/embed/" + video.id.videoId}
                     title={video.snippet.title}
@@ -209,9 +253,9 @@ export default function Social() {
                     allowFullScreen
                     className="w-full"
                   />
-                </div>
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           ) : (
             <p className="text-center text-sand">No videos found.</p>
           )}
