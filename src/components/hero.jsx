@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { fadeUp, staggerContainer, staggerItem } from "../lib/motion";
 
 const images = [
   "/photos/cover1.jpeg",
@@ -39,27 +41,44 @@ export default function Hero() {
       <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-night to-transparent" />
 
       {/* Content */}
-      <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6">
+      <motion.div
+        className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6"
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+      >
 
         {/* Tag */}
-        <span className="inline-block bg-pink-bonnas/20 border border-pink-bonnas/40 text-pink-bonnas text-xs font-semibold tracking-widest uppercase px-4 py-1.5 rounded-full mb-6">
+        <motion.span
+          variants={staggerItem}
+          className="inline-block bg-pink-bonnas/20 border border-pink-bonnas/40 text-pink-bonnas text-xs font-semibold tracking-widest uppercase px-4 py-1.5 rounded-full mb-6"
+        >
           Authentic Bangladeshi Home Cooking
-        </span>
+        </motion.span>
 
         {/* Headline */}
-        <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold text-white leading-tight max-w-3xl">
+        <motion.h1
+          variants={staggerItem}
+          className="text-4xl sm:text-5xl md:text-7xl font-bold text-white leading-tight max-w-3xl"
+        >
           Welcome to{" "}
           <span className="text-pink-bonnas">Bonna's</span>
-        </h1>
+        </motion.h1>
 
         {/* Subheadline */}
-        <p className="mt-4 text-sand text-base sm:text-lg md:text-xl max-w-xl leading-relaxed">
-          Home-made catering prepared with love — from biryani to desserts, 
+        <motion.p
+          variants={staggerItem}
+          className="mt-4 text-sand text-base sm:text-lg md:text-xl max-w-xl leading-relaxed"
+        >
+          Home-made catering prepared with love — from biryani to desserts,
           for every occasion.
-        </p>
+        </motion.p>
 
         {/* CTA buttons */}
-        <div className="mt-8 flex flex-col sm:flex-row gap-4">
+        <motion.div
+          variants={staggerItem}
+          className="mt-8 flex flex-col sm:flex-row gap-4"
+        >
           <a
             href="#menu"
             className="bg-pink-bonnas text-night px-8 py-3 rounded-full text-sm font-bold hover:bg-pink-dark transition-colors duration-200"
@@ -73,8 +92,8 @@ export default function Hero() {
           >
             Download Menu
           </a>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* Dot indicators */}
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2">
