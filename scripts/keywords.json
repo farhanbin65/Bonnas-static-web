@@ -38,7 +38,7 @@
     {
       "keyword": "halal home cooked food delivery london",
       "intent": "transactional",
-      "used": false
+      "used": true
     },
     {
       "keyword": "ramadan iftar catering london",
