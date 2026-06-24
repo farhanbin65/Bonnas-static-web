@@ -3,23 +3,48 @@
     {
       "title": "Halal Wedding Catering London",
       "slug": "halal-wedding-catering-london",
-      "keywords": ["halal wedding catering london", "muslim wedding food london", "bangladeshi wedding catering", "london halal catering"],
+      "keywords": [
+        "halal wedding catering london",
+        "muslim wedding food london",
+        "bangladeshi wedding catering",
+        "london halal catering"
+      ],
       "contentType": "listicles",
       "publishedAt": "2026-06-24T18:44:08.864358+00:00"
     },
     {
       "title": "Bengali Wedding Catering Services",
       "slug": "bengali-wedding-catering-services",
-      "keywords": ["bengali wedding catering", "bangladeshi wedding catering london", "halal wedding catering"],
+      "keywords": [
+        "bengali wedding catering",
+        "bangladeshi wedding catering london",
+        "halal wedding catering"
+      ],
       "contentType": "guides",
       "publishedAt": "2026-06-17T00:00:00Z"
     },
     {
       "title": "Bangladeshi Dishes to Try",
       "slug": "bangladeshi-dishes-to-try",
-      "keywords": ["best bangladeshi dishes to try", "bangladeshi food london", "bengali food london"],
+      "keywords": [
+        "best bangladeshi dishes to try",
+        "bangladeshi food london",
+        "bengali food london"
+      ],
       "contentType": "listicles",
       "publishedAt": "2026-06-12T00:00:00Z"
+    },
+    {
+      "title": "Best Bengali Dishes to Try",
+      "slug": "best-bengali-dishes-to-try",
+      "keywords": [
+        "best bengali dishes",
+        "bengali food london",
+        "traditional bangladeshi food to try",
+        "bengali dishes in london"
+      ],
+      "contentType": "listicles",
+      "publishedAt": "2026-06-24T18:51:39.104857+00:00"
     }
   ]
 }
