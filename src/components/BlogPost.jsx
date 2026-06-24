@@ -37,6 +37,55 @@ useEffect(() => {
   const canonicalUrl = `https://www.bonnas.co.uk/blog/${post.slug.current}`;
   const publishedDate = new Date(post.publishedAt).toISOString();
 
+  // Parses body text and converts [LINK: slug | anchor] markers
+// into real React Router <Link> components
+function renderBody(body) {
+  if (!body) return null;
+
+  const paragraphs = body.split("\n\n");
+
+  return paragraphs.map((para, pIndex) => {
+    // Split paragraph by [LINK: slug | anchor] markers
+    const linkPattern = /\[LINK:\s*([^\|]+)\|([^\]]+)\]/g;
+    const parts = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = linkPattern.exec(para)) !== null) {
+      // Text before the link
+      if (match.index > lastIndex) {
+        parts.push(para.slice(lastIndex, match.index));
+      }
+
+      const slug = match[1].trim();
+      const anchor = match[2].trim();
+
+      parts.push(
+        <Link
+          key={`link-${pIndex}-${match.index}`}
+          to={`/blog/${slug}`}
+          className="text-pink-bonnas underline underline-offset-2 hover:text-pink-dark transition-colors"
+        >
+          {anchor}
+        </Link>
+      );
+
+      lastIndex = match.index + match[0].length;
+    }
+
+    // Remaining text after last link
+    if (lastIndex < para.length) {
+      parts.push(para.slice(lastIndex));
+    }
+
+    return (
+      <p key={pIndex} className="text-sand text-base leading-relaxed mb-4">
+        {parts.length > 0 ? parts : para}
+      </p>
+    );
+  });
+}
+
   return (
     <>
       {/* ✅ SEO HEAD - Unique per post, Google reads every word */}
@@ -189,9 +238,8 @@ useEffect(() => {
             {post.excerpt}
           </p>
 
-          {/* ✅ body content — readable by Google */}
-          <div className="text-sand text-base leading-relaxed whitespace-pre-line prose prose-invert max-w-none">
-            {post.body}
+          <div className="prose prose-invert max-w-none">
+            {renderBody(post.body)}
           </div>
 
           <div className="mt-12 bg-ember border border-gold-dust rounded-2xl p-6 text-center">

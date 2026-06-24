@@ -37,10 +37,10 @@ jobs:
         run: |
           python scripts/generate_blog.py
 
-      - name: Commit updated keyword bank
+      - name: Commit updated index files
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add scripts/keywords.json
-          git diff --staged --quiet || git commit -m "chore: update keyword usage [skip ci]"
+          git add scripts/topics.json scripts/post_index.json
+          git diff --staged --quiet || git commit -m "chore: update topic usage and post index [skip ci]"
           git push

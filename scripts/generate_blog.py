@@ -40,6 +40,75 @@ CONTENT_ROTATION = [
 ]
 
 # ---------------------------------------------------------------
+# INTERNAL LINKING — find related posts from index
+# ---------------------------------------------------------------
+def get_related_posts(topic, max_results=3):
+    """Find previously published posts whose keywords overlap
+    with the current topic. Returns list of {title, slug, keywords}"""
+    index_file = "scripts/post_index.json"
+
+    try:
+        with open(index_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return []
+
+    posts = data.get("posts", [])
+    if not posts:
+        return []
+
+    # Build search terms from current topic
+    topic_keywords = set(kw.lower() for kw in topic.get("keywords", []))
+    topic_words = set(topic["title"].lower().split())
+    search_terms = topic_keywords | topic_words
+
+    # Score each indexed post by keyword overlap
+    scored = []
+    for post in posts:
+        post_keywords = set(kw.lower() for kw in post.get("keywords", []))
+        post_words = set(post.get("title", "").lower().split())
+        post_terms = post_keywords | post_words
+
+        score = len(search_terms & post_terms)
+        if score > 0:
+            scored.append((score, post))
+
+    # Sort by score descending, return top results
+    scored.sort(key=lambda x: x[0], reverse=True)
+    related = [post for _, post in scored[:max_results]]
+
+    print(f"Found {len(related)} related posts for internal linking")
+    return related
+
+
+def update_post_index(title, slug, keywords, content_type):
+    """Append newly published post to post_index.json"""
+    index_file = "scripts/post_index.json"
+
+    try:
+        with open(index_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        data = {"posts": []}
+
+    # Avoid duplicates
+    existing_slugs = {p["slug"] for p in data["posts"]}
+    if slug not in existing_slugs:
+        data["posts"].append({
+            "title":       title,
+            "slug":        slug,
+            "keywords":    keywords,
+            "contentType": content_type,
+            "publishedAt": datetime.now(timezone.utc).isoformat(),
+        })
+
+        with open(index_file, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+
+        print(f"Post index updated: {title}")
+    else:
+        print(f"Post already in index: {slug}")
+# ---------------------------------------------------------------
 # 1. CALENDAR — check if a seasonal event is coming up
 # ---------------------------------------------------------------
 def get_seasonal_context():
@@ -224,7 +293,7 @@ def fetch_headlines():
 # ---------------------------------------------------------------
 # 5. GENERATE POST
 # ---------------------------------------------------------------
-def generate_post(headlines, topic, content_type, season_hook="", max_attempts=3):
+def generate_post(headlines, topic, content_type, season_hook="", related_posts=None, max_attempts=3):
     client = Groq(api_key=GROQ_API_KEY)
     topics_str = "\n".join(["- " + h for h in headlines])
     primary_keyword = topic["keywords"][0] if topic["keywords"] else topic["title"]
@@ -263,6 +332,20 @@ def generate_post(headlines, topic, content_type, season_hook="", max_attempts=3
     if season_hook:
         season_hook_instruction = f'\nSEASONAL HOOK — open the post with this context naturally: "{season_hook}"'
 
+# Internal linking instruction
+    internal_links_instruction = ""
+    if related_posts:
+        links_list = "\n".join([
+            f'- Title: "{p["title"]}" | Slug: {p["slug"]}'
+            for p in related_posts
+        ])
+        internal_links_instruction = f"""
+INTERNAL LINKS — naturally reference 1-2 of these related Bonna's blog posts within the body where genuinely relevant. Use this exact marker format: [LINK: slug-here | Anchor text here]
+Example: [LINK: chicken-biryani-recipe | our chicken biryani recipe]
+Related posts available:
+{links_list}
+Only use a link if it fits naturally — never force it."""
+
     prompt = f"""You are an SEO content writer for Bonna's — an authentic Bangladeshi home catering service based in London E2. All food is halal and homemade.
 
 CONTENT TYPE: {content_type}
@@ -284,7 +367,9 @@ Return a JSON object with these exact fields:
 - "trendSource": the trending topic used as hook, or "evergreen" if none used
 - "contentType": "{content_type}"
 
-CRITICAL: Valid JSON only. Body must be a single-line string. Use [PARA] for all breaks."""
+{internal_links_instruction}
+
+CRITICAL: Valid JSON only. Body must be a single-line string. Use [PARA] for all breaks. Keep [LINK:...] markers exactly as shown — they will be converted to real links by the frontend."""
 
     last_error = None
     for attempt in range(1, max_attempts + 1):
@@ -324,11 +409,25 @@ CRITICAL: Valid JSON only. Body must be a single-line string. Use [PARA] for all
 # 6. BODY FORMATTING
 # ---------------------------------------------------------------
 def format_body(body):
-    # Strip markdown bold/italic that Groq sometimes outputs despite instructions
-    body = re.sub(r'\*\*(.+?)\*\*', r'\1', body)  # **bold** → bold
-    body = re.sub(r'\*(.+?)\*', r'\1', body)        # *italic* → italic
-    body = re.sub(r'__(.+?)__', r'\1', body)        # __bold__ → bold
-    body = re.sub(r'_(.+?)_', r'\1', body)          # _italic_ → italic
+    # Strip markdown that Groq outputs despite instructions
+    body = re.sub(r'\*\*(.+?)\*\*', r'\1', body)
+    body = re.sub(r'\*(.+?)\*', r'\1', body)
+    body = re.sub(r'__(.+?)__', r'\1', body)
+    body = re.sub(r'_(.+?)_', r'\1', body)
+
+    # Validate [LINK:] markers are well-formed, remove broken ones
+    # Valid format: [LINK: some-slug | Anchor text]
+    def validate_link(match):
+        content = match.group(1)
+        if "|" in content:
+            parts = content.split("|", 1)
+            slug = parts[0].strip()
+            anchor = parts[1].strip()
+            if slug and anchor:
+                return f"[LINK: {slug} | {anchor}]"
+        return ""  # Remove malformed markers
+
+    body = re.sub(r'\[LINK:\s*([^\]]+)\]', validate_link, body)
 
     if "[PARA]" in body:
         parts = [p.strip() for p in body.split("[PARA]") if p.strip()]
@@ -345,7 +444,6 @@ def format_body(body):
     if chunk:
         paragraphs.append(" ".join(chunk))
     return "\n\n".join(paragraphs)
-
 
 # ---------------------------------------------------------------
 # 7. SLUG
@@ -407,6 +505,9 @@ if __name__ == "__main__":
     print("Selecting topic...")
     content_type, topic = get_target_topic(season_key)
 
+    print("Finding related posts for internal linking...")
+    related_posts = get_related_posts(topic)
+
     print("Resolving image...")
     image = get_image(topic, content_type)
 
@@ -414,12 +515,23 @@ if __name__ == "__main__":
     headlines = fetch_headlines()
 
     print("Generating post with Groq...")
-    post_data = generate_post(headlines, topic, content_type, season_hook)
+    post_data = generate_post(headlines, topic, content_type, season_hook, related_posts)
     print(f"Title: {post_data['title']}")
 
     print("Formatting body...")
     post_data["body"] = format_body(post_data["body"])
 
+    slug = slugify(post_data["title"])
+
     print("Saving to Sanity...")
     post_to_sanity(post_data, image)
+
+    print("Updating post index...")
+    update_post_index(
+        title=post_data["title"],
+        slug=slug,
+        keywords=post_data["keywords"],
+        content_type=content_type,
+    )
+
     print("Done!")
