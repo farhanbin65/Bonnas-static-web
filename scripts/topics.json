@@ -1,74 +1,394 @@
 {
   "recipes": [
-    { "title": "Classic Chicken Biryani", "keywords": ["chicken biryani recipe", "how to make biryani at home"], "season": "all", "used": false },
-    { "title": "Lamb Biryani the Sylheti Way", "keywords": ["lamb biryani recipe uk", "sylheti biryani"], "season": "all", "used": false },
-    { "title": "Beef Rezala — Bengali White Curry", "keywords": ["beef rezala recipe", "bengali white curry"], "season": "all", "used": false },
-    { "title": "Homemade Mishti Doi", "keywords": ["mishti doi recipe", "how to make bengali sweet yoghurt"], "season": "all", "used": false },
-    { "title": "Chicken Tikka Marinade", "keywords": ["chicken tikka recipe", "homemade chicken tikka marinade"], "season": "all", "used": false },
-    { "title": "Shami Kebab from Scratch", "keywords": ["shami kebab recipe", "minced beef kebab recipe uk"], "season": "all", "used": false },
-    { "title": "Dal Tadka Bengali Style", "keywords": ["dal tadka recipe", "bangladeshi lentil recipe"], "season": "all", "used": false },
-    { "title": "Ramadan Iftar Recipes", "keywords": ["ramadan iftar recipes uk", "easy iftar food ideas"], "season": "ramadan", "used": false },
-    { "title": "Eid Lamb Dishes", "keywords": ["eid lamb recipe", "qurbani meat recipe ideas"], "season": "eid_adha", "used": false },
-    { "title": "Firni — Bengali Rice Pudding", "keywords": ["firni recipe", "bengali rice pudding"], "season": "all", "used": false },
-    { "title": "Gulab Jamun at Home", "keywords": ["gulab jamun recipe uk", "easy gulab jamun"], "season": "all", "used": false },
-    { "title": "Bangladeshi Chicken Korma", "keywords": ["chicken korma recipe", "bangladeshi korma"], "season": "all", "used": false }
+    {
+      "title": "Classic Chicken Biryani",
+      "keywords": [
+        "chicken biryani recipe",
+        "how to make biryani at home"
+      ],
+      "season": "all",
+      "used": false
+    },
+    {
+      "title": "Lamb Biryani the Sylheti Way",
+      "keywords": [
+        "lamb biryani recipe uk",
+        "sylheti biryani"
+      ],
+      "season": "all",
+      "used": false
+    },
+    {
+      "title": "Beef Rezala — Bengali White Curry",
+      "keywords": [
+        "beef rezala recipe",
+        "bengali white curry"
+      ],
+      "season": "all",
+      "used": false
+    },
+    {
+      "title": "Homemade Mishti Doi",
+      "keywords": [
+        "mishti doi recipe",
+        "how to make bengali sweet yoghurt"
+      ],
+      "season": "all",
+      "used": false
+    },
+    {
+      "title": "Chicken Tikka Marinade",
+      "keywords": [
+        "chicken tikka recipe",
+        "homemade chicken tikka marinade"
+      ],
+      "season": "all",
+      "used": false
+    },
+    {
+      "title": "Shami Kebab from Scratch",
+      "keywords": [
+        "shami kebab recipe",
+        "minced beef kebab recipe uk"
+      ],
+      "season": "all",
+      "used": false
+    },
+    {
+      "title": "Dal Tadka Bengali Style",
+      "keywords": [
+        "dal tadka recipe",
+        "bangladeshi lentil recipe"
+      ],
+      "season": "all",
+      "used": false
+    },
+    {
+      "title": "Ramadan Iftar Recipes",
+      "keywords": [
+        "ramadan iftar recipes uk",
+        "easy iftar food ideas"
+      ],
+      "season": "ramadan",
+      "used": false
+    },
+    {
+      "title": "Eid Lamb Dishes",
+      "keywords": [
+        "eid lamb recipe",
+        "qurbani meat recipe ideas"
+      ],
+      "season": "eid_adha",
+      "used": false
+    },
+    {
+      "title": "Firni — Bengali Rice Pudding",
+      "keywords": [
+        "firni recipe",
+        "bengali rice pudding"
+      ],
+      "season": "all",
+      "used": false
+    },
+    {
+      "title": "Gulab Jamun at Home",
+      "keywords": [
+        "gulab jamun recipe uk",
+        "easy gulab jamun"
+      ],
+      "season": "all",
+      "used": false
+    },
+    {
+      "title": "Bangladeshi Chicken Korma",
+      "keywords": [
+        "chicken korma recipe",
+        "bangladeshi korma"
+      ],
+      "season": "all",
+      "used": false
+    }
   ],
   "history": [
-    { "title": "The Origins of Biryani", "keywords": ["history of biryani", "where did biryani come from"], "season": "all", "used": false },
-    { "title": "Bengali Sweet Culture — Mishti", "keywords": ["bengali sweets history", "mishti culture bangladesh"], "season": "all", "used": false },
-    { "title": "Bangladeshi Food in East London", "keywords": ["bangladeshi food east london history", "brick lane food history"], "season": "all", "used": false },
-    { "title": "The Story of Sylheti Cooking", "keywords": ["sylheti cuisine history", "sylheti food culture"], "season": "all", "used": false },
-    { "title": "How Halal Food Became Mainstream in the UK", "keywords": ["halal food uk history", "halal food britain"], "season": "all", "used": false },
-    { "title": "Pohela Boishakh — Bengali New Year Food Traditions", "keywords": ["pohela boishakh food", "bengali new year traditions"], "season": "boishakh", "used": false },
-    { "title": "The History of Kebabs in South Asia", "keywords": ["kebab history south asia", "origin of shami kebab"], "season": "all", "used": false }
+    {
+      "title": "The Origins of Biryani",
+      "keywords": [
+        "history of biryani",
+        "where did biryani come from"
+      ],
+      "season": "all",
+      "used": false
+    },
+    {
+      "title": "Bengali Sweet Culture — Mishti",
+      "keywords": [
+        "bengali sweets history",
+        "mishti culture bangladesh"
+      ],
+      "season": "all",
+      "used": false
+    },
+    {
+      "title": "Bangladeshi Food in East London",
+      "keywords": [
+        "bangladeshi food east london history",
+        "brick lane food history"
+      ],
+      "season": "all",
+      "used": false
+    },
+    {
+      "title": "The Story of Sylheti Cooking",
+      "keywords": [
+        "sylheti cuisine history",
+        "sylheti food culture"
+      ],
+      "season": "all",
+      "used": false
+    },
+    {
+      "title": "How Halal Food Became Mainstream in the UK",
+      "keywords": [
+        "halal food uk history",
+        "halal food britain"
+      ],
+      "season": "all",
+      "used": false
+    },
+    {
+      "title": "Pohela Boishakh — Bengali New Year Food Traditions",
+      "keywords": [
+        "pohela boishakh food",
+        "bengali new year traditions"
+      ],
+      "season": "boishakh",
+      "used": false
+    },
+    {
+      "title": "The History of Kebabs in South Asia",
+      "keywords": [
+        "kebab history south asia",
+        "origin of shami kebab"
+      ],
+      "season": "all",
+      "used": false
+    }
   ],
   "stories": [
-    { "title": "Why Bonna's Started in East London", "keywords": ["bangladeshi home catering london", "bonnas catering story"], "season": "all", "used": false },
-    { "title": "What Makes Home Cooked Food Different", "keywords": ["home cooked food vs restaurant", "why home cooked food is better"], "season": "all", "used": false },
-    { "title": "Cooking for a Community — Catering for Bangladeshi Events", "keywords": ["bangladeshi event catering london", "community catering london"], "season": "all", "used": false },
-    { "title": "From Our Kitchen to Your Table", "keywords": ["halal home catering london", "bespoke catering london"], "season": "all", "used": false }
+    {
+      "title": "Why Bonna's Started in East London",
+      "keywords": [
+        "bangladeshi home catering london",
+        "bonnas catering story"
+      ],
+      "season": "all",
+      "used": false
+    },
+    {
+      "title": "What Makes Home Cooked Food Different",
+      "keywords": [
+        "home cooked food vs restaurant",
+        "why home cooked food is better"
+      ],
+      "season": "all",
+      "used": false
+    },
+    {
+      "title": "Cooking for a Community — Catering for Bangladeshi Events",
+      "keywords": [
+        "bangladeshi event catering london",
+        "community catering london"
+      ],
+      "season": "all",
+      "used": false
+    },
+    {
+      "title": "From Our Kitchen to Your Table",
+      "keywords": [
+        "halal home catering london",
+        "bespoke catering london"
+      ],
+      "season": "all",
+      "used": false
+    }
   ],
   "guides": [
-    { "title": "How to Plan a Bangladeshi Wedding Menu", "keywords": ["bangladeshi wedding catering", "muslim wedding food menu uk"], "season": "all", "used": false },
-    { "title": "How Much Does Catering Cost for 50 People in London", "keywords": ["catering cost 50 people london", "party catering prices uk"], "season": "all", "used": false },
-    { "title": "What to Serve at a Halal Party in London", "keywords": ["halal party food ideas london", "what to serve at muslim party"], "season": "all", "used": false },
-    { "title": "Eid Party Food Guide — What to Order", "keywords": ["eid party food ideas", "eid catering london"], "season": "eid_fitr", "used": false },
-    { "title": "Office Party Food — Halal Options in London", "keywords": ["halal office party food london", "bangladeshi food for office party"], "season": "all", "used": false },
-    { "title": "Best Bangladeshi Dishes to Try in London", "keywords": ["best bangladeshi dishes to try", "bangladeshi food london"], "season": "all", "used": false },
-    { "title": "How to Order Catering Online in London", "keywords": ["order catering online london", "halal catering delivery london"], "season": "all", "used": false },
-    { "title": "Ramadan Catering Guide for London", "keywords": ["ramadan catering london", "iftar catering east london"], "season": "ramadan", "used": false },
-    { "title": "Nikkah Reception Food Ideas", "keywords": ["nikkah catering london", "muslim wedding reception food uk"], "season": "all", "used": false },
-    { "title": "Bengali Food for Non-Bangladeshi Guests", "keywords": ["introducing bangladeshi food", "bengali food for beginners"], "season": "all", "used": false }
+    {
+      "title": "How to Plan a Bangladeshi Wedding Menu",
+      "keywords": [
+        "bangladeshi wedding catering",
+        "muslim wedding food menu uk"
+      ],
+      "season": "all",
+      "used": false
+    },
+    {
+      "title": "How Much Does Catering Cost for 50 People in London",
+      "keywords": [
+        "catering cost 50 people london",
+        "party catering prices uk"
+      ],
+      "season": "all",
+      "used": false
+    },
+    {
+      "title": "What to Serve at a Halal Party in London",
+      "keywords": [
+        "halal party food ideas london",
+        "what to serve at muslim party"
+      ],
+      "season": "all",
+      "used": false
+    },
+    {
+      "title": "Eid Party Food Guide — What to Order",
+      "keywords": [
+        "eid party food ideas",
+        "eid catering london"
+      ],
+      "season": "eid_fitr",
+      "used": false
+    },
+    {
+      "title": "Office Party Food — Halal Options in London",
+      "keywords": [
+        "halal office party food london",
+        "bangladeshi food for office party"
+      ],
+      "season": "all",
+      "used": false
+    },
+    {
+      "title": "Best Bangladeshi Dishes to Try in London",
+      "keywords": [
+        "best bangladeshi dishes to try",
+        "bangladeshi food london"
+      ],
+      "season": "all",
+      "used": false
+    },
+    {
+      "title": "How to Order Catering Online in London",
+      "keywords": [
+        "order catering online london",
+        "halal catering delivery london"
+      ],
+      "season": "all",
+      "used": false
+    },
+    {
+      "title": "Ramadan Catering Guide for London",
+      "keywords": [
+        "ramadan catering london",
+        "iftar catering east london"
+      ],
+      "season": "ramadan",
+      "used": false
+    },
+    {
+      "title": "Nikkah Reception Food Ideas",
+      "keywords": [
+        "nikkah catering london",
+        "muslim wedding reception food uk"
+      ],
+      "season": "all",
+      "used": false
+    },
+    {
+      "title": "Bengali Food for Non-Bangladeshi Guests",
+      "keywords": [
+        "introducing bangladeshi food",
+        "bengali food for beginners"
+      ],
+      "season": "all",
+      "used": false
+    }
   ],
   "local": [
-    { "title": "Best Halal Catering in East London", "keywords": ["halal catering east london", "bangladeshi catering bethnal green"], "season": "all", "used": false },
-    { "title": "Bangladeshi Food Delivery in Tower Hamlets", "keywords": ["bangladeshi food delivery tower hamlets", "halal food delivery e2"], "season": "all", "used": false },
-    { "title": "Catering Near Bethnal Green", "keywords": ["catering bethnal green london", "food catering e2 london"], "season": "all", "used": false },
-    { "title": "Halal Home Cooked Food Delivery in Hackney", "keywords": ["halal food delivery hackney", "home cooked food hackney"], "season": "all", "used": false },
-    { "title": "Bengali Community Events Food in London", "keywords": ["bengali community catering london", "south asian event catering london"], "season": "all", "used": false }
+    {
+      "title": "Best Halal Catering in East London",
+      "keywords": [
+        "halal catering east london",
+        "bangladeshi catering bethnal green"
+      ],
+      "season": "all",
+      "used": false
+    },
+    {
+      "title": "Bangladeshi Food Delivery in Tower Hamlets",
+      "keywords": [
+        "bangladeshi food delivery tower hamlets",
+        "halal food delivery e2"
+      ],
+      "season": "all",
+      "used": false
+    },
+    {
+      "title": "Catering Near Bethnal Green",
+      "keywords": [
+        "catering bethnal green london",
+        "food catering e2 london"
+      ],
+      "season": "all",
+      "used": false
+    },
+    {
+      "title": "Halal Home Cooked Food Delivery in Hackney",
+      "keywords": [
+        "halal food delivery hackney",
+        "home cooked food hackney"
+      ],
+      "season": "all",
+      "used": false
+    },
+    {
+      "title": "Bengali Community Events Food in London",
+      "keywords": [
+        "bengali community catering london",
+        "south asian event catering london"
+      ],
+      "season": "all",
+      "used": false
+    }
   ],
   "restaurant_seo": [
     {
       "title": "Bengali Home Cooking vs Bengali Restaurants in London — Which Is Better?",
-      "keywords": ["bengali restaurant london", "bengali home cooked food london", "best bengali food london"],
+      "keywords": [
+        "bengali restaurant london",
+        "bengali home cooked food london",
+        "best bengali food london"
+      ],
       "season": "all",
       "used": false
     },
     {
       "title": "Authentic Bangladeshi Food in London — Where to Find It",
-      "keywords": ["authentic bangladeshi food london", "bangladeshi cuisine london", "real bangladeshi food london"],
+      "keywords": [
+        "authentic bangladeshi food london",
+        "bangladeshi cuisine london",
+        "real bangladeshi food london"
+      ],
       "season": "all",
       "used": false
     },
     {
       "title": "Halal Bengali Food in London — A Complete Guide",
-      "keywords": ["halal bengali restaurant london", "halal bangladeshi food london", "muslim friendly food london"],
+      "keywords": [
+        "halal bengali restaurant london",
+        "halal bangladeshi food london",
+        "muslim friendly food london"
+      ],
       "season": "all",
       "used": false
     },
     {
       "title": "Beyond Brick Lane — Authentic Bengali Home Cooking in East London",
-      "keywords": ["brick lane bangladeshi food", "east london bengali food", "authentic bengali east london"],
+      "keywords": [
+        "brick lane bangladeshi food",
+        "east london bengali food",
+        "authentic bengali east london"
+      ],
       "season": "all",
       "used": false
     }
@@ -76,25 +396,41 @@
   "local_restaurant": [
     {
       "title": "Bengali Food Near Bethnal Green — What Are Your Options?",
-      "keywords": ["bengali food bethnal green", "bangladeshi restaurant bethnal green", "halal food bethnal green"],
+      "keywords": [
+        "bengali food bethnal green",
+        "bangladeshi restaurant bethnal green",
+        "halal food bethnal green"
+      ],
       "season": "all",
       "used": false
     },
     {
       "title": "Best Halal Food Near Whitechapel and Tower Hamlets",
-      "keywords": ["halal food whitechapel", "bangladeshi restaurant tower hamlets", "restaurant near whitechapel"],
+      "keywords": [
+        "halal food whitechapel",
+        "bangladeshi restaurant tower hamlets",
+        "restaurant near whitechapel"
+      ],
       "season": "all",
       "used": false
     },
     {
       "title": "Sylheti Food in East London — A Local Guide",
-      "keywords": ["sylheti restaurant london", "sylheti food east london", "authentic sylheti dishes london"],
+      "keywords": [
+        "sylheti restaurant london",
+        "sylheti food east london",
+        "authentic sylheti dishes london"
+      ],
       "season": "all",
       "used": false
     },
     {
       "title": "Family Halal Catering in East London",
-      "keywords": ["family halal catering east london", "halal catering east london", "family food delivery east london"],
+      "keywords": [
+        "family halal catering east london",
+        "halal catering east london",
+        "family food delivery east london"
+      ],
       "season": "all",
       "used": false
     }
@@ -102,69 +438,113 @@
   "listicles": [
     {
       "title": "10 Bengali Dishes Every London Food Lover Should Try",
-      "keywords": ["best bengali dishes", "bengali food london", "traditional bangladeshi food to try"],
+      "keywords": [
+        "best bengali dishes",
+        "bengali food london",
+        "traditional bangladeshi food to try"
+      ],
       "season": "all",
       "used": false
     },
     {
       "title": "7 Reasons to Choose Home Catering Over a Restaurant for Your Next Event",
-      "keywords": ["home catering vs restaurant london", "why choose home catering", "catering for events london"],
+      "keywords": [
+        "home catering vs restaurant london",
+        "why choose home catering",
+        "catering for events london"
+      ],
       "season": "all",
       "used": false
     },
     {
       "title": "5 Must-Try Bangladeshi Street Foods You Can Recreate at Home",
-      "keywords": ["bangladeshi street food", "bengali street food recipes", "desi street food london"],
+      "keywords": [
+        "bangladeshi street food",
+        "bengali street food recipes",
+        "desi street food london"
+      ],
       "season": "all",
       "used": false
     },
     {
       "title": "8 Bengali Dishes Perfect for Large Gatherings",
-      "keywords": ["bangladeshi food for large groups", "bengali party food", "catering food ideas bangladesh"],
+      "keywords": [
+        "bangladeshi food for large groups",
+        "bengali party food",
+        "catering food ideas bangladesh"
+      ],
       "season": "all",
       "used": false
     },
     {
       "title": "Top 5 Halal Catering Options for Weddings in London",
-      "keywords": ["halal wedding catering london", "muslim wedding food london", "bangladeshi wedding catering"],
+      "keywords": [
+        "halal wedding catering london",
+        "muslim wedding food london",
+        "bangladeshi wedding catering"
+      ],
       "season": "all",
-      "used": false
+      "used": true
     }
   ],
   "deep_dives": [
     {
       "title": "What Is Shorshe Ilish? Bengal's Most Famous Fish Dish Explained",
-      "keywords": ["shorshe ilish", "hilsa fish curry", "bengali fish dishes london"],
+      "keywords": [
+        "shorshe ilish",
+        "hilsa fish curry",
+        "bengali fish dishes london"
+      ],
       "season": "all",
       "used": false
     },
     {
       "title": "What Is Bhuna? The Bengali Cooking Technique Behind the Best Curries",
-      "keywords": ["what is bhuna", "bhuna curry london", "bengali bhuna cooking"],
+      "keywords": [
+        "what is bhuna",
+        "bhuna curry london",
+        "bengali bhuna cooking"
+      ],
       "season": "all",
       "used": false
     },
     {
       "title": "Mishti Doi — Everything You Need to Know About Bengal's Famous Sweet Yoghurt",
-      "keywords": ["mishti doi", "bengali sweet yoghurt", "what is mishti doi"],
+      "keywords": [
+        "mishti doi",
+        "bengali sweet yoghurt",
+        "what is mishti doi"
+      ],
       "season": "all",
       "used": false
     },
     {
       "title": "What Makes Sylheti Cooking Different from Other Bengali Cuisine?",
-      "keywords": ["sylheti cuisine", "sylheti food vs bengali food", "authentic sylheti dishes"],
+      "keywords": [
+        "sylheti cuisine",
+        "sylheti food vs bengali food",
+        "authentic sylheti dishes"
+      ],
       "season": "all",
       "used": false
     },
     {
       "title": "Haleem — The Ultimate Winter Comfort Food from Bangladesh",
-      "keywords": ["haleem recipe uk", "bangladeshi haleem london", "what is haleem"],
+      "keywords": [
+        "haleem recipe uk",
+        "bangladeshi haleem london",
+        "what is haleem"
+      ],
       "season": "winter",
       "used": false
     },
     {
       "title": "Ilish Mach — Why Hilsa Fish Is the Soul of Bengali Cuisine",
-      "keywords": ["ilish fish london", "hilsa fish bengali", "bangladeshi fish curry"],
+      "keywords": [
+        "ilish fish london",
+        "hilsa fish bengali",
+        "bangladeshi fish curry"
+      ],
       "season": "all",
       "used": false
     }
