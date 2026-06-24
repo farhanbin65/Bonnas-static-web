@@ -8,17 +8,17 @@
     {
       "keyword": "bengali wedding catering",
       "intent": "commercial",
-      "used": false
+      "used": true
     },
     {
       "keyword": "biryani catering for party london",
       "intent": "commercial",
-      "used": false
+      "used": true
     },
     {
       "keyword": "what is bhuna",
       "intent": "informational",
-      "used": false
+      "used": true
     },
     {
       "keyword": "bangladeshi food for office party",
@@ -43,7 +43,7 @@
     {
       "keyword": "ramadan iftar catering london",
       "intent": "commercial",
-      "used": false
+      "used": true
     },
     {
       "keyword": "eid party food ideas",
