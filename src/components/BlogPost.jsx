@@ -8,17 +8,18 @@ export default function BlogPost() {
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    client
-      .fetch(
-        `*[_type == "blogPost" && slug.current == $slug][0] {
-          title, excerpt, body, publishedAt, keywords, trendSource, slug
-        }`,
-        { slug }
-      )
-      .then((data) => { setPost(data); setLoading(false); })
-      .catch(() => setLoading(false));
-  }, [slug]);
+useEffect(() => {
+  client
+    .fetch(
+      `*[_type == "blogPost" && slug.current == $slug][0] {
+        title, excerpt, body, publishedAt, keywords, trendSource, slug,
+        featuredImageUrl, featuredImageAlt, imageSource, contentType
+      }`,
+      { slug }
+    )
+    .then((data) => { setPost(data); setLoading(false); })
+    .catch(() => setLoading(false));
+}, [slug]);
 
   if (loading) return (
     <div className="min-h-screen bg-night flex items-center justify-center">
@@ -168,6 +169,21 @@ export default function BlogPost() {
               </p>
             </div>
           </div>
+
+          {post.featuredImageUrl && (
+            <div className="rounded-2xl overflow-hidden border border-gold-dust mb-8">
+              <img
+                src={post.featuredImageUrl}
+                alt={post.featuredImageAlt || post.title}
+                className="w-full h-64 md:h-80 object-cover"
+              />
+              {post.imageSource && post.imageSource !== "local" && (
+                <p className="text-xs text-sand/50 text-right px-3 py-1">
+                  Photo via {post.imageSource === "unsplash" ? "Unsplash" : "Pexels"}
+                </p>
+              )}
+            </div>
+          )}
 
           <p className="text-pink-bonnas/80 text-base italic mb-8 leading-relaxed">
             {post.excerpt}

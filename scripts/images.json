@@ -1,0 +1,71 @@
+{
+  "local_images": [
+    {
+      "path": "/photos/f1.jpeg",
+      "alt": "Bonna's home cooked Bangladeshi food in serving bowl",
+      "tags": ["bangladeshi food", "home cooked", "catering", "serving", "main course"],
+      "used_in": []
+    },
+    {
+      "path": "/photos/f2.jpeg",
+      "alt": "Fresh Bengali food prepared by Bonna's kitchen",
+      "tags": ["bengali food", "fresh food", "kitchen", "home cooking"],
+      "used_in": []
+    },
+    {
+      "path": "/photos/f3.jpeg",
+      "alt": "Bonna's catering spread for a London event",
+      "tags": ["catering", "event food", "spread", "party food", "london"],
+      "used_in": []
+    },
+    {
+      "path": "/photos/f4.jpeg",
+      "alt": "Bonna's signature dish — halal home cooking London",
+      "tags": ["halal food", "signature dish", "home cooking", "london"],
+      "used_in": []
+    },
+    {
+      "path": "/photos/f5.jpeg",
+      "alt": "Bangladeshi meal prepared fresh for delivery",
+      "tags": ["bangladeshi meal", "food delivery", "fresh", "halal"],
+      "used_in": []
+    },
+    {
+      "path": "/photos/f6.jpeg",
+      "alt": "Bonna's kitchen food preparation",
+      "tags": ["kitchen", "food preparation", "cooking", "bangladeshi"],
+      "used_in": []
+    },
+    {
+      "path": "/photos/f8.jpeg",
+      "alt": "Bonna's homemade food close up",
+      "tags": ["homemade", "close up", "food photography", "bangladeshi"],
+      "used_in": []
+    },
+    {
+      "path": "/photos/s1.jpeg",
+      "alt": "Party catering food by Bonna's — London",
+      "tags": ["party food", "catering", "event", "london", "celebration"],
+      "used_in": []
+    },
+    {
+      "path": "/photos/s3.jpeg",
+      "alt": "Weekly meal service — Bonna's home cooked food",
+      "tags": ["weekly meals", "meal service", "home cooked", "regular"],
+      "used_in": []
+    },
+    {
+      "path": "/photos/s4.jpeg",
+      "alt": "Special occasion catering — Bonna's London",
+      "tags": ["special occasion", "wedding", "eid", "celebration", "catering"],
+      "used_in": []
+    },
+    {
+      "path": "/photos/s5.jpeg",
+      "alt": "Bonna's food gallery — authentic Bengali cooking",
+      "tags": ["bengali cooking", "authentic", "gallery", "food"],
+      "used_in": []
+    }
+  ],
+  "fallback": "unsplash"
+}

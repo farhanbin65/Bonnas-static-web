@@ -36,7 +36,7 @@ export default function MenuTeaser() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-5 items-start">
+        <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-5 items-start">
           {FEATURED.map((item) => (
             <div key={item._id} className="bg-night rounded-2xl overflow-hidden border border-gold-dust hover:border-pink-bonnas/50 transition-colors">
 
@@ -44,12 +44,12 @@ export default function MenuTeaser() {
                 <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
               </div>
 
-              <div className="p-4 h-28 flex flex-col justify-between">
+              <div className="p-4 h-28 flex flex-col justify-between gap-2">
                 <div>
                   <span className="text-xs text-pink-bonnas/70 font-medium">{item.category}</span>
                   <h3 className="font-semibold text-cream text-sm leading-snug mt-0.5 line-clamp-1">{item.name}</h3>
                 </div>
-                <div className="flex items-center justify-between pt-3 border-t border-gold-dust">
+                <div className="flex items-center justify-between gap-2 pt-3 border-t border-gold-dust">
                   <span className="text-pink-bonnas font-bold text-sm">£{item.price.toFixed(2)}</span>
                   <button
                     onClick={() => handleOrderClick(item)}

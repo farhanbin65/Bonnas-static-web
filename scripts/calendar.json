@@ -1,0 +1,39 @@
+{
+  "events": [
+    {
+      "name": "Ramadan 2027",
+      "season_key": "ramadan",
+      "start": "2027-02-17",
+      "publish_window_days_before": 21,
+      "hook": "With Ramadan approaching, families across London are planning their iftar meals."
+    },
+    {
+      "name": "Eid ul-Fitr 2027",
+      "season_key": "eid_fitr",
+      "start": "2027-03-20",
+      "publish_window_days_before": 14,
+      "hook": "Eid celebrations are just around the corner — the perfect time to plan your feast."
+    },
+    {
+      "name": "Eid ul-Adha 2027",
+      "season_key": "eid_adha",
+      "start": "2027-05-27",
+      "publish_window_days_before": 14,
+      "hook": "Eid ul-Adha is almost here — a time for sharing, giving, and of course, incredible food."
+    },
+    {
+      "name": "Pohela Boishakh 2027",
+      "season_key": "boishakh",
+      "start": "2027-04-14",
+      "publish_window_days_before": 10,
+      "hook": "Pohela Boishakh — Bengali New Year — is a celebration of culture, community and food."
+    },
+    {
+    "name": "Winter",
+    "season_key": "winter",
+    "start": "2026-11-01",
+    "publish_window_days_before": 14,
+    "hook": "As the cold sets in across London, nothing beats warming Bengali comfort food."
+    }
+  ]
+}
