@@ -14,6 +14,35 @@ export default {
     { name: "featuredImageAlt", title: "Featured Image Alt", type: "string" },
     { name: "imageSource",      title: "Image Source",       type: "string" },
     { name: "contentType",      title: "Content Type",       type: "string" },
+
+    {
+      name:  "directAnswer",
+      title: "Direct Answer",
+      type:  "object",
+      fields: [
+        { name: "question", title: "Customer Question", type: "string" },
+        { name: "answer",   title: "Bonna's Answer",    type: "text", rows: 3 },
+      ],
+    },
+
+    {
+      name:  "faqs",
+      title: "FAQs",
+      type:  "array",
+      of: [
+        {
+          type: "object",
+          fields: [
+            { name: "question", title: "Question", type: "string" },
+            { name: "answer",   title: "Answer",   type: "text", rows: 3 },
+          ],
+          preview: {
+            select: { title: "question" },
+          },
+        },
+      ],
+    },
+
   ],
   preview: { select: { title: "title", subtitle: "publishedAt" } },
 }
