@@ -279,7 +279,7 @@ Today's trending UK food topics (INSPIRATION ONLY — weave in as a hook if genu
 Return a JSON object with these exact fields:
 - "title": SEO title based on the post title above, max 65 characters, written like a real search result. Must contain the primary keyword naturally.
 - "excerpt": meta description 150-160 characters, contains primary keyword, makes reader want to click
-- "body": full blog post, 700-1000 words. Primary keyword in first 100 words and 3-5 times total. {structure_instruction} Use [PARA] as the ONLY separator — no real line breaks, no markdown, no asterisks.
+- "body": full blog post, 700-1000 words. Primary keyword in first 100 words and 3-5 times total. {structure_instruction} Use [PARA] as the ONLY separator — ABSOLUTELY NO markdown of any kind. No asterisks (*), no double asterisks (**), no underscores (_), no hash symbols (#). Plain prose only.
 - "keywords": array of 4 strings — first must be exactly "{primary_keyword}", then 3 natural search variations
 - "trendSource": the trending topic used as hook, or "evergreen" if none used
 - "contentType": "{content_type}"
@@ -324,6 +324,12 @@ CRITICAL: Valid JSON only. Body must be a single-line string. Use [PARA] for all
 # 6. BODY FORMATTING
 # ---------------------------------------------------------------
 def format_body(body):
+    # Strip markdown bold/italic that Groq sometimes outputs despite instructions
+    body = re.sub(r'\*\*(.+?)\*\*', r'\1', body)  # **bold** → bold
+    body = re.sub(r'\*(.+?)\*', r'\1', body)        # *italic* → italic
+    body = re.sub(r'__(.+?)__', r'\1', body)        # __bold__ → bold
+    body = re.sub(r'_(.+?)_', r'\1', body)          # _italic_ → italic
+
     if "[PARA]" in body:
         parts = [p.strip() for p in body.split("[PARA]") if p.strip()]
         return "\n\n".join(parts)
