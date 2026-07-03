@@ -65,7 +65,67 @@
       "alt": "Bonna's food gallery — authentic Bengali cooking",
       "tags": ["bengali cooking", "authentic", "gallery", "food"],
       "used_in": []
-    }
+    },
+    {
+  "path": "/photos/a1.jpeg",
+  "alt": "Bonna's fried rice with tandoori chicken and mixed salad — halal home cooked food London",
+  "tags": ["fried rice", "tandoori chicken", "mixed salad", "rice dish", "grilled chicken", "salad", "halal", "home cooked", "bangladeshi food", "main course", "party food"],
+  "used_in": []
+},
+{
+  "path": "/photos/a2.jpeg",
+  "alt": "Crispy homemade patties — chicken, beef and vegetable pastry snacks by Bonna's",
+  "tags": ["patties", "pastry", "chicken patties", "beef patties", "vegetable patties", "snack", "crispy", "fluffy", "starter", "street food", "bangladeshi snack", "party food"],
+  "used_in": []
+},
+{
+  "path": "/photos/a3.jpeg",
+  "alt": "Bengali faluda dessert — mixed fruit faluda and ice cream faluda by Bonna's",
+  "tags": ["faluda", "fruit faluda", "ice cream faluda", "dessert", "bengali dessert", "sweet", "cold dessert", "bangladeshi sweet", "drinks", "milkshake"],
+  "used_in": []
+},
+{
+  "path": "/photos/a4.jpeg",
+  "alt": "Bengali sweets — rosogolla, gulab jamun and kalo jam by Bonna's kitchen",
+  "tags": ["rosogolla", "gulab jamun", "kalo jam", "bengali sweets", "mishti", "dessert", "bangladeshi sweet", "eid food", "celebration sweet", "syrup sweet", "traditional sweet"],
+  "used_in": []
+},
+{
+  "path": "/photos/a5.jpeg",
+  "alt": "Homemade singara and samosa — chicken, beef and vegetable snacks by Bonna's",
+  "tags": ["singara", "samosa", "chicken samosa", "beef samosa", "vegetable samosa", "snack", "starter", "street food", "bangladeshi snack", "party food", "fried snack", "iftar food"],
+  "used_in": []
+},
+{
+  "path": "/photos/a6.jpeg",
+  "alt": "Shish kebab and kathi kebab — beef, lamb and chicken tandoori kebab by Bonna's",
+  "tags": ["shish kebab", "kathi kebab", "tandoori kebab", "beef kebab", "lamb kebab", "chicken kebab", "grilled meat", "starter", "party food", "barbecue", "bangladeshi kebab", "eid food"],
+  "used_in": []
+},
+{
+  "path": "/photos/a7.jpeg",
+  "alt": "Bengali fish curry — kosha mach and rui mach, traditional Bangladeshi fish dish",
+  "tags": ["fish curry", "mach", "kosha mach", "rui mach", "bengali fish", "bangladeshi fish curry", "traditional fish dish", "hilsa", "river fish", "main course", "halal", "sylheti fish"],
+  "used_in": []
+},
+{
+  "path": "/photos/a8.jpeg",
+  "alt": "Plain polao — fragrant basmati rice cooked Bengali style by Bonna's kitchen",
+  "tags": ["polao", "plain polao", "basmati rice", "bengali rice", "rice dish", "side dish", "bangladeshi polao", "wedding food", "eid food", "celebration food", "fragrant rice"],
+  "used_in": []
+},
+{
+  "path": "/photos/a9.jpeg",
+  "alt": "Homemade momos — chicken, lamb and vegetable dumplings with chutney sauce by Bonna's",
+  "tags": ["momos", "dumplings", "chicken momos", "lamb momos", "beef momos", "vegetable momos", "chatni", "chutney", "momo sauce", "snack", "starter", "street food", "party food"],
+  "used_in": []
+},
+{
+  "path": "/photos/a10.jpeg",
+  "alt": "Tandoori chicken wings — crispy spiced chicken wings by Bonna's halal kitchen",
+  "tags": ["chicken wings", "tandoori chicken", "crispy chicken", "grilled chicken", "spiced chicken", "starter", "party food", "halal chicken", "bbq chicken", "bangladeshi chicken", "eid food"],
+  "used_in": []
+}
   ],
   "fallback": "unsplash"
 }
