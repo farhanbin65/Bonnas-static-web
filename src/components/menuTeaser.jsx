@@ -2,11 +2,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 
 const FEATURED = [
-  { _id: "bir1", name: "Chicken Biryani", category: "Biryani",  price: 12.00, image: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=400&h=220&fit=crop&auto=format" },
-  { _id: "sta2", name: "Chicken Tikka",   category: "Starter",  price: 7.00,  image: "https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=400&h=220&fit=crop&auto=format" },
+  { _id: "bir1", name: "Chicken Biryani", category: "Biryani",  price: 12.00, image: "/photos/a1.jpeg" },
+  { _id: "sta2", name: "Chicken Tikka",   category: "Starter",  price: 7.00,  image: "/photos/a5.jpeg" },
   { _id: "dss1", name: "Mishti Doi",      category: "Dessert",  price: 3.50,  image: "https://images.unsplash.com/photo-1574894709920-11b28e7367e3?w=400&h=220&fit=crop&auto=format" },
   { _id: "bir2", name: "Lamb Biryani",    category: "Biryani",  price: 14.00, image: "https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=400&h=220&fit=crop&auto=format" },
-  { _id: "sta1", name: "Samosa (4 pcs)",  category: "Starter",  price: 4.50,  image: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400&h=220&fit=crop&auto=format" },
+  { _id: "sta1", name: "Samosa (4 pcs)",  category: "Starter",  price: 4.50,  image: "/photos/a10.jpeg" },
   { _id: "des1", name: "Chicken Curry",   category: "Desi's",   price: 10.00, image: "https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=400&h=220&fit=crop&auto=format" },
 ];
 // Note: Party/Family packages removed from this list since they require

@@ -7,25 +7,25 @@ const SERVICES = [
   {
     title: "Home Catering",
     description: "Freshly prepared meals delivered straight to your door for any occasion.",
-    img: "/photos/f4.jpeg",
+    img: "/photos/a6.jpeg",
     Icon: Home,
   },
   {
     title: "Party Orders",
     description: "Feeding a crowd? Our party packages cover starters, mains, biryani and desserts.",
-    img: "/photos/s1.jpeg",
+    img: "/photos/a7.jpeg",
     Icon: PartyPopper,
   },
   {
     title: "Weekly Meal Service",
     description: "Regular weekly meals prepared fresh — perfect for busy families.",
-    img: "/photos/s3.jpeg",
+    img: "/photos/a8.jpeg",
     Icon: CalendarDays,
   },
   {
     title: "Special Occasions",
     description: "Weddings, Eid gatherings, birthdays — we cater for your most important moments.",
-    img: "/photos/s4.jpeg",
+    img: "/photos/a9.jpeg",
     Icon: Sparkles,
   },
 ];

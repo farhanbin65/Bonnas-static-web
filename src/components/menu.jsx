@@ -17,7 +17,7 @@ const CATEGORIES = [
 ];
 
 const MENU_ITEMS = [
-  { _id: "pkg1", name: "Party Package", category: "packages", description: "Feeds 10–12 guests. Includes 2 mains, biryani, starter & dessert.", image: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=400&h=220&fit=crop&auto=format", variants: [{ label: "Chicken", price: 85.00 }, { label: "Lamb", price: 95.00 }, { label: "Mixed", price: 99.00 }] },
+  { _id: "pkg1", name: "Party Package", category: "packages", description: "Feeds 10–12 guests. Includes 2 mains, biryani, starter & dessert.", image: "/photos/a1.jpeg", variants: [{ label: "Chicken", price: 85.00 }, { label: "Lamb", price: 95.00 }, { label: "Mixed", price: 99.00 }] },
   { _id: "pkg2", name: "Family Package", category: "packages", description: "Feeds 4–5 people. Includes 1 main, biryani & dessert.", image: "https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=400&h=220&fit=crop&auto=format", variants: [{ label: "Chicken", price: 35.00 }, { label: "Lamb", price: 42.00 }] },
   { _id: "bir1", name: "Chicken Biryani", category: "biriyani", price: 12.00, description: "Fragrant basmati layered with tender chicken, saffron & whole spices.", image: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=400&h=220&fit=crop&auto=format" },
   { _id: "bir2", name: "Lamb Biryani",    category: "biriyani", price: 14.00, description: "Slow-cooked Sylheti lamb on aged basmati, sealed and finished in deg.", image: "https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=400&h=220&fit=crop&auto=format" },
