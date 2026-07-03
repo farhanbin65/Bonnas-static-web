@@ -5,14 +5,14 @@ import { fadeUp, staggerContainer, staggerItem, scrollRevealViewport } from "../
 import TiltCard from "./TiltCard";
 
 const PHOTOS = [
-  "/photos/f1.jpeg",
-  "/photos/f2.jpeg",
-  "/photos/f3.jpeg",
-  "/photos/f4.jpeg",
-  "/photos/f5.jpeg",
-  "/photos/f6.jpeg",
-  "/photos/s5.jpeg",
-  "/photos/f8.jpeg",
+  "/photos/a1.jpeg",
+  "/photos/a2.jpeg",
+  "/photos/a3.jpeg",
+  "/photos/a4.jpeg",
+  "/photos/a5.jpeg",
+  "/photos/a6.jpeg",
+  "/photos/a7.jpeg",
+  "/photos/a8.jpeg",
 ];
 
 export default function Gallery() {
