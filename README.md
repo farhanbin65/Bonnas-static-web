@@ -10,7 +10,7 @@ A full-stack restaurant website for **Bonna's**, a home-based Bangladeshi cateri
 
 ---
 
-## ✨ Features
+##  Features
 
 - **Dark Pink Brand Theme** — custom Tailwind palette built around the Bonna's logo (`#F2A8B5`)
 - **Hero Carousel** — auto-rotating full-screen food photography with CTA
