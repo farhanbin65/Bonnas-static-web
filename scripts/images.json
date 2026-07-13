@@ -20,26 +20,32 @@
     },
     {
       "path": "/photos/f4.jpeg",
-      "alt": "Bonna's signature dish — halal home cooking London",
-      "tags": ["halal food", "signature dish", "home cooking", "london"],
+      "alt": "Bonna's lamb biryani — authentic Bengali dam biryani and tehari, halal home cooked London",
+      "tags": ["biryani", "lamb biryani", "chicken biryani", "dam biryani", "tehari", "akhni", "khichuri", "bengali biryani", "bangladeshi biryani", "rice dish", "halal", "home cooked", "london", "party food", "eid food", "wedding food", "celebration food", "sylheti biryani"],
       "used_in": []
     },
     {
       "path": "/photos/f5.jpeg",
-      "alt": "Bangladeshi meal prepared fresh for delivery",
-      "tags": ["bangladeshi meal", "food delivery", "fresh", "halal"],
+      "alt": "Bonna's dum biryani — kacchi biryani and Puran Dhaka style pakki biryani, authentic Bengali layered rice",
+      "tags": ["dum biryani", "kacchi biryani", "pakki biryani", "layer biryani", "puran dhaka biryani", "bangladeshi biryani", "bengali biryani", "rice dish", "halal", "wedding food", "eid food", "party food", "celebration food", "home cooked", "london"],
       "used_in": []
     },
     {
       "path": "/photos/f6.jpeg",
-      "alt": "Bonna's kitchen food preparation",
-      "tags": ["kitchen", "food preparation", "cooking", "bangladeshi"],
+      "alt": "Bengali sweets by Bonna's — gulab jamun, kalo jam and rosogolla, traditional Bangladeshi dessert",
+      "tags": ["gulab jamun", "kalo jam", "rosogolla", "bengali sweets", "mishti", "dessert", "bangladeshi sweet", "traditional sweet", "eid food", "celebration sweet", "syrup sweet", "home cooked"],
+      "used_in": []
+    },
+    {
+      "path": "/photos/f7.jpeg",
+      "alt": "Bengali fried wonton snack — crispy chicken wonton, homemade Bengali street food by Bonna's",
+      "tags": ["wonton", "fried wonton", "chicken wonton", "bengali snack", "crispy snack", "street food", "starter", "party food", "bangladeshi snack", "homemade", "iftar food"],
       "used_in": []
     },
     {
       "path": "/photos/f8.jpeg",
-      "alt": "Bonna's homemade food close up",
-      "tags": ["homemade", "close up", "food photography", "bangladeshi"],
+      "alt": "Homemade Bengali wonton — chicken wonton close up, crispy Bangladeshi snack by Bonna's kitchen",
+      "tags": ["wonton", "fried wonton", "chicken wonton", "bengali snack", "crispy snack", "close up", "food photography", "street food", "starter", "party food", "bangladeshi snack", "homemade"],
       "used_in": []
     },
     {
@@ -50,8 +56,8 @@
     },
     {
       "path": "/photos/s3.jpeg",
-      "alt": "Weekly meal service — Bonna's home cooked food",
-      "tags": ["weekly meals", "meal service", "home cooked", "regular"],
+      "alt": "Bengali sweets by Bonna's — gulab jamun, kalo jam and rosogolla, traditional Bangladeshi dessert",
+      "tags": ["gulab jamun", "kalo jam", "rosogolla", "bengali sweets", "mishti", "dessert", "bangladeshi sweet", "traditional sweet", "eid food", "celebration sweet", "syrup sweet", "home cooked"],
       "used_in": []
     },
     {
