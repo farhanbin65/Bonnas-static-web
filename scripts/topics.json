@@ -34,7 +34,7 @@
         "how to make bengali sweet yoghurt"
       ],
       "season": "all",
-      "used": false
+      "used": true
     },
     {
       "title": "Chicken Tikka Marinade",
@@ -43,7 +43,7 @@
         "homemade chicken tikka marinade"
       ],
       "season": "all",
-      "used": false
+      "used": true
     },
     {
       "title": "Shami Kebab from Scratch",
@@ -464,7 +464,7 @@
         "desi street food london"
       ],
       "season": "all",
-      "used": false
+      "used": true
     },
     {
       "title": "8 Bengali Dishes Perfect for Large Gatherings",
@@ -546,7 +546,7 @@
         "bangladeshi fish curry"
       ],
       "season": "all",
-      "used": false
+      "used": true
     }
   ]
 }
