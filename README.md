@@ -26,45 +26,60 @@ A full-stack restaurant website for **Bonna's**, a home-based Bangladeshi cateri
 
 ---
 
-## 🗂️ Project Structure
+```mermaid
+flowchart TD
+    A([🕐 GitHub Actions Cron\nMon / Wed / Fri 08:00 UTC]) --> B
 
-```
-BONNAS-STATIC-WEB/
-├── public/
-│   ├── photos/              # Food and cover images
-│   ├── logo.PNG
-│   ├── menu.pdf
-│   └── robots.txt
-├── scripts/
-│   └── generate_blog.py     # Automated blog pipeline (Python)
-├── src/
-│   ├── components/
-│   │   ├── navbar.jsx
-│   │   ├── hero.jsx
-│   │   ├── about.jsx
-│   │   ├── services.jsx
-│   │   ├── menuTeaser.jsx   # Homepage 8-card teaser
-│   │   ├── menu.jsx         # Full menu page /menu
-│   │   ├── gallery.jsx
-│   │   ├── reservations.jsx
-│   │   ├── social.jsx
-│   │   ├── contact.jsx
-│   │   ├── footer.jsx
-│   │   ├── Blog.jsx         # /blog listing
-│   │   └── BlogPost.jsx     # /blog/:slug single post
-│   ├── lib/
-│   │   └── sanityClient.js
-│   └── App.jsx
-├── studio/                  # Sanity Studio (local CMS)
-│   └── schemaTypes/
-│       ├── menuItem.js
-│       └── blogPost.js
-├── .github/
-│   └── workflows/
-│       └── blog-pipeline.yml
-├── .env                     # Never commit this
-├── tailwind.config.js
-└── vite.config.js
+    B[Check calendar.json\nSeasonal event active?]
+    B -->|Yes — within publish window| C[Prioritise seasonal topic\ne.g. Ramadan, Eid, Boishakh]
+    B -->|No| D[Content type rotation\nby day of week]
+
+    C --> E[Select topic from topics.json\nmark as used]
+    D --> E
+
+    E --> F[Find related posts\nfrom post_index.json\nkeyword overlap scoring]
+
+    F --> G[Resolve image\nlocal images.json first]
+    G -->|Match found| H[Use local photo\nfrom public/photos/]
+    G -->|No match| I[Unsplash API fallback]
+    I -->|No result| J[Pexels API fallback]
+    I -->|Found| K[External image URL]
+    J -->|Found| K
+    J -->|No result| L[No image — text only]
+
+    H --> M
+    K --> M
+    L --> M
+
+    M[Fetch RSS headlines\nGoogle Trends / Reddit / BBC Food\ntrend hook only]
+
+    M --> N[Build Groq prompt\n- content type guidance\n- target keyword\n- seasonal hook\n- related posts for linking\n- trend headlines\n- no markdown rules]
+
+    N --> O[Groq llama-3.3-70b-versatile\nJSON mode — max 3 attempts]
+
+    O -->|Success| P[Validate JSON fields\ntitle, excerpt, body, keywords\ndirectAnswer, faqs, contentType]
+    O -->|Fail| Q[Retry — wait 2s\nup to 3 attempts]
+    Q -->|All failed| R([❌ Pipeline fails])
+    Q -->|Retry success| P
+
+    P --> S[format_body\nStrip markdown\nPARA markers to paragraphs\nValidate LINK markers]
+
+    S --> T[post_to_sanity\nSave title, slug, excerpt, body\nkeywords, directAnswer, faqs\nfeaturedImageUrl, contentType]
+
+    T -->|200 OK| U[update_post_index\nAppend to post_index.json]
+    T -->|Error| R
+
+    U --> V[GitHub Actions commits back\ntopics.json + post_index.json]
+
+    V --> W([✅ Post live on bonnas.co.uk/blog])
+
+    W --> X[BlogPost.jsx renders]
+    X --> X1[Helmet — BlogPosting + FAQPage JSON-LD]
+    X --> X2[Featured Image]
+    X --> X3[Quick Answer Box\nChat bubble style]
+    X --> X4[Blog Body — renderBody\nLINK markers to React Router links]
+    X --> X5[FAQ Accordion\nFramer Motion animation]
+    X --> X6[Ready to Order CTA]
 ```
 
 ---
