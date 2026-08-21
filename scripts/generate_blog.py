@@ -376,7 +376,7 @@ CRITICAL: Valid JSON only. Body must be a single-line string. Use [PARA] for all
         print(f"Groq attempt {attempt}/{max_attempts}...")
         try:
             response = client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
+                model="llama-3.1-8b-instant",
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.65,
                 max_tokens=2800,
