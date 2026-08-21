@@ -376,8 +376,14 @@ CRITICAL: Valid JSON only. Body must be a single-line string. Use [PARA] for all
         print(f"Groq attempt {attempt}/{max_attempts}...")
         try:
             response = client.chat.completions.create(
-                model="openai/gpt-oss-120b",
-                messages=[{"role": "user", "content": prompt}],
+                model="qwen/qwen3.6-27b",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are an SEO content writer. Always respond with valid JSON only. No markdown, no explanations, just the JSON object."
+                    },
+                    {"role": "user", "content": prompt}
+                ],
                 temperature=0.65,
                 max_tokens=2800,
                 response_format={"type": "json_object"},
