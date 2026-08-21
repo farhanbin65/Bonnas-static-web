@@ -376,7 +376,7 @@ CRITICAL: Valid JSON only. Body must be a single-line string. Use [PARA] for all
         print(f"Groq attempt {attempt}/{max_attempts}...")
         try:
             response = client.chat.completions.create(
-                model="qwen/qwen3.6-27b",
+                model="qwen/qwen3-32b",
                 messages=[
                     {
                         "role": "system",
@@ -388,7 +388,9 @@ CRITICAL: Valid JSON only. Body must be a single-line string. Use [PARA] for all
                 max_tokens=2800,
             )
 
-            raw = response.choices[0].message.content.strip()
+            raw = response.choices[0].message.content
+            print(f"Raw response (first 200 chars): {repr(raw[:200] if raw else 'EMPTY')}")
+            raw = raw.strip() if raw else ""
 
             # Strip markdown code fences if model wraps in them
             raw = re.sub(r"^```json\s*", "", raw)
