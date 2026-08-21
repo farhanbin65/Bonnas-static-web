@@ -386,10 +386,20 @@ CRITICAL: Valid JSON only. Body must be a single-line string. Use [PARA] for all
                 ],
                 temperature=0.65,
                 max_tokens=2800,
+                reasoning_effort="none",
             )
 
-            raw = response.choices[0].message.content
-            print(f"Raw response (first 200 chars): {repr(raw[:200] if raw else 'EMPTY')}")
+                        # Full debug — check what the model actually returned
+            choice = response.choices[0]
+            print(f"Finish reason: {choice.finish_reason}")
+            print(f"Message role: {choice.message.role}")
+            raw = choice.message.content
+            print(f"Raw response (first 300 chars): {repr(raw[:300] if raw else 'EMPTY')}")
+            
+            # Check if model used reasoning tokens instead
+            if hasattr(choice.message, 'reasoning') and choice.message.reasoning:
+                print(f"Reasoning field present: {repr(choice.message.reasoning[:100])}")
+            
             raw = raw.strip() if raw else ""
 
             # Strip markdown code fences if model wraps in them
