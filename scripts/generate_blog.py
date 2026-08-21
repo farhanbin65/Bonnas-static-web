@@ -386,16 +386,32 @@ CRITICAL: Valid JSON only. Body must be a single-line string. Use [PARA] for all
                 ],
                 temperature=0.65,
                 max_tokens=2800,
-                response_format={"type": "json_object"},
             )
 
             raw = response.choices[0].message.content.strip()
-            raw = re.sub(r"```json|```", "", raw).strip()
+
+            # Strip markdown code fences if model wraps in them
+            raw = re.sub(r"^```json\s*", "", raw)
+            raw = re.sub(r"^```\s*", "", raw)
+            raw = re.sub(r"\s*```$", "", raw)
+            raw = raw.strip()
+
             data = json.loads(raw, strict=False)
 
-            for field in ["title", "excerpt", "body", "keywords"]:
+            for field in ["title", "excerpt", "body", "keywords", "directAnswer", "faqs"]:
                 if not data.get(field):
                     raise ValueError(f"Missing field: {field}")
+
+            da = data.get("directAnswer", {})
+            if not da.get("question") or not da.get("answer"):
+                raise ValueError("directAnswer missing question or answer")
+
+            faqs = data.get("faqs", [])
+            if len(faqs) < 2:
+                raise ValueError(f"Expected at least 2 FAQs, got {len(faqs)}")
+            for faq in faqs:
+                if not faq.get("question") or not faq.get("answer"):
+                    raise ValueError("FAQ missing question or answer")
 
             return data
 
