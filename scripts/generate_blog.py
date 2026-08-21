@@ -362,7 +362,7 @@ Today's trending UK food topics (INSPIRATION ONLY — weave in as a hook if genu
 Return a JSON object with these exact fields:
 - "title": SEO title based on the post title above, max 65 characters, written like a real search result. Must contain the primary keyword naturally.
 - "excerpt": meta description 150-160 characters, contains primary keyword, makes reader want to click
-- "body": full blog post, 700-1000 words. Primary keyword in first 100 words and 3-5 times total. {structure_instruction} Use [PARA] as the ONLY separator — ABSOLUTELY NO markdown of any kind. No asterisks (*), no double asterisks (**), no underscores (_), no hash symbols (#). Plain prose only.
+- "body": full blog post, 500-700 words. Primary keyword in first 100 words and 3-5 times total. {structure_instruction} Use [PARA] as the ONLY separator — ABSOLUTELY NO markdown of any kind. No asterisks (*), no double asterisks (**), no underscores (_), no hash symbols (#). Plain prose only.
 - "keywords": array of 4 strings — first must be exactly "{primary_keyword}", then 3 natural search variations
 - "trendSource": the trending topic used as hook, or "evergreen" if none used
 - "contentType": "{content_type}"
@@ -385,8 +385,8 @@ CRITICAL: Valid JSON only. Body must be a single-line string. Use [PARA] for all
                     {"role": "user", "content": prompt}
                 ],
                 temperature=0.65,
-                max_tokens=2800,
-                reasoning_effort="none",
+                max_tokens=4000,
+                reasoning_effort="low",
             )
 
                         # Full debug — check what the model actually returned
