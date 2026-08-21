@@ -410,20 +410,36 @@ CRITICAL: Valid JSON only. Body must be a single-line string. Use [PARA] for all
 
             data = json.loads(raw, strict=False)
 
-            for field in ["title", "excerpt", "body", "keywords", "directAnswer", "faqs"]:
+                        # Core fields are required
+            for field in ["title", "excerpt", "body", "keywords"]:
                 if not data.get(field):
                     raise ValueError(f"Missing field: {field}")
 
-            da = data.get("directAnswer", {})
-            if not da.get("question") or not da.get("answer"):
-                raise ValueError("directAnswer missing question or answer")
+            # directAnswer and faqs are optional — generate fallbacks if missing
+            if not data.get("directAnswer") or not data["directAnswer"].get("question"):
+                primary_kw = topic["keywords"][0] if topic.get("keywords") else topic["title"]
+                data["directAnswer"] = {
+                    "question": f"Where can I find authentic Bangladeshi food in London?",
+                    "answer": f"Bonna's offers authentic halal Bangladeshi home catering across East London, including Tower Hamlets, Bethnal Green and Hackney. All food is freshly prepared and delivered to your door. Order online at bonnas.co.uk."
+                }
+                print("directAnswer missing — using fallback")
 
-            faqs = data.get("faqs", [])
-            if len(faqs) < 2:
-                raise ValueError(f"Expected at least 2 FAQs, got {len(faqs)}")
-            for faq in faqs:
-                if not faq.get("question") or not faq.get("answer"):
-                    raise ValueError("FAQ missing question or answer")
+            if not data.get("faqs") or len(data["faqs"]) < 2:
+                data["faqs"] = [
+                    {
+                        "question": "Do you offer halal Bangladeshi food delivery in London?",
+                        "answer": "Yes, Bonna's provides 100% halal home cooked Bangladeshi food delivery across East London. All dishes are freshly prepared using family recipes."
+                    },
+                    {
+                        "question": "What is the minimum order for Bonna's catering?",
+                        "answer": "The minimum order is £20 for delivery. We cater for individuals, families and events of all sizes across East London."
+                    },
+                    {
+                        "question": "How do I order from Bonna's?",
+                        "answer": "You can order online at bonnas.co.uk/menu or contact us directly via WhatsApp. We deliver across East London including Tower Hamlets and Bethnal Green."
+                    }
+                ]
+                print("faqs missing — using fallback")
 
             return data
 
