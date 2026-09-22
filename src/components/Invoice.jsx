@@ -5,19 +5,22 @@ import jsPDF from 'jspdf';
 // ============================================================
 // CONSTANTS
 // ============================================================
-const LOGO_URL = "https://ibb.co/MvWNBdg"; 
+// Use a LOCAL logo in /public so html2canvas never hits CORS.
+// Example: public/logo.PNG  ->  "/logo.PNG"
+const LOGO_URL = "/logo.PNG";
+
 const CURRENCY = "£";
 const BRAND_NAME = "BONNAS";
 const BRAND_SUBTITLE = "Original Bengali Cuisine";
 const BRAND_WEBSITE = "bonnas.co.uk";
 const BRAND_FACEBOOK = "facebook.com/bonnas.cooking1";
 
+const ADMIN_PASSWORD = "bonnas24";
+
 // ============================================================
-// HELPER FUNCTIONS
+// HELPERS
 // ============================================================
-const formatCurrency = (amount) => {
-  return `${CURRENCY}${Number(amount || 0).toFixed(2)}`;
-};
+const formatCurrency = (amount) => `${CURRENCY}${Number(amount || 0).toFixed(2)}`;
 
 const generateDocNumber = (type) => {
   const now = new Date();
@@ -37,8 +40,49 @@ const getTodayDate = () => {
   return `${year}-${month}-${day}`;
 };
 
+// Regex that matches oklch/lab/lch/color() etc. — html2canvas chokes on these.
+// We replace them with safe fallbacks during export.
+const UNSUPPORTED_COLOR_REGEX =
+  /(oklch|oklab|lab|lch|color)\s*\([^)]*\)/gi;
+
+/**
+ * Walk the cloned DOM and replace any unsupported color functions
+ * (oklch, lab, lch, color()) with a safe hex fallback so html2canvas
+ * doesn't crash. Called from html2canvas onclone.
+ */
+const sanitizeUnsupportedColors = (clonedDoc) => {
+  const SAFE = {
+    color: '#2C2C2C',
+    backgroundColor: 'transparent',
+    borderTopColor: '#D7CCC8',
+    borderRightColor: '#D7CCC8',
+    borderBottomColor: '#D7CCC8',
+    borderLeftColor: '#D7CCC8',
+    outlineColor: '#D7CCC8',
+    textDecorationColor: '#2C2C2C',
+    caretColor: '#2C2C2C',
+    columnRuleColor: '#D7CCC8',
+    fill: '#2C2C2C',
+    stroke: '#2C2C2C',
+  };
+
+  const all = clonedDoc.querySelectorAll('*');
+  all.forEach((el) => {
+    const cs = clonedDoc.defaultView.getComputedStyle(el);
+    // Check every color-ish property
+    Object.keys(SAFE).forEach((prop) => {
+      const val = cs[prop];
+      if (val && UNSUPPORTED_COLOR_REGEX.test(val)) {
+        el.style[prop] = SAFE[prop];
+        // reset lastIndex because regex is global
+        UNSUPPORTED_COLOR_REGEX.lastIndex = 0;
+      }
+    });
+  });
+};
+
 // ============================================================
-// STYLES (INLINE ONLY)
+// STYLES (unchanged, all hex — safe for html2canvas)
 // ============================================================
 const styles = {
   appContainer: {
@@ -62,10 +106,7 @@ const styles = {
     flexWrap: 'wrap',
     gap: '12px',
   },
-  headerLogo: {
-    height: '50px',
-    objectFit: 'contain',
-  },
+  headerLogo: { height: '50px', objectFit: 'contain' },
   headerTitle: {
     fontSize: '22px',
     fontWeight: 'bold',
@@ -77,11 +118,7 @@ const styles = {
     color: '#8D6E63',
     fontStyle: 'italic',
   },
-  headerContact: {
-    textAlign: 'right',
-    fontSize: '12px',
-    color: '#8D6E63',
-  },
+  headerContact: { textAlign: 'right', fontSize: '12px', color: '#8D6E63' },
   layoutGrid: {
     display: 'flex',
     flexWrap: 'wrap',
@@ -134,31 +171,12 @@ const styles = {
     color: '#2C2C2C',
     outline: 'none',
     boxSizing: 'border-box',
-    transition: 'border-color 0.2s',
   },
-  inputReadOnly: {
-    backgroundColor: '#EFEBE9',
-    fontWeight: 'bold',
-  },
-  row: {
-    display: 'flex',
-    gap: '12px',
-    marginBottom: '16px',
-    flexWrap: 'wrap',
-  },
-  halfWidth: {
-    flex: '1 1 calc(50% - 6px)',
-    minWidth: '140px',
-  },
-  fullWidth: {
-    flex: '1 1 100%',
-  },
-  table: {
-    width: '100%',
-    borderCollapse: 'collapse',
-    fontSize: '13px',
-    marginTop: '8px',
-  },
+  inputReadOnly: { backgroundColor: '#EFEBE9', fontWeight: 'bold' },
+  row: { display: 'flex', gap: '12px', marginBottom: '16px', flexWrap: 'wrap' },
+  halfWidth: { flex: '1 1 calc(50% - 6px)', minWidth: '140px' },
+  fullWidth: { flex: '1 1 100%' },
+  table: { width: '100%', borderCollapse: 'collapse', fontSize: '13px', marginTop: '8px' },
   th: {
     textAlign: 'left',
     padding: '8px 6px',
@@ -185,12 +203,7 @@ const styles = {
     outline: 'none',
     boxSizing: 'border-box',
   },
-  tdReadOnly: {
-    padding: '6px 8px',
-    fontSize: '13px',
-    color: '#5D4037',
-    fontWeight: '600',
-  },
+  tdReadOnly: { padding: '6px 8px', fontSize: '13px', color: '#5D4037', fontWeight: '600' },
   deleteBtn: {
     backgroundColor: '#FBE9E7',
     color: '#BF360C',
@@ -200,7 +213,6 @@ const styles = {
     cursor: 'pointer',
     fontSize: '12px',
     fontWeight: 'bold',
-    transition: 'background-color 0.2s',
   },
   addBtn: {
     backgroundColor: '#3E2723',
@@ -212,7 +224,6 @@ const styles = {
     fontSize: '14px',
     fontWeight: '600',
     marginTop: '12px',
-    transition: 'background-color 0.2s',
     letterSpacing: '0.5px',
   },
   summaryBox: {
@@ -239,12 +250,7 @@ const styles = {
     borderTop: '2px solid #C5A059',
     marginTop: '8px',
   },
-  actionBar: {
-    display: 'flex',
-    gap: '12px',
-    marginTop: '24px',
-    flexWrap: 'wrap',
-  },
+  actionBar: { display: 'flex', gap: '12px', marginTop: '24px', flexWrap: 'wrap' },
   btnPrimary: {
     flex: '1 1 180px',
     padding: '12px 24px',
@@ -255,7 +261,6 @@ const styles = {
     fontSize: '14px',
     fontWeight: '600',
     cursor: 'pointer',
-    transition: 'background-color 0.2s, transform 0.1s',
     letterSpacing: '0.5px',
   },
   btnSecondary: {
@@ -268,13 +273,9 @@ const styles = {
     fontSize: '14px',
     fontWeight: '600',
     cursor: 'pointer',
-    transition: 'background-color 0.2s, transform 0.1s',
     letterSpacing: '0.5px',
   },
-  btnDisabled: {
-    opacity: 0.6,
-    cursor: 'not-allowed',
-  },
+  btnDisabled: { opacity: 0.6, cursor: 'not-allowed' },
   notesArea: {
     width: '100%',
     minHeight: '100px',
@@ -289,9 +290,6 @@ const styles = {
     resize: 'vertical',
     fontFamily: 'inherit',
   },
-  // ============================================================
-  // INVOICE PREVIEW STYLES
-  // ============================================================
   invoicePreview: {
     backgroundColor: '#FFFFFF',
     padding: '30px',
@@ -311,15 +309,8 @@ const styles = {
     flexWrap: 'wrap',
     gap: '12px',
   },
-  invLogoSection: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '16px',
-  },
-  invLogo: {
-    height: '60px',
-    objectFit: 'contain',
-  },
+  invLogoSection: { display: 'flex', alignItems: 'center', gap: '16px' },
+  invLogo: { height: '60px', objectFit: 'contain' },
   invBrandName: {
     fontSize: '24px',
     fontWeight: 'bold',
@@ -333,14 +324,8 @@ const styles = {
     fontStyle: 'italic',
     margin: 0,
   },
-  invBrandContact: {
-    fontSize: '11px',
-    color: '#8D6E63',
-    margin: '2px 0 0 0',
-  },
-  invDocInfo: {
-    textAlign: 'right',
-  },
+  invBrandContact: { fontSize: '11px', color: '#8D6E63', margin: '2px 0 0 0' },
+  invDocInfo: { textAlign: 'right' },
   invDocType: {
     fontSize: '28px',
     fontWeight: 'bold',
@@ -348,17 +333,8 @@ const styles = {
     letterSpacing: '2px',
     margin: 0,
   },
-  invDocNumber: {
-    fontSize: '14px',
-    color: '#4E342E',
-    margin: '4px 0 0 0',
-    fontWeight: '600',
-  },
-  invDocDate: {
-    fontSize: '13px',
-    color: '#6D4C41',
-    margin: '2px 0 0 0',
-  },
+  invDocNumber: { fontSize: '14px', color: '#4E342E', margin: '4px 0 0 0', fontWeight: '600' },
+  invDocDate: { fontSize: '13px', color: '#6D4C41', margin: '2px 0 0 0' },
   invCustomerSection: {
     display: 'flex',
     justifyContent: 'space-between',
@@ -366,10 +342,7 @@ const styles = {
     marginBottom: '20px',
     flexWrap: 'wrap',
   },
-  invCustomerBox: {
-    flex: '1 1 45%',
-    minWidth: '200px',
-  },
+  invCustomerBox: { flex: '1 1 45%', minWidth: '200px' },
   invCustomerLabel: {
     fontSize: '11px',
     fontWeight: 'bold',
@@ -380,18 +353,8 @@ const styles = {
     borderBottom: '1px solid #EFEBE9',
     paddingBottom: '2px',
   },
-  invCustomerText: {
-    fontSize: '13px',
-    color: '#3E2723',
-    margin: '2px 0',
-    lineHeight: '1.5',
-  },
-  invTable: {
-    width: '100%',
-    borderCollapse: 'collapse',
-    fontSize: '12px',
-    marginBottom: '16px',
-  },
+  invCustomerText: { fontSize: '13px', color: '#3E2723', margin: '2px 0', lineHeight: '1.5' },
+  invTable: { width: '100%', borderCollapse: 'collapse', fontSize: '12px', marginBottom: '16px' },
   invTh: {
     textAlign: 'left',
     padding: '6px 8px',
@@ -402,12 +365,7 @@ const styles = {
     letterSpacing: '0.5px',
     textTransform: 'uppercase',
   },
-  invTd: {
-    padding: '5px 8px',
-    borderBottom: '1px solid #EFEBE9',
-    fontSize: '12px',
-    color: '#2C2C2C',
-  },
+  invTd: { padding: '5px 8px', borderBottom: '1px solid #EFEBE9', fontSize: '12px', color: '#2C2C2C' },
   invTdRight: {
     padding: '5px 8px',
     borderBottom: '1px solid #EFEBE9',
@@ -422,21 +380,9 @@ const styles = {
     textAlign: 'center',
     color: '#2C2C2C',
   },
-  invSummaryContainer: {
-    display: 'flex',
-    justifyContent: 'flex-end',
-    marginBottom: '16px',
-  },
-  invSummaryBox: {
-    width: '280px',
-    fontSize: '13px',
-  },
-  invSummaryRow: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    padding: '3px 0',
-    color: '#4E342E',
-  },
+  invSummaryContainer: { display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' },
+  invSummaryBox: { width: '280px', fontSize: '13px' },
+  invSummaryRow: { display: 'flex', justifyContent: 'space-between', padding: '3px 0', color: '#4E342E' },
   invSummaryTotal: {
     display: 'flex',
     justifyContent: 'space-between',
@@ -462,12 +408,7 @@ const styles = {
     letterSpacing: '1px',
     marginBottom: '6px',
   },
-  invNotesText: {
-    fontSize: '12px',
-    color: '#4E342E',
-    lineHeight: '1.6',
-    whiteSpace: 'pre-wrap',
-  },
+  invNotesText: { fontSize: '12px', color: '#4E342E', lineHeight: '1.6', whiteSpace: 'pre-wrap' },
   invPolicySection: {
     marginTop: '16px',
     padding: '12px',
@@ -483,14 +424,7 @@ const styles = {
     letterSpacing: '1px',
     marginBottom: '6px',
   },
-  invPolicyList: {
-    listStyle: 'none',
-    padding: 0,
-    margin: 0,
-    fontSize: '11px',
-    color: '#6D4C41',
-    lineHeight: '1.7',
-  },
+  invPolicyList: { listStyle: 'none', padding: 0, margin: 0, fontSize: '11px', color: '#6D4C41', lineHeight: '1.7' },
   invFooter: {
     marginTop: '24px',
     paddingTop: '12px',
@@ -499,12 +433,7 @@ const styles = {
     fontSize: '11px',
     color: '#8D6E63',
   },
-  invFooterBrand: {
-    fontSize: '13px',
-    fontWeight: 'bold',
-    color: '#3E2723',
-    margin: '0 0 2px 0',
-  },
+  invFooterBrand: { fontSize: '13px', fontWeight: 'bold', color: '#3E2723', margin: '0 0 2px 0' },
   loadingOverlay: {
     position: 'absolute',
     top: 0,
@@ -526,13 +455,84 @@ const styles = {
     borderRadius: '50%',
     animation: 'spin 1s linear infinite',
   },
+  // --- Password screen ---
+  passwordScreen: {
+    minHeight: '100vh',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FDFBF7',
+    padding: '20px',
+    fontFamily: "'Georgia', 'Times New Roman', serif",
+  },
+  passwordCard: {
+    backgroundColor: '#FFFFFF',
+    padding: '40px 32px',
+    borderRadius: '10px',
+    boxShadow: '0 8px 30px rgba(0,0,0,0.08)',
+    borderTop: '4px solid #C5A059',
+    width: '100%',
+    maxWidth: '400px',
+    textAlign: 'center',
+  },
+  passwordLogo: { height: '70px', objectFit: 'contain', marginBottom: '16px' },
+  passwordTitle: {
+    fontSize: '22px',
+    fontWeight: 'bold',
+    color: '#3E2723',
+    letterSpacing: '1px',
+    margin: '0 0 4px 0',
+  },
+  passwordSubtitle: {
+    fontSize: '13px',
+    color: '#8D6E63',
+    fontStyle: 'italic',
+    margin: '0 0 24px 0',
+  },
+  passwordInput: {
+    width: '100%',
+    padding: '12px 14px',
+    fontSize: '15px',
+    border: '1px solid #D7CCC8',
+    borderRadius: '6px',
+    backgroundColor: '#FDFBF7',
+    color: '#2C2C2C',
+    outline: 'none',
+    boxSizing: 'border-box',
+    marginBottom: '16px',
+    textAlign: 'center',
+    letterSpacing: '2px',
+  },
+  passwordBtn: {
+    width: '100%',
+    padding: '12px',
+    backgroundColor: '#3E2723',
+    color: '#FFFFFF',
+    border: 'none',
+    borderRadius: '6px',
+    fontSize: '15px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    letterSpacing: '0.5px',
+  },
+  passwordError: {
+    color: '#BF360C',
+    fontSize: '13px',
+    marginBottom: '12px',
+    fontWeight: '600',
+  },
 };
 
 // ============================================================
 // MAIN COMPONENT
 // ============================================================
 const InvoiceGenerator = () => {
-  // --- State ---
+  // --- Auth gate ---
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+
+  // --- Form state ---
   const [docType, setDocType] = useState('invoice');
   const [invoiceNumber, setInvoiceNumber] = useState(generateDocNumber('invoice'));
   const [invoiceDate, setInvoiceDate] = useState(getTodayDate());
@@ -544,46 +544,53 @@ const InvoiceGenerator = () => {
   const [eventDate, setEventDate] = useState('');
   const [guestCount, setGuestCount] = useState('');
   const [notes, setNotes] = useState('');
-  const [depositPercent, setDepositPercent] = useState(0);
-  const [items, setItems] = useState([
-    { id: 1, description: '', qty: 1, unitPrice: 0 },
-  ]);
+  const [depositPercent, setDepositPercent] = useState(100); // <-- default 100
+  const [items, setItems] = useState([{ id: 1, description: '', qty: 1, unitPrice: 0 }]);
   const [nextId, setNextId] = useState(2);
   const [isExporting, setIsExporting] = useState(false);
 
   const previewRef = useRef(null);
 
-  // --- Derived Calculations ---
-  const calculatedItems = useMemo(() => {
-    return items.map((item) => {
-      const qty = Math.max(0, Number(item.qty) || 0);
-      const unitPrice = Math.max(0, Number(item.unitPrice) || 0);
-      const total = qty * unitPrice;
-      return { ...item, qty, unitPrice, total };
-    });
-  }, [items]);
+  // --- Derived ---
+  const calculatedItems = useMemo(
+    () =>
+      items.map((item) => {
+        const qty = Math.max(0, Number(item.qty) || 0);
+        const unitPrice = Math.max(0, Number(item.unitPrice) || 0);
+        return { ...item, qty, unitPrice, total: qty * unitPrice };
+      }),
+    [items]
+  );
 
-  const subtotal = useMemo(() => {
-    return calculatedItems.reduce((sum, item) => sum + item.total, 0);
-  }, [calculatedItems]);
+  const subtotal = useMemo(
+    () => calculatedItems.reduce((sum, item) => sum + item.total, 0),
+    [calculatedItems]
+  );
 
   const depositAmount = useMemo(() => {
     const percent = Math.min(100, Math.max(0, Number(depositPercent) || 0));
     return (subtotal * percent) / 100;
   }, [subtotal, depositPercent]);
 
-  const remainingBalance = useMemo(() => {
-    return subtotal - depositAmount;
-  }, [subtotal, depositAmount]);
-
+  const remainingBalance = useMemo(() => subtotal - depositAmount, [subtotal, depositAmount]);
   const grandTotal = subtotal;
 
-  // --- Effects ---
   useEffect(() => {
     setInvoiceNumber(generateDocNumber(docType));
   }, [docType]);
 
   // --- Handlers ---
+  const handlePasswordSubmit = (e) => {
+    e.preventDefault();
+    if (passwordInput === ADMIN_PASSWORD) {
+      setIsAuthenticated(true);
+      setPasswordError('');
+    } else {
+      setPasswordError('Incorrect password. Please try again.');
+      setPasswordInput('');
+    }
+  };
+
   const handleAddItem = () => {
     setItems([...items, { id: nextId, description: '', qty: 1, unitPrice: 0 }]);
     setNextId(nextId + 1);
@@ -597,15 +604,13 @@ const InvoiceGenerator = () => {
   const handleItemChange = (id, field, value) => {
     setItems(
       items.map((item) => {
-        if (item.id === id) {
-          if (field === 'qty' || field === 'unitPrice') {
-            const numVal = parseFloat(value);
-            if (isNaN(numVal) || numVal < 0) return item;
-            return { ...item, [field]: numVal };
-          }
-          return { ...item, [field]: value };
+        if (item.id !== id) return item;
+        if (field === 'qty' || field === 'unitPrice') {
+          const numVal = parseFloat(value);
+          if (isNaN(numVal) || numVal < 0) return item;
+          return { ...item, [field]: numVal };
         }
-        return item;
+        return { ...item, [field]: value };
       })
     );
   };
@@ -622,7 +627,6 @@ const InvoiceGenerator = () => {
       const element = previewRef.current;
       if (!element) return;
 
-      // Temporarily remove border-radius and box-shadow for cleaner capture
       const originalBorderRadius = element.style.borderRadius;
       const originalBoxShadow = element.style.boxShadow;
       element.style.borderRadius = '0';
@@ -631,11 +635,28 @@ const InvoiceGenerator = () => {
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
+        allowTaint: false,
         logging: false,
         backgroundColor: '#FFFFFF',
+        onclone: (clonedDoc) => {
+          // 1) Strip any oklch/lab/lch/color() values that break html2canvas
+          sanitizeUnsupportedColors(clonedDoc);
+
+          // 2) Force all <img> to use same-origin (no CORS issues)
+          //    Any remote logo will be replaced with a blank transparent pixel
+          //    so the export doesn't crash. Use /logo.PNG locally instead.
+          clonedDoc.querySelectorAll('img').forEach((img) => {
+            if (!img.src.startsWith(window.location.origin)) {
+              // If a remote image is still there, drop it silently
+              img.removeAttribute('src');
+              img.style.visibility = 'hidden';
+            } else {
+              img.removeAttribute('crossorigin');
+            }
+          });
+        },
       });
 
-      // Restore styles
       element.style.borderRadius = originalBorderRadius;
       element.style.boxShadow = originalBoxShadow;
 
@@ -652,7 +673,6 @@ const InvoiceGenerator = () => {
         const imgY = 10;
 
         if (imgHeight * ratio > pdfHeight - 20) {
-          // Multi-page logic
           const pageHeightInPx = (pdfHeight - 20) / ratio;
           let heightLeft = imgHeight;
           let position = 0;
@@ -666,28 +686,11 @@ const InvoiceGenerator = () => {
             tempCanvas.width = imgWidth;
             tempCanvas.height = sourceHeight;
             const ctx = tempCanvas.getContext('2d');
-            ctx.drawImage(
-              canvas,
-              0,
-              sourceY,
-              imgWidth,
-              sourceHeight,
-              0,
-              0,
-              imgWidth,
-              sourceHeight
-            );
+            ctx.drawImage(canvas, 0, sourceY, imgWidth, sourceHeight, 0, 0, imgWidth, sourceHeight);
             const pageImgData = tempCanvas.toDataURL('image/png');
 
             if (page > 1) pdf.addPage();
-            pdf.addImage(
-              pageImgData,
-              'PNG',
-              imgX,
-              imgY,
-              imgWidth * ratio,
-              sourceHeight * ratio
-            );
+            pdf.addImage(pageImgData, 'PNG', imgX, imgY, imgWidth * ratio, sourceHeight * ratio);
 
             heightLeft -= sourceHeight;
             position += sourceHeight;
@@ -706,26 +709,55 @@ const InvoiceGenerator = () => {
       }
     } catch (error) {
       console.error('Export failed:', error);
-      alert('Export failed. Please try again.');
+      alert(
+        'Export failed. If this keeps happening, make sure your logo is a local file at /public/logo.PNG and not a remote URL.'
+      );
     } finally {
       setIsExporting(false);
     }
   };
 
   // ============================================================
-  // RENDER
+  // PASSWORD GATE
+  // ============================================================
+  if (!isAuthenticated) {
+    return (
+      <div style={styles.passwordScreen}>
+        <form style={styles.passwordCard} onSubmit={handlePasswordSubmit}>
+          <img src={LOGO_URL} alt="BONNAS Logo" style={styles.passwordLogo} />
+          <h1 style={styles.passwordTitle}>{BRAND_NAME}</h1>
+          <p style={styles.passwordSubtitle}>{BRAND_SUBTITLE}</p>
+          <p style={{ ...styles.passwordSubtitle, marginBottom: '20px', fontSize: '12px' }}>
+            Admin access only
+          </p>
+
+          <input
+            type="password"
+            value={passwordInput}
+            onChange={(e) => setPasswordInput(e.target.value)}
+            placeholder="Enter password"
+            style={styles.passwordInput}
+            autoFocus
+          />
+
+          {passwordError && <div style={styles.passwordError}>{passwordError}</div>}
+
+          <button type="submit" style={styles.passwordBtn}>
+            Unlock
+          </button>
+        </form>
+      </div>
+    );
+  }
+
+  // ============================================================
+  // MAIN INVOICE UI
   // ============================================================
   return (
     <div style={styles.appContainer}>
-      {/* ==================== HEADER BAR ==================== */}
       <div style={styles.headerBar}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <img
-            src={LOGO_URL}
-            alt="BONNAS Logo"
-            style={styles.headerLogo}
-            crossOrigin="anonymous"
-          />
+          <img src={LOGO_URL} alt="BONNAS Logo" style={styles.headerLogo} />
           <div>
             <div style={styles.headerTitle}>{BRAND_NAME}</div>
             <div style={styles.headerSubtitle}>{BRAND_SUBTITLE}</div>
@@ -737,46 +769,29 @@ const InvoiceGenerator = () => {
         </div>
       </div>
 
-      {/* ==================== MAIN LAYOUT ==================== */}
       <div style={styles.layoutGrid}>
-        {/* ==================== LEFT COLUMN: FORM ==================== */}
+        {/* ============ LEFT: FORM ============ */}
         <div style={styles.formColumn}>
-          {/* --- Document Type --- */}
           <div style={styles.sectionTitle}>Document Type</div>
           <div style={styles.row}>
             <div style={styles.halfWidth}>
               <label style={styles.label}>Type</label>
-              <select
-                value={docType}
-                onChange={(e) => setDocType(e.target.value)}
-                style={styles.input}
-              >
+              <select value={docType} onChange={(e) => setDocType(e.target.value)} style={styles.input}>
                 <option value="invoice">Invoice</option>
                 <option value="quotation">Quotation</option>
               </select>
             </div>
             <div style={styles.halfWidth}>
               <label style={styles.label}>Number</label>
-              <input
-                type="text"
-                value={invoiceNumber}
-                readOnly
-                style={{ ...styles.input, ...styles.inputReadOnly }}
-              />
+              <input type="text" value={invoiceNumber} readOnly style={{ ...styles.input, ...styles.inputReadOnly }} />
             </div>
           </div>
 
-          {/* --- Invoice Details --- */}
           <div style={styles.sectionTitle}>Invoice Details</div>
           <div style={styles.row}>
             <div style={styles.halfWidth}>
               <label style={styles.label}>Invoice Date</label>
-              <input
-                type="date"
-                value={invoiceDate}
-                onChange={(e) => setInvoiceDate(e.target.value)}
-                style={styles.input}
-              />
+              <input type="date" value={invoiceDate} onChange={(e) => setInvoiceDate(e.target.value)} style={styles.input} />
             </div>
             <div style={styles.halfWidth}>
               <label style={styles.label}>Deposit %</label>
@@ -795,78 +810,41 @@ const InvoiceGenerator = () => {
             </div>
           </div>
 
-          {/* --- Customer Details --- */}
           <div style={styles.sectionTitle}>Customer Details</div>
           <div style={styles.row}>
             <div style={styles.fullWidth}>
               <label style={styles.label}>Customer Name</label>
-              <input
-                type="text"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                placeholder="Full name"
-                style={styles.input}
-              />
+              <input type="text" value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="Full name" style={styles.input} />
             </div>
           </div>
           <div style={styles.row}>
             <div style={styles.halfWidth}>
               <label style={styles.label}>Phone</label>
-              <input
-                type="tel"
-                value={customerPhone}
-                onChange={(e) => setCustomerPhone(e.target.value)}
-                placeholder="Phone number"
-                style={styles.input}
-              />
+              <input type="tel" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} placeholder="Phone number" style={styles.input} />
             </div>
             <div style={styles.halfWidth}>
               <label style={styles.label}>Email</label>
-              <input
-                type="email"
-                value={customerEmail}
-                onChange={(e) => setCustomerEmail(e.target.value)}
-                placeholder="Email address"
-                style={styles.input}
-              />
+              <input type="email" value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} placeholder="Email address" style={styles.input} />
             </div>
           </div>
           <div style={styles.row}>
             <div style={styles.fullWidth}>
               <label style={styles.label}>Customer Address</label>
-              <input
-                type="text"
-                value={customerAddress}
-                onChange={(e) => setCustomerAddress(e.target.value)}
-                placeholder="Full address"
-                style={styles.input}
-              />
+              <input type="text" value={customerAddress} onChange={(e) => setCustomerAddress(e.target.value)} placeholder="Full address" style={styles.input} />
             </div>
           </div>
 
-          {/* --- Event Details --- */}
           <div style={styles.sectionTitle}>Event Details</div>
           <div style={styles.row}>
             <div style={styles.fullWidth}>
               <label style={styles.label}>Event Address</label>
-              <input
-                type="text"
-                value={eventAddress}
-                onChange={(e) => setEventAddress(e.target.value)}
-                placeholder="Event venue address"
-                style={styles.input}
-              />
+              <input type="text" value={eventAddress} onChange={(e) => setEventAddress(e.target.value)} placeholder="Event venue address" style={styles.input} />
             </div>
           </div>
           <div style={styles.row}>
             <div style={styles.halfWidth}>
               <label style={styles.label}>Event Date</label>
-              <input
-                type="date"
-                value={eventDate}
-                onChange={(e) => setEventDate(e.target.value)}
-                style={styles.input}
-              />
+              <input type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} style={styles.input} />
             </div>
             <div style={styles.halfWidth}>
               <label style={styles.label}>Guest Count</label>
@@ -885,7 +863,6 @@ const InvoiceGenerator = () => {
             </div>
           </div>
 
-          {/* --- Line Items --- */}
           <div style={styles.sectionTitle}>Line Items</div>
           <table style={styles.table}>
             <thead>
@@ -901,124 +878,49 @@ const InvoiceGenerator = () => {
             <tbody>
               {calculatedItems.map((item, index) => (
                 <tr key={item.id}>
-                  <td
-                    style={{
-                      ...styles.td,
-                      textAlign: 'center',
-                      fontWeight: 'bold',
-                      color: '#C5A059',
-                    }}
-                  >
+                  <td style={{ ...styles.td, textAlign: 'center', fontWeight: 'bold', color: '#C5A059' }}>
                     {index + 1}
                   </td>
                   <td style={styles.td}>
-                    <input
-                      type="text"
-                      value={item.description}
-                      onChange={(e) =>
-                        handleItemChange(item.id, 'description', e.target.value)
-                      }
-                      placeholder="Item description"
-                      style={styles.tdInput}
-                    />
+                    <input type="text" value={item.description} onChange={(e) => handleItemChange(item.id, 'description', e.target.value)} placeholder="Item description" style={styles.tdInput} />
                   </td>
                   <td style={styles.td}>
-                    <input
-                      type="number"
-                      min="0"
-                      value={item.qty}
-                      onChange={(e) => handleItemChange(item.id, 'qty', e.target.value)}
-                      style={{ ...styles.tdInput, textAlign: 'center' }}
-                    />
+                    <input type="number" min="0" value={item.qty} onChange={(e) => handleItemChange(item.id, 'qty', e.target.value)} style={{ ...styles.tdInput, textAlign: 'center' }} />
                   </td>
                   <td style={styles.td}>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={item.unitPrice}
-                      onChange={(e) =>
-                        handleItemChange(item.id, 'unitPrice', e.target.value)
-                      }
-                      style={{ ...styles.tdInput, textAlign: 'right' }}
-                    />
+                    <input type="number" min="0" step="0.01" value={item.unitPrice} onChange={(e) => handleItemChange(item.id, 'unitPrice', e.target.value)} style={{ ...styles.tdInput, textAlign: 'right' }} />
                   </td>
-                  <td style={{ ...styles.tdReadOnly, textAlign: 'right' }}>
-                    {formatCurrency(item.total)}
-                  </td>
+                  <td style={{ ...styles.tdReadOnly, textAlign: 'right' }}>{formatCurrency(item.total)}</td>
                   <td style={styles.td}>
-                    <button
-                      onClick={() => handleRemoveItem(item.id)}
-                      style={styles.deleteBtn}
-                      disabled={items.length <= 1}
-                      title="Remove item"
-                    >
-                      ✕
-                    </button>
+                    <button onClick={() => handleRemoveItem(item.id)} style={styles.deleteBtn} disabled={items.length <= 1} title="Remove item">✕</button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-          <button onClick={handleAddItem} style={styles.addBtn}>
-            + Add Item
-          </button>
+          <button onClick={handleAddItem} style={styles.addBtn}>+ Add Item</button>
 
-          {/* --- Notes --- */}
           <div style={styles.sectionTitle}>Notes</div>
-          <textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="Enter any additional notes or special instructions..."
-            style={styles.notesArea}
-          />
+          <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Enter any additional notes or special instructions..." style={styles.notesArea} />
 
-          {/* --- Summary (Form Side) --- */}
           <div style={styles.summaryBox}>
-            <div style={styles.summaryRow}>
-              <span>Subtotal</span>
-              <span>{formatCurrency(subtotal)}</span>
-            </div>
-            <div style={styles.summaryRow}>
-              <span>Deposit ({depositPercent}%)</span>
-              <span>{formatCurrency(depositAmount)}</span>
-            </div>
-            <div style={styles.summaryRow}>
-              <span>Remaining Balance</span>
-              <span>{formatCurrency(remainingBalance)}</span>
-            </div>
-            <div style={styles.summaryTotal}>
-              <span>Grand Total</span>
-              <span>{formatCurrency(grandTotal)}</span>
-            </div>
+            <div style={styles.summaryRow}><span>Subtotal</span><span>{formatCurrency(subtotal)}</span></div>
+            <div style={styles.summaryRow}><span>Deposit ({depositPercent}%)</span><span>{formatCurrency(depositAmount)}</span></div>
+            <div style={styles.summaryRow}><span>Remaining Balance</span><span>{formatCurrency(remainingBalance)}</span></div>
+            <div style={styles.summaryTotal}><span>Grand Total</span><span>{formatCurrency(grandTotal)}</span></div>
           </div>
 
-          {/* --- Action Buttons --- */}
           <div style={styles.actionBar}>
-            <button
-              onClick={() => handleExport('pdf')}
-              disabled={isExporting}
-              style={{
-                ...styles.btnPrimary,
-                ...(isExporting ? styles.btnDisabled : {}),
-              }}
-            >
+            <button onClick={() => handleExport('pdf')} disabled={isExporting} style={{ ...styles.btnPrimary, ...(isExporting ? styles.btnDisabled : {}) }}>
               {isExporting ? 'Exporting...' : 'Download PDF'}
             </button>
-            <button
-              onClick={() => handleExport('jpg')}
-              disabled={isExporting}
-              style={{
-                ...styles.btnSecondary,
-                ...(isExporting ? styles.btnDisabled : {}),
-              }}
-            >
+            <button onClick={() => handleExport('jpg')} disabled={isExporting} style={{ ...styles.btnSecondary, ...(isExporting ? styles.btnDisabled : {}) }}>
               {isExporting ? 'Exporting...' : 'Download JPG'}
             </button>
           </div>
         </div>
 
-        {/* ==================== RIGHT COLUMN: LIVE PREVIEW ==================== */}
+        {/* ============ RIGHT: LIVE PREVIEW ============ */}
         <div style={styles.previewColumn}>
           <div style={{ position: 'relative' }}>
             {isExporting && (
@@ -1026,20 +928,10 @@ const InvoiceGenerator = () => {
                 <div style={styles.spinner} />
               </div>
             )}
-            <div
-              ref={previewRef}
-              style={styles.invoicePreview}
-              id="invoice-preview"
-            >
-              {/* --- Invoice Header --- */}
+            <div ref={previewRef} style={styles.invoicePreview} id="invoice-preview">
               <div style={styles.invHeader}>
                 <div style={styles.invLogoSection}>
-                  <img
-                    src={LOGO_URL}
-                    alt="BONNAS Logo"
-                    style={styles.invLogo}
-                    crossOrigin="anonymous"
-                  />
+                  <img src={LOGO_URL} alt="BONNAS Logo" style={styles.invLogo} />
                   <div>
                     <h1 style={styles.invBrandName}>{BRAND_NAME}</h1>
                     <p style={styles.invBrandSub}>{BRAND_SUBTITLE}</p>
@@ -1048,137 +940,62 @@ const InvoiceGenerator = () => {
                   </div>
                 </div>
                 <div style={styles.invDocInfo}>
-                  <h2 style={styles.invDocType}>
-                    {docType === 'invoice' ? 'INVOICE' : 'QUOTATION'}
-                  </h2>
+                  <h2 style={styles.invDocType}>{docType === 'invoice' ? 'INVOICE' : 'QUOTATION'}</h2>
                   <p style={styles.invDocNumber}>{invoiceNumber}</p>
                   <p style={styles.invDocDate}>
-                    Date:{' '}
-                    {invoiceDate
-                      ? new Date(invoiceDate).toLocaleDateString('en-GB')
-                      : 'N/A'}
+                    Date: {invoiceDate ? new Date(invoiceDate).toLocaleDateString('en-GB') : 'N/A'}
                   </p>
                 </div>
               </div>
 
-              {/* --- Customer & Event Info --- */}
               <div style={styles.invCustomerSection}>
                 <div style={styles.invCustomerBox}>
                   <div style={styles.invCustomerLabel}>Bill To</div>
-                  <p style={styles.invCustomerText}>
-                    <strong>{customerName || 'Customer Name'}</strong>
-                  </p>
-                  {customerPhone && (
-                    <p style={styles.invCustomerText}>Phone: {customerPhone}</p>
-                  )}
-                  {customerEmail && (
-                    <p style={styles.invCustomerText}>Email: {customerEmail}</p>
-                  )}
-                  {customerAddress && (
-                    <p style={styles.invCustomerText}>{customerAddress}</p>
-                  )}
+                  <p style={styles.invCustomerText}><strong>{customerName || 'Customer Name'}</strong></p>
+                  {customerPhone && <p style={styles.invCustomerText}>Phone: {customerPhone}</p>}
+                  {customerEmail && <p style={styles.invCustomerText}>Email: {customerEmail}</p>}
+                  {customerAddress && <p style={styles.invCustomerText}>{customerAddress}</p>}
                 </div>
                 <div style={styles.invCustomerBox}>
                   <div style={styles.invCustomerLabel}>Event Details</div>
-                  {eventAddress && (
-                    <p style={styles.invCustomerText}>Venue: {eventAddress}</p>
-                  )}
-                  {eventDate && (
-                    <p style={styles.invCustomerText}>
-                      Date: {new Date(eventDate).toLocaleDateString('en-GB')}
-                    </p>
-                  )}
-                  {guestCount && (
-                    <p style={styles.invCustomerText}>Guests: {guestCount}</p>
-                  )}
+                  {eventAddress && <p style={styles.invCustomerText}>Venue: {eventAddress}</p>}
+                  {eventDate && <p style={styles.invCustomerText}>Date: {new Date(eventDate).toLocaleDateString('en-GB')}</p>}
+                  {guestCount && <p style={styles.invCustomerText}>Guests: {guestCount}</p>}
                 </div>
               </div>
 
-              {/* --- Line Items Table --- */}
               <table style={styles.invTable}>
                 <thead>
                   <tr>
                     <th style={{ ...styles.invTh, width: '30px' }}>#</th>
                     <th style={styles.invTh}>Description</th>
-                    <th
-                      style={{
-                        ...styles.invTh,
-                        width: '50px',
-                        textAlign: 'center',
-                      }}
-                    >
-                      Qty
-                    </th>
-                    <th
-                      style={{
-                        ...styles.invTh,
-                        width: '80px',
-                        textAlign: 'right',
-                      }}
-                    >
-                      Unit Price
-                    </th>
-                    <th
-                      style={{
-                        ...styles.invTh,
-                        width: '80px',
-                        textAlign: 'right',
-                      }}
-                    >
-                      Total
-                    </th>
+                    <th style={{ ...styles.invTh, width: '50px', textAlign: 'center' }}>Qty</th>
+                    <th style={{ ...styles.invTh, width: '80px', textAlign: 'right' }}>Unit Price</th>
+                    <th style={{ ...styles.invTh, width: '80px', textAlign: 'right' }}>Total</th>
                   </tr>
                 </thead>
                 <tbody>
                   {calculatedItems.map((item, index) => (
                     <tr key={item.id}>
-                      <td
-                        style={{
-                          ...styles.invTdCenter,
-                          fontWeight: 'bold',
-                          color: '#C5A059',
-                        }}
-                      >
-                        {index + 1}
-                      </td>
-                      <td style={styles.invTd}>
-                        {item.description || 'Item description'}
-                      </td>
+                      <td style={{ ...styles.invTdCenter, fontWeight: 'bold', color: '#C5A059' }}>{index + 1}</td>
+                      <td style={styles.invTd}>{item.description || 'Item description'}</td>
                       <td style={styles.invTdCenter}>{item.qty}</td>
-                      <td style={styles.invTdRight}>
-                        {formatCurrency(item.unitPrice)}
-                      </td>
-                      <td style={styles.invTdRight}>
-                        {formatCurrency(item.total)}
-                      </td>
+                      <td style={styles.invTdRight}>{formatCurrency(item.unitPrice)}</td>
+                      <td style={styles.invTdRight}>{formatCurrency(item.total)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
 
-              {/* --- Summary --- */}
               <div style={styles.invSummaryContainer}>
                 <div style={styles.invSummaryBox}>
-                  <div style={styles.invSummaryRow}>
-                    <span>Subtotal</span>
-                    <span>{formatCurrency(subtotal)}</span>
-                  </div>
-                  <div style={styles.invSummaryRow}>
-                    <span>Deposit ({depositPercent}%)</span>
-                    <span>{formatCurrency(depositAmount)}</span>
-                  </div>
-                  <div style={styles.invSummaryRow}>
-                    <span>Remaining Balance</span>
-                    <span>{formatCurrency(remainingBalance)}</span>
-                  </div>
-                  <div style={styles.invSummaryTotal}>
-                    <span>Grand Total</span>
-                    <span>{formatCurrency(grandTotal)}</span>
-                  </div>
+                  <div style={styles.invSummaryRow}><span>Subtotal</span><span>{formatCurrency(subtotal)}</span></div>
+                  <div style={styles.invSummaryRow}><span>Deposit ({depositPercent}%)</span><span>{formatCurrency(depositAmount)}</span></div>
+                  <div style={styles.invSummaryRow}><span>Remaining Balance</span><span>{formatCurrency(remainingBalance)}</span></div>
+                  <div style={styles.invSummaryTotal}><span>Grand Total</span><span>{formatCurrency(grandTotal)}</span></div>
                 </div>
               </div>
 
-              {/* --- Notes --- */}
               {notes && (
                 <div style={styles.invNotesSection}>
                   <div style={styles.invNotesTitle}>Notes</div>
@@ -1186,9 +1003,8 @@ const InvoiceGenerator = () => {
                 </div>
               )}
 
-              {/* --- Policies (Always Included) --- */}
               <div style={styles.invPolicySection}>
-                <div style={styles.invPolicyTitle}>Terms & Policies</div>
+                <div style={styles.invPolicyTitle}>Terms &amp; Policies</div>
                 <ul style={styles.invPolicyList}>
                   <li>• Collection only</li>
                   <li>• Full payment required before event</li>
@@ -1198,11 +1014,8 @@ const InvoiceGenerator = () => {
                 </ul>
               </div>
 
-              {/* --- Footer --- */}
               <div style={styles.invFooter}>
-                <p style={styles.invFooterBrand}>
-                  Thank you for choosing {BRAND_NAME}
-                </p>
+                <p style={styles.invFooterBrand}>Thank you for choosing {BRAND_NAME}</p>
                 <p>{BRAND_SUBTITLE}</p>
                 <p>{BRAND_WEBSITE}</p>
               </div>
