@@ -1,5 +1,34 @@
 import React, { useState, useRef } from 'react';
 
+const loadScript = (src, getExport) => new Promise((resolve, reject) => {
+  const existingScript = document.querySelector(`script[src="${src}"]`);
+
+  if (existingScript) {
+    if (getExport()) {
+      resolve(getExport());
+      return;
+    }
+
+    existingScript.addEventListener('load', () => resolve(getExport()), { once: true });
+    existingScript.addEventListener('error', () => reject(new Error(`Failed to load ${src}`)), { once: true });
+    return;
+  }
+
+  const script = document.createElement('script');
+  script.src = src;
+  script.async = true;
+  script.onload = () => {
+    const loadedExport = getExport();
+    if (loadedExport) {
+      resolve(loadedExport);
+    } else {
+      reject(new Error(`Loaded ${src}, but its export was not found`));
+    }
+  };
+  script.onerror = () => reject(new Error(`Failed to load ${src}`));
+  document.head.appendChild(script);
+});
+
 export default function Invoice() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
@@ -20,7 +49,7 @@ export default function Invoice() {
   const [isDownloading, setIsDownloading] = useState(false);
   
   const invoiceRef = useRef(null);
-  const CORRECT_PASSWORD = 'bonnas2024';
+  const CORRECT_PASSWORD = 'bonnas24';
 
   const handleLogin = () => {
     if (password === CORRECT_PASSWORD) {
@@ -69,11 +98,16 @@ export default function Invoice() {
     setIsDownloading(true);
 
     try {
-      // Load html2canvas and jsPDF from CDN
-      const html2canvas = (await import('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js')).default;
+      const html2canvas = await loadScript(
+        'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
+        () => window.html2canvas
+      );
       
       if (format === 'pdf') {
-        const jsPDF = (await import('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js')).jsPDF;
+        const jsPDF = await loadScript(
+          'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+          () => window.jspdf?.jsPDF || window.jsPDF
+        );
         
         const canvas = await html2canvas(element, { 
           scale: 2, 
