@@ -244,7 +244,7 @@ export default function Invoice() {
               overflow: 'hidden'
             }}>
               <img
-                src="/logo.png"
+                src="./public/logo.png"
                 alt="Logo"
                 style={{ width: '100%', height: '100%', objectFit: 'contain' }}
               />
