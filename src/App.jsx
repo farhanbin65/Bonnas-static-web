@@ -7,6 +7,7 @@ import Home from "./components/Home";
 import Menu from "./components/menu";
 import Blog from "./components/Blog";
 import BlogPost from "./components/BlogPost";
+import Invoice from "./components/Invoice";  // ← Add this
 import Footer from "./components/footer";
 
 function ScrollToTop() {
@@ -27,6 +28,7 @@ export default function App() {
           <Route path="/menu" element={<Menu />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:slug" element={<BlogPost />} />
+          <Route path="/invoice" element={<Invoice />} />  {/* ← Add this */}
         </Routes>
         <Footer />
       </BrowserRouter>
