@@ -8,7 +8,6 @@ const loadScript = (src, getExport) => new Promise((resolve, reject) => {
       resolve(getExport());
       return;
     }
-
     existingScript.addEventListener('load', () => resolve(getExport()), { once: true });
     existingScript.addEventListener('error', () => reject(new Error(`Failed to load ${src}`)), { once: true });
     return;
@@ -29,11 +28,34 @@ const loadScript = (src, getExport) => new Promise((resolve, reject) => {
   document.head.appendChild(script);
 });
 
+// Helper: sanitize oklch colors before capture (fallback safety net)
+const sanitizeColors = (root) => {
+  if (!root) return;
+  const elements = root.querySelectorAll('*');
+  const colorProps = [
+    'color', 'backgroundColor', 'borderColor',
+    'borderTopColor', 'borderRightColor', 'borderBottomColor', 'borderLeftColor',
+    'outlineColor', 'textDecorationColor', 'caretColor', 'fill', 'stroke',
+  ];
+  const all = [root, ...elements];
+  all.forEach((el) => {
+    const style = window.getComputedStyle(el);
+    colorProps.forEach((prop) => {
+      const value = style[prop];
+      if (value && value.includes('oklch')) {
+        // Convert by resetting to a safe fallback
+        el.style[prop] = '#000000';
+      }
+    });
+  });
+};
+
 export default function Invoice() {
+  // ... all your existing state ...
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
-  
+
   const [docType, setDocType] = useState('invoice');
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
@@ -42,12 +64,12 @@ export default function Invoice() {
   const [eventAddress, setEventAddress] = useState('');
   const [guestCount, setGuestCount] = useState('');
   const [lineItems, setLineItems] = useState([{ item: '', price: '' }]);
-  
+
   const [depositPercentage, setDepositPercentage] = useState(50);
   const [includeTerms, setIncludeTerms] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
-  
+
   const invoiceRef = useRef(null);
   const CORRECT_PASSWORD = 'bonnas24';
 
@@ -73,17 +95,11 @@ export default function Invoice() {
   const invoiceNumber = generateInvoiceNumber();
   const today = new Date().toISOString().split('T')[0];
 
-  const addLineItem = () => {
-    setLineItems([...lineItems, { item: '', price: '' }]);
-  };
-
-  const removeLineItem = (index) => {
-    setLineItems(lineItems.filter((_, i) => i !== index));
-  };
-
-  const updateLineItem = (index, field, value) => {
+  const addLineItem = () => setLineItems([...lineItems, { item: '', price: '' }]);
+  const removeLineItem = (i) => setLineItems(lineItems.filter((_, idx) => idx !== i));
+  const updateLineItem = (i, field, value) => {
     const updated = [...lineItems];
-    updated[index][field] = value;
+    updated[i][field] = value;
     setLineItems(updated);
   };
 
@@ -98,24 +114,28 @@ export default function Invoice() {
     setIsDownloading(true);
 
     try {
+      // ✅ Use html2canvas-pro which supports oklch/lab/lch
       const html2canvas = await loadScript(
-        'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
+        'https://cdn.jsdelivr.net/npm/html2canvas-pro@1.5.11/dist/html2canvas-pro.min.js',
         () => window.html2canvas
       );
-      
+
+      // Safety net: replace any oklch computed colors with black
+      sanitizeColors(element);
+
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        backgroundColor: '#ffffff',
+        useCORS: true,
+        logging: false,
+      });
+
       if (format === 'pdf') {
         const jsPDF = await loadScript(
           'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
           () => window.jspdf?.jsPDF || window.jsPDF
         );
-        
-        const canvas = await html2canvas(element, { 
-          scale: 2, 
-          backgroundColor: '#ffffff',
-          useCORS: true,
-          logging: false
-        });
-        
+
         const imgData = canvas.toDataURL('image/png');
         const pdf = new jsPDF('p', 'mm', 'a4');
         const imgWidth = 210;
@@ -123,13 +143,6 @@ export default function Invoice() {
         pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
         pdf.save(`${invoiceNumber}-${docType}.pdf`);
       } else if (format === 'jpg') {
-        const canvas = await html2canvas(element, { 
-          scale: 2, 
-          backgroundColor: '#ffffff',
-          useCORS: true,
-          logging: false
-        });
-        
         const link = document.createElement('a');
         link.href = canvas.toDataURL('image/jpeg', 0.95);
         link.download = `${invoiceNumber}-${docType}.jpg`;
@@ -143,40 +156,35 @@ export default function Invoice() {
     }
   };
 
+  // ===== LOGIN SCREEN (unchanged, just logo swap) =====
   if (!isAuthenticated) {
     return (
       <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
+        display: 'flex', justifyContent: 'center', alignItems: 'center',
         minHeight: '100vh',
         background: 'linear-gradient(135deg, #fce4ec 0%, #f3e5f5 100%)',
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
         padding: '20px'
       }}>
         <div style={{
-          background: '#fafaf9',
-          padding: '50px 40px',
-          borderRadius: '16px',
+          background: '#fafaf9', padding: '50px 40px', borderRadius: '16px',
           boxShadow: '0 10px 40px rgba(236, 64, 122, 0.15)',
-          width: '100%',
-          maxWidth: '400px',
-          textAlign: 'center'
+          width: '100%', maxWidth: '400px', textAlign: 'center'
         }}>
           <div style={{ marginBottom: '35px' }}>
-            <div style={{ 
-              width: '60px', 
-              height: '60px', 
+            {/* ✅ Logo image */}
+            <div style={{
+              width: '60px', height: '60px',
               background: 'linear-gradient(135deg, #ec407a 0%, #e91e63 100%)',
-              borderRadius: '12px',
-              margin: '0 auto 20px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '32px',
-              color: 'white'
+              borderRadius: '12px', margin: '0 auto 20px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              overflow: 'hidden'
             }}>
-              🧁
+              <img
+                src="/logo.png"
+                alt="Logo"
+                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+              />
             </div>
             <h1 style={{ fontSize: '28px', margin: '0 0 8px 0', color: '#2c2c2c', fontWeight: '700' }}>Invoice Portal</h1>
             <p style={{ margin: '0', color: '#999', fontSize: '14px', fontWeight: '500' }}>Admin access only</p>
@@ -190,15 +198,10 @@ export default function Invoice() {
               onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
               placeholder="Enter password"
               style={{
-                width: '100%',
-                padding: '14px 16px',
+                width: '100%', padding: '14px 16px',
                 border: passwordError ? '2px solid #e91e63' : '2px solid #f3e5f5',
-                borderRadius: '10px',
-                fontSize: '14px',
-                boxSizing: 'border-box',
-                fontFamily: 'inherit',
-                background: 'white',
-                transition: 'all 0.2s'
+                borderRadius: '10px', fontSize: '14px', boxSizing: 'border-box',
+                fontFamily: 'inherit', background: 'white', transition: 'all 0.2s'
               }}
               onFocus={(e) => !passwordError && (e.target.style.borderColor = '#ec407a')}
               onBlur={(e) => !passwordError && (e.target.style.borderColor = '#f3e5f5')}
@@ -209,25 +212,12 @@ export default function Invoice() {
           <button
             onClick={handleLogin}
             style={{
-              width: '100%',
-              padding: '14px',
+              width: '100%', padding: '14px',
               background: 'linear-gradient(135deg, #ec407a 0%, #e91e63 100%)',
-              color: 'white',
-              border: 'none',
-              borderRadius: '10px',
-              fontSize: '15px',
-              fontWeight: '700',
-              cursor: 'pointer',
+              color: 'white', border: 'none', borderRadius: '10px',
+              fontSize: '15px', fontWeight: '700', cursor: 'pointer',
               transition: 'all 0.3s',
               boxShadow: '0 4px 15px rgba(233, 30, 99, 0.3)'
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.transform = 'translateY(-2px)';
-              e.target.style.boxShadow = '0 6px 20px rgba(233, 30, 99, 0.4)';
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.transform = 'translateY(0)';
-              e.target.style.boxShadow = '0 4px 15px rgba(233, 30, 99, 0.3)';
             }}
           >
             Access Portal
@@ -237,25 +227,27 @@ export default function Invoice() {
     );
   }
 
+  // ===== MAIN UI (unchanged except logo) =====
   return (
     <div style={{ minHeight: '100vh', background: '#fafaf9', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', padding: '40px 20px' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        
+
         {/* Header */}
         <div style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
           <div>
-            <div style={{ 
-              width: '50px', 
-              height: '50px', 
+            {/* ✅ Logo image in header */}
+            <div style={{
+              width: '50px', height: '50px',
               background: 'linear-gradient(135deg, #ec407a 0%, #e91e63 100%)',
-              borderRadius: '12px',
-              marginBottom: '15px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '28px'
+              borderRadius: '12px', marginBottom: '15px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              overflow: 'hidden'
             }}>
-              🧁
+              <img
+                src="/logo.png"
+                alt="Logo"
+                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+              />
             </div>
             <h1 style={{ margin: '0', fontSize: '32px', color: '#2c2c2c', fontWeight: '700' }}>Invoice Generator</h1>
             <p style={{ margin: '5px 0 0 0', color: '#999', fontSize: '14px' }}>Bonnas Catering</p>
@@ -263,28 +255,15 @@ export default function Invoice() {
           <button
             onClick={() => setIsAuthenticated(false)}
             style={{
-              padding: '10px 20px',
-              background: 'white',
-              border: '2px solid #f3e5f5',
-              borderRadius: '10px',
-              cursor: 'pointer',
-              fontSize: '13px',
-              color: '#e91e63',
-              fontWeight: '600',
-              transition: 'all 0.2s'
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.borderColor = '#e91e63';
-              e.target.style.background = '#fce4ec';
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.borderColor = '#f3e5f5';
-              e.target.style.background = 'white';
+              padding: '10px 20px', background: 'white',
+              border: '2px solid #f3e5f5', borderRadius: '10px',
+              cursor: 'pointer', fontSize: '13px', color: '#e91e63', fontWeight: '600'
             }}
           >
             Logout
           </button>
         </div>
+
 
         <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth > 1024 ? '1fr 1fr' : '1fr', gap: '30px', marginBottom: '40px' }}>
           

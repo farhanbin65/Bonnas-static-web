@@ -9,3 +9,7 @@ body {
 .golden-tiles img {
   filter: sepia(1) hue-rotate(10deg) saturate(9) brightness(1.25);
 }
+
+.invoice-capture, .invoice-capture * {
+  color-scheme: light;
+}
