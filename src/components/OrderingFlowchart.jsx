@@ -1,10 +1,11 @@
 import { motion } from "framer-motion";
 import { scrollRevealViewport } from "../lib/motion";
+import { MessageCircle, Mail } from "lucide-react";
 
 export default function OrderingFlowchart() {
   const steps = [
     { number: 1, title: "Choose Your Order", desc: "Browse our menu & select items", icon: "🍽️" },
-    { number: 2, title: "Contact Us", desc: "WhatsApp/Email your order", contact: "07912795556 · orders@bonnas.co.uk", icon: "📞" },
+    { number: 2, title: "Contact Us", desc: "WhatsApp/Email your order", phone: "07912795556", email: "orders@bonnas.co.uk", icon: "📞" },
     { number: 3, title: "Payment", desc: "100% upfront to confirm", icon: "💳" },
     { number: 4, title: "Collect", desc: "Pick up from E2 0RB", icon: "📍" },
     { number: 5, title: "Enjoy!", desc: "Savor authentic Bangladeshi food", icon: "😋" },
@@ -37,7 +38,7 @@ export default function OrderingFlowchart() {
               transition={{ duration: 0.5, delay: idx * 0.1 }}
             >
               {/* Step box */}
-              <div className="w-full bg-ember border-2 border-pink-bonnas rounded-2xl p-6 text-center shadow-lg hover:shadow-xl hover:border-gold-dust transition-all duration-300 flex flex-col items-center">
+              <div className="w-full bg-ember border-2 border-pink-bonnas rounded-2xl p-6 text-center shadow-lg hover:shadow-xl hover:border-gold-dust transition-all duration-300 flex flex-col items-center h-full group">
                 {/* Icon circle */}
                 <div className="w-16 h-16 rounded-full bg-gradient-to-br from-pink-bonnas to-red-500 flex items-center justify-center text-2xl mb-4 shadow-md">
                   {step.icon}
@@ -52,14 +53,27 @@ export default function OrderingFlowchart() {
                 {/* Description */}
                 <p className="text-xs text-sand mb-3">{step.desc}</p>
 
-                {/* Contact info (step 2 only) */}
-                {step.contact && (
-                  <div className="text-xs text-pink-bonnas font-semibold border-t border-gold-dust pt-3 w-full">
-                    <a href="tel:07912795556" className="block hover:text-cream transition mb-1">
-                      📱 07912795556
+                {/* Contact info (step 2 only) - Hidden by default, shown on hover */}
+                {step.phone && (
+                  <div className="w-full border-t border-gold-dust pt-4 mt-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    {/* WhatsApp Link */}
+                    <a
+                      href={`https://wa.me/447912795556?text=Hello,%20I'd%20like%20to%20order%20from%20Bonna's`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 text-xs text-cream bg-green-600 hover:bg-green-700 rounded-lg px-3 py-2 mb-2 transition-colors font-semibold"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      WhatsApp
                     </a>
-                    <a href="mailto:orders@bonnas.co.uk" className="block hover:text-cream transition">
-                      ✉️ orders@bonnas.co.uk
+
+                    {/* Email Link */}
+                    <a
+                      href={`mailto:orders@bonnas.co.uk`}
+                      className="flex items-center justify-center gap-2 text-xs text-cream bg-blue-600 hover:bg-blue-700 rounded-lg px-3 py-2 transition-colors font-semibold"
+                    >
+                      <Mail className="w-4 h-4" />
+                      Email
                     </a>
                   </div>
                 )}
@@ -114,10 +128,12 @@ export default function OrderingFlowchart() {
             Ready to order? Minimum order <span className="text-pink-bonnas font-bold">£20</span>
           </p>
           <a
-            href="tel:07912795556"
+            href={`https://wa.me/447912795556?text=Hello,%20I'd%20like%20to%20order%20from%20Bonna's`}
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-block px-8 py-3 bg-gradient-to-r from-pink-bonnas to-red-500 text-night rounded-full text-sm font-semibold hover:shadow-lg transition-shadow"
           >
-            Call or WhatsApp Now
+            Message on WhatsApp
           </a>
         </motion.div>
       </div>
