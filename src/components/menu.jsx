@@ -6,6 +6,7 @@ import TiltCard from "./TiltCard";
 import StickyCartBar from "./StickyCartBar";
 import { useCart } from "../context/CartContext";
 
+
 const CATEGORIES = [
   { label: "All",      value: "all" },
   { label: "Packages", value: "packages" },
