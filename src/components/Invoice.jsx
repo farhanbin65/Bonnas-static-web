@@ -849,7 +849,7 @@ const InvoiceGenerator = () => {
             <div style={styles.halfWidth}>
               <label style={styles.label}>Guest Count</label>
               <input
-                type="number"
+                type="text"
                 min="0"
                 value={guestCount}
                 onChange={(e) => {
@@ -885,10 +885,10 @@ const InvoiceGenerator = () => {
                     <input type="text" value={item.description} onChange={(e) => handleItemChange(item.id, 'description', e.target.value)} placeholder="Item description" style={styles.tdInput} />
                   </td>
                   <td style={styles.td}>
-                    <input type="number" min="0" value={item.qty} onChange={(e) => handleItemChange(item.id, 'qty', e.target.value)} style={{ ...styles.tdInput, textAlign: 'center' }} />
+                    <input type="text" min="0" value={item.qty} onChange={(e) => handleItemChange(item.id, 'qty', e.target.value)} style={{ ...styles.tdInput, textAlign: 'center' }} />
                   </td>
                   <td style={styles.td}>
-                    <input type="number" min="0" step="0.01" value={item.unitPrice} onChange={(e) => handleItemChange(item.id, 'unitPrice', e.target.value)} style={{ ...styles.tdInput, textAlign: 'right' }} />
+                    <input type="text" min="0" step="0.01" value={item.unitPrice} onChange={(e) => handleItemChange(item.id, 'unitPrice', e.target.value)} style={{ ...styles.tdInput, textAlign: 'right' }} />
                   </td>
                   <td style={{ ...styles.tdReadOnly, textAlign: 'right' }}>{formatCurrency(item.total)}</td>
                   <td style={styles.td}>
