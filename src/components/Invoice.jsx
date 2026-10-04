@@ -5,8 +5,6 @@ import jsPDF from 'jspdf';
 // ============================================================
 // CONSTANTS
 // ============================================================
-// Use a LOCAL logo in /public so html2canvas never hits CORS.
-// Example: public/logo.PNG  ->  "/logo.PNG"
 const LOGO_URL = "/logo.PNG";
 
 const CURRENCY = "£";
@@ -40,16 +38,9 @@ const getTodayDate = () => {
   return `${year}-${month}-${day}`;
 };
 
-// Regex that matches oklch/lab/lch/color() etc. — html2canvas chokes on these.
-// We replace them with safe fallbacks during export.
 const UNSUPPORTED_COLOR_REGEX =
   /(oklch|oklab|lab|lch|color)\s*\([^)]*\)/gi;
 
-/**
- * Walk the cloned DOM and replace any unsupported color functions
- * (oklch, lab, lch, color()) with a safe hex fallback so html2canvas
- * doesn't crash. Called from html2canvas onclone.
- */
 const sanitizeUnsupportedColors = (clonedDoc) => {
   const SAFE = {
     color: '#2C2C2C',
@@ -69,12 +60,10 @@ const sanitizeUnsupportedColors = (clonedDoc) => {
   const all = clonedDoc.querySelectorAll('*');
   all.forEach((el) => {
     const cs = clonedDoc.defaultView.getComputedStyle(el);
-    // Check every color-ish property
     Object.keys(SAFE).forEach((prop) => {
       const val = cs[prop];
       if (val && UNSUPPORTED_COLOR_REGEX.test(val)) {
         el.style[prop] = SAFE[prop];
-        // reset lastIndex because regex is global
         UNSUPPORTED_COLOR_REGEX.lastIndex = 0;
       }
     });
@@ -82,7 +71,7 @@ const sanitizeUnsupportedColors = (clonedDoc) => {
 };
 
 // ============================================================
-// STYLES (unchanged, all hex — safe for html2canvas)
+// STYLES
 // ============================================================
 const styles = {
   appContainer: {
@@ -455,7 +444,6 @@ const styles = {
     borderRadius: '50%',
     animation: 'spin 1s linear infinite',
   },
-  // --- Password screen ---
   passwordScreen: {
     minHeight: '100vh',
     display: 'flex',
@@ -544,7 +532,8 @@ const InvoiceGenerator = () => {
   const [eventDate, setEventDate] = useState('');
   const [guestCount, setGuestCount] = useState('');
   const [notes, setNotes] = useState('');
-  const [depositPercent, setDepositPercent] = useState(100); // <-- default 100
+  const [depositPercent, setDepositPercent] = useState(100);
+  const [discount, setDiscount] = useState(0); // NEW: flat discount
   const [items, setItems] = useState([{ id: 1, description: '', qty: 1, unitPrice: 0 }]);
   const [nextId, setNextId] = useState(2);
   const [isExporting, setIsExporting] = useState(false);
@@ -567,13 +556,20 @@ const InvoiceGenerator = () => {
     [calculatedItems]
   );
 
+  const discountAmount = useMemo(() => Math.max(0, Number(discount) || 0), [discount]);
+
+  const subtotalAfterDiscount = useMemo(
+    () => Math.max(0, subtotal - discountAmount),
+    [subtotal, discountAmount]
+  );
+
   const depositAmount = useMemo(() => {
     const percent = Math.min(100, Math.max(0, Number(depositPercent) || 0));
-    return (subtotal * percent) / 100;
-  }, [subtotal, depositPercent]);
+    return (subtotalAfterDiscount * percent) / 100;
+  }, [subtotalAfterDiscount, depositPercent]);
 
-  const remainingBalance = useMemo(() => subtotal - depositAmount, [subtotal, depositAmount]);
-  const grandTotal = subtotal;
+  const remainingBalance = useMemo(() => subtotalAfterDiscount - depositAmount, [subtotalAfterDiscount, depositAmount]);
+  const grandTotal = subtotalAfterDiscount;
 
   useEffect(() => {
     setInvoiceNumber(generateDocNumber(docType));
@@ -639,15 +635,10 @@ const InvoiceGenerator = () => {
         logging: false,
         backgroundColor: '#FFFFFF',
         onclone: (clonedDoc) => {
-          // 1) Strip any oklch/lab/lch/color() values that break html2canvas
           sanitizeUnsupportedColors(clonedDoc);
 
-          // 2) Force all <img> to use same-origin (no CORS issues)
-          //    Any remote logo will be replaced with a blank transparent pixel
-          //    so the export doesn't crash. Use /logo.PNG locally instead.
           clonedDoc.querySelectorAll('img').forEach((img) => {
             if (!img.src.startsWith(window.location.origin)) {
-              // If a remote image is still there, drop it silently
               img.removeAttribute('src');
               img.style.visibility = 'hidden';
             } else {
@@ -900,11 +891,35 @@ const InvoiceGenerator = () => {
           </table>
           <button onClick={handleAddItem} style={styles.addBtn}>+ Add Item</button>
 
+          <div style={styles.sectionTitle}>Pricing</div>
+          <div style={styles.row}>
+            <div style={styles.fullWidth}>
+              <label style={styles.label}>Discount (Flat Amount)</label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={discount}
+                onChange={(e) => {
+                  const val = parseFloat(e.target.value);
+                  if (!isNaN(val) && val >= 0) setDiscount(val);
+                  else if (e.target.value === '') setDiscount(0);
+                }}
+                placeholder="Enter discount amount"
+                style={styles.input}
+              />
+            </div>
+          </div>
+
           <div style={styles.sectionTitle}>Notes</div>
           <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Enter any additional notes or special instructions..." style={styles.notesArea} />
 
           <div style={styles.summaryBox}>
             <div style={styles.summaryRow}><span>Subtotal</span><span>{formatCurrency(subtotal)}</span></div>
+            {discountAmount > 0 && (
+              <div style={styles.summaryRow}><span>Discount</span><span>-{formatCurrency(discountAmount)}</span></div>
+            )}
+            <div style={styles.summaryRow}><span>Subtotal After Discount</span><span>{formatCurrency(subtotalAfterDiscount)}</span></div>
             <div style={styles.summaryRow}><span>Deposit ({depositPercent}%)</span><span>{formatCurrency(depositAmount)}</span></div>
             <div style={styles.summaryRow}><span>Remaining Balance</span><span>{formatCurrency(remainingBalance)}</span></div>
             <div style={styles.summaryTotal}><span>Grand Total</span><span>{formatCurrency(grandTotal)}</span></div>
@@ -990,6 +1005,10 @@ const InvoiceGenerator = () => {
               <div style={styles.invSummaryContainer}>
                 <div style={styles.invSummaryBox}>
                   <div style={styles.invSummaryRow}><span>Subtotal</span><span>{formatCurrency(subtotal)}</span></div>
+                  {discountAmount > 0 && (
+                    <div style={styles.invSummaryRow}><span>Discount</span><span>-{formatCurrency(discountAmount)}</span></div>
+                  )}
+                  <div style={styles.invSummaryRow}><span>Subtotal After Discount</span><span>{formatCurrency(subtotalAfterDiscount)}</span></div>
                   <div style={styles.invSummaryRow}><span>Deposit ({depositPercent}%)</span><span>{formatCurrency(depositAmount)}</span></div>
                   <div style={styles.invSummaryRow}><span>Remaining Balance</span><span>{formatCurrency(remainingBalance)}</span></div>
                   <div style={styles.invSummaryTotal}><span>Grand Total</span><span>{formatCurrency(grandTotal)}</span></div>
@@ -1004,7 +1023,7 @@ const InvoiceGenerator = () => {
               )}
 
               <div style={styles.invPolicySection}>
-                <div style={styles.invPolicyTitle}>Terms &amp; Policies</div>
+                <div style={styles.invPolicyTitle}>Terms & Policies</div>
                 <ul style={styles.invPolicyList}>
                   <li>• Collection only</li>
                   <li>• Full payment required before event</li>
