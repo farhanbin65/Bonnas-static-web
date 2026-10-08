@@ -98,8 +98,7 @@ export default function Menu() {
 
   return (
     <section id="menu" className="py-20 px-6 md:px-20 bg-night">
-
-      {/* Header */}
+{/*
       <motion.div
         className="flex items-center justify-between mb-10 max-w-7xl mx-auto"
         variants={fadeUp}
@@ -130,7 +129,7 @@ export default function Menu() {
         </button>
       </motion.div>
 
-      {/* Category tabs */}
+   
       <div className="flex gap-2 mb-10 overflow-x-auto pb-2 max-w-7xl mx-auto">
         {CATEGORIES.map((cat) => (
           <button key={cat.value} onClick={() => setActiveCategory(cat.value)}
@@ -144,7 +143,7 @@ export default function Menu() {
         ))}
       </div>
 
-      {/* Grid */}
+
       <motion.div
         className="grid gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 max-w-7xl mx-auto"
         variants={staggerContainer}
@@ -157,7 +156,7 @@ export default function Menu() {
             <TiltCard
               className="bg-ember rounded-2xl overflow-hidden border border-gold-dust hover:border-pink-bonnas/50 transition-colors flex flex-col cursor-pointer h-full"
             >
-              {/* FIX: whole card is clickable — opens variant picker or adds directly */}
+
               <div
                 onClick={() => item.variants?.length > 0 ? setVariantPicker(item) : addToCart(item)}
                 className="flex flex-col flex-1"
@@ -172,7 +171,7 @@ export default function Menu() {
                         ? "£" + item.variants[0].price.toFixed(2) + " – £" + item.variants[item.variants.length - 1].price.toFixed(2)
                         : item.price ? "£" + item.price.toFixed(2) : "See options"}
                     </span>
-                    {/* Button kept for visual affordance; click is handled by the card wrapper above */}
+       
                     <span className="bg-pink-bonnas text-night text-xs px-3 py-1.5 rounded-full font-semibold pointer-events-none">
                       + Add
                     </span>
@@ -183,13 +182,13 @@ export default function Menu() {
           </motion.div>
         ))}
       </motion.div>
-
+      */}
       {/* PDF section */}
       <div className="mt-16 border-t border-gold-dust pt-12 max-w-7xl mx-auto">
         <h3 className="text-xl font-semibold text-center text-cream mb-2">Full Menu PDF</h3>
         <p className="text-center text-sand text-sm mb-8">Download our complete menu</p>
         <div className="flex flex-col md:flex-row gap-6 justify-center items-center mb-8">
-          {["/photos/menu1.jpg", "/photos/menu2.jpg"].map((img, i) => (
+          {["/photos/menu1.jpg", "/photos/menu2.jpg", "/photos/menu3.jpg"].map((img, i) => (
             <div key={i} className="border border-gold-dust rounded-xl p-2 max-w-xs w-full">
               <img src={img} alt={"Menu " + (i + 1)} className="w-full object-cover rounded-lg" />
             </div>
@@ -202,7 +201,7 @@ export default function Menu() {
         </div>
       </div>
 
-      {/* Variant picker */}
+      {/* Variant picker
       <AnimatePresence>
         {variantPicker && (
           <motion.div
@@ -243,8 +242,9 @@ export default function Menu() {
           </motion.div>
         )}
       </AnimatePresence>
+      */}
 
-      {/* Cart drawer */}
+      {/* 
       <AnimatePresence>
         {cartOpen && (
           <motion.div
@@ -253,9 +253,7 @@ export default function Menu() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            {/* FIX: backdrop is lighter + clearly dismissible, but the real fix is
-                that the drawer no longer force-opens on every add, so this
-                backdrop is only seen when the user deliberately opens the cart. */}
+
             <div className="flex-1 bg-black/50" onClick={() => setCartOpen(false)} />
             <motion.div
               className="w-full md:max-w-sm bg-ember border-l border-gold-dust flex flex-col shadow-2xl md:h-full rounded-t-2xl md:rounded-none"
@@ -311,8 +309,7 @@ export default function Menu() {
                   <input type="tel" placeholder="Your phone number" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)}
                     className="w-full bg-ember border border-gold-dust text-cream placeholder-sand rounded-xl px-4 py-2.5 text-sm mb-4 outline-none focus:border-pink-bonnas" />
 
-                  {/* FIX: now a real clickable button — closes the drawer so the
-                      user can go add more items from the grid */}
+ 
                   {amountToMinimum > 0 && (
                     <button
                       onClick={handleAddMoreClick}
@@ -324,8 +321,6 @@ export default function Menu() {
                     </button>
                   )}
 
-                  {/* FIX: disabled + shows sending state while request is in flight,
-                      preventing the double/triple click Telegram bug */}
                   <button
                     onClick={sendTelegram}
                     disabled={cartTotal < 20 || !customerName || !customerPhone || isSending}
@@ -350,6 +345,7 @@ export default function Menu() {
         )}
       </AnimatePresence>
       <StickyCartBar onOpenCart={() => setCartOpen(true)} />
+      */}
     </section>
   );
 }
