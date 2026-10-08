@@ -534,6 +534,8 @@ const InvoiceGenerator = () => {
   const [notes, setNotes] = useState('');
   const [depositPercent, setDepositPercent] = useState(100);
   const [discount, setDiscount] = useState(0); // NEW: flat discount
+  const [useDiscount, setUseDiscount] = useState(false);
+  const [useDeposit, setUseDeposit] = useState(false);
   const [items, setItems] = useState([{ id: 1, description: '', qty: 1, unitPrice: 0 }]);
   const [nextId, setNextId] = useState(2);
   const [isExporting, setIsExporting] = useState(false);
@@ -556,17 +558,20 @@ const InvoiceGenerator = () => {
     [calculatedItems]
   );
 
-  const discountAmount = useMemo(() => Math.max(0, Number(discount) || 0), [discount]);
-
+  const discountAmount = useMemo(
+    () => (useDiscount ? Math.max(0, Number(discount) || 0) : 0),
+    [useDiscount, discount]
+  );
   const subtotalAfterDiscount = useMemo(
     () => Math.max(0, subtotal - discountAmount),
     [subtotal, discountAmount]
   );
 
   const depositAmount = useMemo(() => {
+    if (!useDeposit) return 0;
     const percent = Math.min(100, Math.max(0, Number(depositPercent) || 0));
     return (subtotalAfterDiscount * percent) / 100;
-  }, [subtotalAfterDiscount, depositPercent]);
+  }, [useDeposit, subtotalAfterDiscount, depositPercent]);
 
   const remainingBalance = useMemo(() => subtotalAfterDiscount - depositAmount, [subtotalAfterDiscount, depositAmount]);
   const grandTotal = subtotalAfterDiscount;
@@ -741,7 +746,7 @@ const InvoiceGenerator = () => {
     );
   }
 
-  // ============================================================
+    // ============================================================
   // MAIN INVOICE UI
   // ============================================================
   return (
@@ -785,18 +790,22 @@ const InvoiceGenerator = () => {
               <input type="date" value={invoiceDate} onChange={(e) => setInvoiceDate(e.target.value)} style={styles.input} />
             </div>
             <div style={styles.halfWidth}>
-              <label style={styles.label}>Deposit %</label>
+              <label style={{ ...styles.label, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <input type="checkbox" checked={useDeposit} onChange={(e) => setUseDeposit(e.target.checked)} />
+                Include Deposit
+              </label>
               <input
                 type="number"
                 min="0"
                 max="100"
                 value={depositPercent}
+                disabled={!useDeposit}
                 onChange={(e) => {
                   const val = parseFloat(e.target.value);
                   if (!isNaN(val) && val >= 0 && val <= 100) setDepositPercent(val);
                   else if (e.target.value === '') setDepositPercent(0);
                 }}
-                style={styles.input}
+                style={{ ...styles.input, ...(useDeposit ? {} : { opacity: 0.5 }) }}
               />
             </div>
           </div>
@@ -879,49 +888,73 @@ const InvoiceGenerator = () => {
                     <input type="text" min="0" value={item.qty} onChange={(e) => handleItemChange(item.id, 'qty', e.target.value)} style={{ ...styles.tdInput, textAlign: 'center' }} />
                   </td>
                   <td style={styles.td}>
-                    <input type="text" min="0" step="0.01" value={item.unitPrice} onChange={(e) => handleItemChange(item.id, 'unitPrice', e.target.value)} style={{ ...styles.tdInput, textAlign: 'right' }} />
+                    <input type="text" inputMode="decimal" value={item.unitPrice} onChange={(e) => handleItemChange(item.id, 'unitPrice', e.target.value)} style={{ ...styles.tdInput, textAlign: 'right' }} />
                   </td>
                   <td style={{ ...styles.tdReadOnly, textAlign: 'right' }}>{formatCurrency(item.total)}</td>
                   <td style={styles.td}>
-                    <button onClick={() => handleRemoveItem(item.id)} style={styles.deleteBtn} disabled={items.length <= 1} title="Remove item">✕</button>
+                    <button
+                      onClick={() => handleRemoveItem(item.id)}
+                      style={styles.deleteBtn}
+                      disabled={items.length <= 1}
+                      title="Remove item"
+                    >
+                      <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
+                        <path d="M2 2 L10 10 M10 2 L2 10" stroke="#BF360C" strokeWidth="2" strokeLinecap="round" />
+                      </svg>
+                    </button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-          <button onClick={handleAddItem} style={styles.addBtn}>+ Add Item</button>
+          <button onClick={handleAddItem} style={styles.addBtn}>Add Item</button>
 
           <div style={styles.sectionTitle}>Pricing</div>
           <div style={styles.row}>
             <div style={styles.fullWidth}>
-              <label style={styles.label}>Discount (Flat Amount)</label>
+              <label style={{ ...styles.label, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <input type="checkbox" checked={useDiscount} onChange={(e) => setUseDiscount(e.target.checked)} />
+                Apply Discount
+              </label>
               <input
                 type="number"
                 min="0"
                 step="0.01"
                 value={discount}
+                disabled={!useDiscount}
                 onChange={(e) => {
                   const val = parseFloat(e.target.value);
                   if (!isNaN(val) && val >= 0) setDiscount(val);
                   else if (e.target.value === '') setDiscount(0);
                 }}
                 placeholder="Enter discount amount"
-                style={styles.input}
+                style={{ ...styles.input, ...(useDiscount ? {} : { opacity: 0.5 }) }}
               />
             </div>
           </div>
 
           <div style={styles.sectionTitle}>Notes</div>
-          <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Enter any additional notes or special instructions..." style={styles.notesArea} />
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Enter any additional notes or special instructions..."
+            style={styles.notesArea}
+          />
 
           <div style={styles.summaryBox}>
             <div style={styles.summaryRow}><span>Subtotal</span><span>{formatCurrency(subtotal)}</span></div>
-            {discountAmount > 0 && (
-              <div style={styles.summaryRow}><span>Discount</span><span>-{formatCurrency(discountAmount)}</span></div>
+            {useDiscount && (
+              <>
+                <div style={styles.summaryRow}><span>Discount</span><span>-{formatCurrency(discountAmount)}</span></div>
+                <div style={styles.summaryRow}><span>Subtotal After Discount</span><span>{formatCurrency(subtotalAfterDiscount)}</span></div>
+              </>
             )}
-            <div style={styles.summaryRow}><span>Subtotal After Discount</span><span>{formatCurrency(subtotalAfterDiscount)}</span></div>
-            <div style={styles.summaryRow}><span>Deposit ({depositPercent}%)</span><span>{formatCurrency(depositAmount)}</span></div>
-            <div style={styles.summaryRow}><span>Remaining Balance</span><span>{formatCurrency(remainingBalance)}</span></div>
+            {useDeposit && (
+              <>
+                <div style={styles.summaryRow}><span>Deposit ({depositPercent}%)</span><span>{formatCurrency(depositAmount)}</span></div>
+                <div style={styles.summaryRow}><span>Remaining Balance</span><span>{formatCurrency(remainingBalance)}</span></div>
+              </>
+            )}
             <div style={styles.summaryTotal}><span>Grand Total</span><span>{formatCurrency(grandTotal)}</span></div>
           </div>
 
@@ -1005,12 +1038,18 @@ const InvoiceGenerator = () => {
               <div style={styles.invSummaryContainer}>
                 <div style={styles.invSummaryBox}>
                   <div style={styles.invSummaryRow}><span>Subtotal</span><span>{formatCurrency(subtotal)}</span></div>
-                  {discountAmount > 0 && (
-                    <div style={styles.invSummaryRow}><span>Discount</span><span>-{formatCurrency(discountAmount)}</span></div>
+                  {useDiscount && (
+                    <>
+                      <div style={styles.invSummaryRow}><span>Discount</span><span>-{formatCurrency(discountAmount)}</span></div>
+                      <div style={styles.invSummaryRow}><span>Subtotal After Discount</span><span>{formatCurrency(subtotalAfterDiscount)}</span></div>
+                    </>
                   )}
-                  <div style={styles.invSummaryRow}><span>Subtotal After Discount</span><span>{formatCurrency(subtotalAfterDiscount)}</span></div>
-                  <div style={styles.invSummaryRow}><span>Deposit ({depositPercent}%)</span><span>{formatCurrency(depositAmount)}</span></div>
-                  <div style={styles.invSummaryRow}><span>Remaining Balance</span><span>{formatCurrency(remainingBalance)}</span></div>
+                  {useDeposit && (
+                    <>
+                      <div style={styles.invSummaryRow}><span>Deposit ({depositPercent}%)</span><span>{formatCurrency(depositAmount)}</span></div>
+                      <div style={styles.invSummaryRow}><span>Remaining Balance</span><span>{formatCurrency(remainingBalance)}</span></div>
+                    </>
+                  )}
                   <div style={styles.invSummaryTotal}><span>Grand Total</span><span>{formatCurrency(grandTotal)}</span></div>
                 </div>
               </div>
