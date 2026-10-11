@@ -889,8 +889,9 @@ const InvoiceGenerator = () => {
                   </td>
                   <td style={styles.td}>
                     <input
-                      type="text"
-                      inputMode="decimal"
+                      type="number"
+                      step="0.01"
+                      min="0"
                       value={item.unitPrice}
                       onChange={(e) =>
                         handleItemChange(item.id, 'unitPrice', e.target.value)
