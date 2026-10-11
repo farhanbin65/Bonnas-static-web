@@ -888,7 +888,16 @@ const InvoiceGenerator = () => {
                     <input type="text" min="0" value={item.qty} onChange={(e) => handleItemChange(item.id, 'qty', e.target.value)} style={{ ...styles.tdInput, textAlign: 'center' }} />
                   </td>
                   <td style={styles.td}>
-                    <input type="text" inputMode="decimal" value={item.unitPrice} onChange={(e) => handleItemChange(item.id, 'unitPrice', e.target.value)} style={{ ...styles.tdInput, textAlign: 'right' }} />
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={item.unitPrice}
+                      onChange={(e) =>
+                        handleItemChange(item.id, 'unitPrice', e.target.value)
+                      }
+                      placeholder="0.00"
+                      style={{ ...styles.tdInput, textAlign: 'right' }}
+                    />
                   </td>
                   <td style={{ ...styles.tdReadOnly, textAlign: 'right' }}>{formatCurrency(item.total)}</td>
                   <td style={styles.td}>
