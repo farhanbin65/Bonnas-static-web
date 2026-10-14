@@ -4,10 +4,10 @@ import { PlayCircle, ThumbsUp, Radio } from "lucide-react";
 import { fadeUp, fadeInLeft, fadeInRight, staggerContainer, staggerItem, scrollRevealViewport } from "../lib/motion";
 import TiltCard from "./TiltCard";
 
-const FB_PAGE_ID = import.meta.env.VITE_FB_PAGE_ID;
-const FB_TOKEN = import.meta.env.VITE_FB_ACCESS_TOKEN;
-const YT_KEY = import.meta.env.VITE_YT_API_KEY;
-const YT_CHANNEL_ID = import.meta.env.VITE_YT_CHANNEL_ID;
+const FB_PAGE_ID = import.meta.env.FB_PAGE_ID;
+const FB_TOKEN = import.meta.env.FB_ACCESS_TOKEN;
+const YT_KEY = import.meta.env.YT_API_KEY;
+const YT_CHANNEL_ID = import.meta.env.YT_CHANNEL_ID;
 
 export default function Social() {
   const [ytVideos, setYtVideos] = useState([]);
