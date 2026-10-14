@@ -6,14 +6,13 @@ import jsPDF from 'jspdf';
 // CONSTANTS
 // ============================================================
 const LOGO_URL = "/logo.PNG";
-
 const CURRENCY = "£";
 const BRAND_NAME = "BONNAS";
 const BRAND_SUBTITLE = "Original Bengali Cuisine";
 const BRAND_WEBSITE = "bonnas.co.uk";
 const BRAND_FACEBOOK = "facebook.com/bonnas.cooking1";
-
 const ADMIN_PASSWORD = "bonnas24";
+const STORAGE_KEY = "bonnas_invoices";
 
 // ============================================================
 // HELPERS
@@ -38,8 +37,7 @@ const getTodayDate = () => {
   return `${year}-${month}-${day}`;
 };
 
-const UNSUPPORTED_COLOR_REGEX =
-  /(oklch|oklab|lab|lch|color)\s*\([^)]*\)/gi;
+const UNSUPPORTED_COLOR_REGEX = /(oklch|oklab|lab|lch|color)\s*\([^)]*\)/gi;
 
 const sanitizeUnsupportedColors = (clonedDoc) => {
   const SAFE = {
@@ -68,6 +66,39 @@ const sanitizeUnsupportedColors = (clonedDoc) => {
       }
     });
   });
+};
+
+// ============================================================
+// STORAGE HELPERS
+// ============================================================
+const loadInvoices = () => {
+  try {
+    const data = localStorage.getItem(STORAGE_KEY);
+    return data ? JSON.parse(data) : {};
+  } catch (e) {
+    console.error('Failed to load invoices:', e);
+    return {};
+  }
+};
+
+const saveInvoices = (invoices) => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(invoices));
+  } catch (e) {
+    console.error('Failed to save invoices:', e);
+  }
+};
+
+const saveInvoice = (invoiceData) => {
+  const invoices = loadInvoices();
+  invoices[invoiceData.invoiceNumber] = invoiceData;
+  saveInvoices(invoices);
+};
+
+const deleteInvoice = (invoiceNumber) => {
+  const invoices = loadInvoices();
+  delete invoices[invoiceNumber];
+  saveInvoices(invoices);
 };
 
 // ============================================================
@@ -108,6 +139,27 @@ const styles = {
     fontStyle: 'italic',
   },
   headerContact: { textAlign: 'right', fontSize: '12px', color: '#8D6E63' },
+  tabs: {
+    display: 'flex',
+    gap: '8px',
+    marginBottom: '20px',
+    borderBottom: '2px solid #EFEBE9',
+  },
+  tab: {
+    padding: '12px 24px',
+    border: 'none',
+    backgroundColor: 'transparent',
+    color: '#8D6E63',
+    fontSize: '14px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    borderBottom: '3px solid transparent',
+    transition: 'all 0.3s ease',
+  },
+  tabActive: {
+    color: '#3E2723',
+    borderBottom: '3px solid #C5A059',
+  },
   layoutGrid: {
     display: 'flex',
     flexWrap: 'wrap',
@@ -256,6 +308,18 @@ const styles = {
     flex: '1 1 180px',
     padding: '12px 24px',
     backgroundColor: '#C5A059',
+    color: '#FFFFFF',
+    border: 'none',
+    borderRadius: '6px',
+    fontSize: '14px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    letterSpacing: '0.5px',
+  },
+  btnDanger: {
+    flex: '1 1 180px',
+    padding: '12px 24px',
+    backgroundColor: '#BF360C',
     color: '#FFFFFF',
     border: 'none',
     borderRadius: '6px',
@@ -509,6 +573,45 @@ const styles = {
     marginBottom: '12px',
     fontWeight: '600',
   },
+  invoiceList: {
+    display: 'grid',
+    gap: '12px',
+    maxWidth: '800px',
+  },
+  invoiceListItem: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '16px',
+    backgroundColor: '#FDFBF7',
+    border: '1px solid #EFEBE9',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+  },
+  invoiceListItemHover: {
+    backgroundColor: '#F5F3F0',
+    borderColor: '#C5A059',
+  },
+  invoiceListInfo: {
+    flex: 1,
+  },
+  invoiceListNumber: {
+    fontWeight: 'bold',
+    color: '#3E2723',
+    fontSize: '14px',
+  },
+  invoiceListMeta: {
+    fontSize: '12px',
+    color: '#8D6E63',
+    marginTop: '4px',
+  },
+  invoiceListAmount: {
+    fontSize: '16px',
+    fontWeight: 'bold',
+    color: '#C5A059',
+    marginRight: '16px',
+  },
 };
 
 // ============================================================
@@ -519,6 +622,13 @@ const InvoiceGenerator = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
   const [passwordError, setPasswordError] = useState('');
+
+  // --- Tabs ---
+  const [activeTab, setActiveTab] = useState('create'); // 'create' | 'history'
+
+  // --- History view ---
+  const [invoiceHistory, setInvoiceHistory] = useState({});
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
 
   // --- Form state ---
   const [docType, setDocType] = useState('invoice');
@@ -532,15 +642,25 @@ const InvoiceGenerator = () => {
   const [eventDate, setEventDate] = useState('');
   const [guestCount, setGuestCount] = useState('');
   const [notes, setNotes] = useState('');
-  const [depositPercent, setDepositPercent] = useState(100);
-  const [discount, setDiscount] = useState(0); // NEW: flat discount
-  const [useDiscount, setUseDiscount] = useState(false);
-  const [useDeposit, setUseDeposit] = useState(false);
   const [items, setItems] = useState([{ id: 1, description: '', qty: 1, unitPrice: 0 }]);
   const [nextId, setNextId] = useState(2);
   const [isExporting, setIsExporting] = useState(false);
 
+  // NEW: Flat deposit amount
+  const [depositAmount, setDepositAmount] = useState(0);
+  const [useDeposit, setUseDeposit] = useState(false);
+
+  // NEW: Flat discount amount
+  const [discount, setDiscount] = useState(0);
+  const [useDiscount, setUseDiscount] = useState(false);
+
   const previewRef = useRef(null);
+
+  // --- Load invoices on mount ---
+  useEffect(() => {
+    const saved = loadInvoices();
+    setInvoiceHistory(saved);
+  }, []);
 
   // --- Derived ---
   const calculatedItems = useMemo(
@@ -562,23 +682,23 @@ const InvoiceGenerator = () => {
     () => (useDiscount ? Math.max(0, Number(discount) || 0) : 0),
     [useDiscount, discount]
   );
+
   const subtotalAfterDiscount = useMemo(
     () => Math.max(0, subtotal - discountAmount),
     [subtotal, discountAmount]
   );
 
-  const depositAmount = useMemo(() => {
-    if (!useDeposit) return 0;
-    const percent = Math.min(100, Math.max(0, Number(depositPercent) || 0));
-    return (subtotalAfterDiscount * percent) / 100;
-  }, [useDeposit, subtotalAfterDiscount, depositPercent]);
+  const finalDepositAmount = useMemo(
+    () => (useDeposit ? Math.max(0, Number(depositAmount) || 0) : 0),
+    [useDeposit, depositAmount]
+  );
 
-  const remainingBalance = useMemo(() => subtotalAfterDiscount - depositAmount, [subtotalAfterDiscount, depositAmount]);
+  const remainingBalance = useMemo(
+    () => Math.max(0, subtotalAfterDiscount - finalDepositAmount),
+    [subtotalAfterDiscount, finalDepositAmount]
+  );
+
   const grandTotal = subtotalAfterDiscount;
-
-  useEffect(() => {
-    setInvoiceNumber(generateDocNumber(docType));
-  }, [docType]);
 
   // --- Handlers ---
   const handlePasswordSubmit = (e) => {
@@ -614,6 +734,118 @@ const InvoiceGenerator = () => {
         return { ...item, [field]: value };
       })
     );
+  };
+
+  const handleSaveInvoice = () => {
+    if (subtotal <= 0) {
+      alert('Cannot save an empty invoice. Please add items with a total greater than zero.');
+      return;
+    }
+
+    const invoiceData = {
+      docType,
+      invoiceNumber,
+      invoiceDate,
+      customerName,
+      customerPhone,
+      customerEmail,
+      customerAddress,
+      eventAddress,
+      eventDate,
+      guestCount,
+      notes,
+      items,
+      subtotal,
+      discountAmount,
+      discount,
+      useDiscount,
+      depositAmount,
+      useDeposit,
+      grandTotal,
+      remainingBalance,
+      savedAt: new Date().toISOString(),
+    };
+
+    saveInvoice(invoiceData);
+    setInvoiceHistory({ ...invoiceHistory, [invoiceNumber]: invoiceData });
+    alert(`Invoice ${invoiceNumber} saved successfully!`);
+  };
+
+  const handleLoadInvoice = (invoice) => {
+    setSelectedInvoice(invoice.invoiceNumber);
+    setDocType(invoice.docType);
+    setInvoiceNumber(invoice.invoiceNumber);
+    setInvoiceDate(invoice.invoiceDate);
+    setCustomerName(invoice.customerName);
+    setCustomerPhone(invoice.customerPhone);
+    setCustomerEmail(invoice.customerEmail);
+    setCustomerAddress(invoice.customerAddress);
+    setEventAddress(invoice.eventAddress);
+    setEventDate(invoice.eventDate);
+    setGuestCount(invoice.guestCount);
+    setNotes(invoice.notes);
+    setItems(invoice.items);
+    setDiscount(invoice.discount || 0);
+    setUseDiscount(invoice.useDiscount || false);
+    setDepositAmount(invoice.depositAmount || 0);
+    setUseDeposit(invoice.useDeposit || false);
+    setActiveTab('create');
+  };
+
+  const handleNewInvoice = () => {
+    setDocType('invoice');
+    setInvoiceNumber(generateDocNumber('invoice'));
+    setInvoiceDate(getTodayDate());
+    setCustomerName('');
+    setCustomerPhone('');
+    setCustomerEmail('');
+    setCustomerAddress('');
+    setEventAddress('');
+    setEventDate('');
+    setGuestCount('');
+    setNotes('');
+    setItems([{ id: 1, description: '', qty: 1, unitPrice: 0 }]);
+    setNextId(2);
+    setDiscount(0);
+    setUseDiscount(false);
+    setDepositAmount(0);
+    setUseDeposit(false);
+    setSelectedInvoice(null);
+  };
+
+  const handleDeleteInvoice = (invNumber) => {
+    if (confirm(`Are you sure you want to delete ${invNumber}?`)) {
+      deleteInvoice(invNumber);
+      const updated = { ...invoiceHistory };
+      delete updated[invNumber];
+      setInvoiceHistory(updated);
+      if (selectedInvoice === invNumber) {
+        handleNewInvoice();
+      }
+    }
+  };
+
+  const handleDuplicateInvoice = (invoice) => {
+    const newNumber = generateDocNumber(invoice.docType);
+    const duplicated = { ...invoice, invoiceNumber: newNumber, invoiceDate: getTodayDate() };
+    setInvoiceNumber(newNumber);
+    setDocType(duplicated.docType);
+    setInvoiceDate(duplicated.invoiceDate);
+    setCustomerName(duplicated.customerName);
+    setCustomerPhone(duplicated.customerPhone);
+    setCustomerEmail(duplicated.customerEmail);
+    setCustomerAddress(duplicated.customerAddress);
+    setEventAddress(duplicated.eventAddress);
+    setEventDate(duplicated.eventDate);
+    setGuestCount(duplicated.guestCount);
+    setNotes(duplicated.notes);
+    setItems(duplicated.items);
+    setDiscount(duplicated.discount || 0);
+    setUseDiscount(duplicated.useDiscount || false);
+    setDepositAmount(duplicated.depositAmount || 0);
+    setUseDeposit(duplicated.useDeposit || false);
+    setSelectedInvoice(null);
+    setActiveTab('create');
   };
 
   const handleExport = async (format) => {
@@ -746,7 +978,7 @@ const InvoiceGenerator = () => {
     );
   }
 
-    // ============================================================
+  // ============================================================
   // MAIN INVOICE UI
   // ============================================================
   return (
@@ -765,332 +997,445 @@ const InvoiceGenerator = () => {
         </div>
       </div>
 
-      <div style={styles.layoutGrid}>
-        {/* ============ LEFT: FORM ============ */}
-        <div style={styles.formColumn}>
-          <div style={styles.sectionTitle}>Document Type</div>
-          <div style={styles.row}>
-            <div style={styles.halfWidth}>
-              <label style={styles.label}>Type</label>
-              <select value={docType} onChange={(e) => setDocType(e.target.value)} style={styles.input}>
-                <option value="invoice">Invoice</option>
-                <option value="quotation">Quotation</option>
-              </select>
-            </div>
-            <div style={styles.halfWidth}>
-              <label style={styles.label}>Number</label>
-              <input type="text" value={invoiceNumber} readOnly style={{ ...styles.input, ...styles.inputReadOnly }} />
-            </div>
-          </div>
+      {/* TAB NAVIGATION */}
+      <div style={styles.tabs}>
+        <button
+          onClick={() => setActiveTab('create')}
+          style={{ ...styles.tab, ...(activeTab === 'create' ? styles.tabActive : {}) }}
+        >
+          Create / Edit
+        </button>
+        <button
+          onClick={() => setActiveTab('history')}
+          style={{ ...styles.tab, ...(activeTab === 'history' ? styles.tabActive : {}) }}
+        >
+          Saved Invoices ({Object.keys(invoiceHistory).length})
+        </button>
+      </div>
 
-          <div style={styles.sectionTitle}>Invoice Details</div>
-          <div style={styles.row}>
-            <div style={styles.halfWidth}>
-              <label style={styles.label}>Invoice Date</label>
-              <input type="date" value={invoiceDate} onChange={(e) => setInvoiceDate(e.target.value)} style={styles.input} />
+      {/* CREATE / EDIT TAB */}
+      {activeTab === 'create' && (
+        <div style={styles.layoutGrid}>
+          {/* ============ LEFT: FORM ============ */}
+          <div style={styles.formColumn}>
+            <div style={styles.sectionTitle}>Document Type</div>
+            <div style={styles.row}>
+              <div style={styles.halfWidth}>
+                <label style={styles.label}>Type</label>
+                <select value={docType} onChange={(e) => setDocType(e.target.value)} style={styles.input}>
+                  <option value="invoice">Invoice</option>
+                  <option value="quotation">Quotation</option>
+                </select>
+              </div>
+              <div style={styles.halfWidth}>
+                <label style={styles.label}>Number</label>
+                <input type="text" value={invoiceNumber} readOnly style={{ ...styles.input, ...styles.inputReadOnly }} />
+              </div>
             </div>
-            <div style={styles.halfWidth}>
-              <label style={{ ...styles.label, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                <input type="checkbox" checked={useDeposit} onChange={(e) => setUseDeposit(e.target.checked)} />
-                Include Deposit
-              </label>
-              <input
-                type="number"
-                min="0"
-                max="100"
-                value={depositPercent}
-                disabled={!useDeposit}
-                onChange={(e) => {
-                  const val = parseFloat(e.target.value);
-                  if (!isNaN(val) && val >= 0 && val <= 100) setDepositPercent(val);
-                  else if (e.target.value === '') setDepositPercent(0);
-                }}
-                style={{ ...styles.input, ...(useDeposit ? {} : { opacity: 0.5 }) }}
-              />
-            </div>
-          </div>
 
-          <div style={styles.sectionTitle}>Customer Details</div>
-          <div style={styles.row}>
-            <div style={styles.fullWidth}>
-              <label style={styles.label}>Customer Name</label>
-              <input type="text" value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="Full name" style={styles.input} />
+            <div style={styles.sectionTitle}>Invoice Details</div>
+            <div style={styles.row}>
+              <div style={styles.halfWidth}>
+                <label style={styles.label}>Invoice Date</label>
+                <input type="date" value={invoiceDate} onChange={(e) => setInvoiceDate(e.target.value)} style={styles.input} />
+              </div>
             </div>
-          </div>
-          <div style={styles.row}>
-            <div style={styles.halfWidth}>
-              <label style={styles.label}>Phone</label>
-              <input type="tel" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} placeholder="Phone number" style={styles.input} />
-            </div>
-            <div style={styles.halfWidth}>
-              <label style={styles.label}>Email</label>
-              <input type="email" value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} placeholder="Email address" style={styles.input} />
-            </div>
-          </div>
-          <div style={styles.row}>
-            <div style={styles.fullWidth}>
-              <label style={styles.label}>Customer Address</label>
-              <input type="text" value={customerAddress} onChange={(e) => setCustomerAddress(e.target.value)} placeholder="Full address" style={styles.input} />
-            </div>
-          </div>
 
-          <div style={styles.sectionTitle}>Event Details</div>
-          <div style={styles.row}>
-            <div style={styles.fullWidth}>
-              <label style={styles.label}>Event Address</label>
-              <input type="text" value={eventAddress} onChange={(e) => setEventAddress(e.target.value)} placeholder="Event venue address" style={styles.input} />
+            <div style={styles.sectionTitle}>Customer Details</div>
+            <div style={styles.row}>
+              <div style={styles.fullWidth}>
+                <label style={styles.label}>Customer Name</label>
+                <input type="text" value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="Full name" style={styles.input} />
+              </div>
             </div>
-          </div>
-          <div style={styles.row}>
-            <div style={styles.halfWidth}>
-              <label style={styles.label}>Event Date</label>
-              <input type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} style={styles.input} />
+            <div style={styles.row}>
+              <div style={styles.halfWidth}>
+                <label style={styles.label}>Phone</label>
+                <input type="tel" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} placeholder="Phone number" style={styles.input} />
+              </div>
+              <div style={styles.halfWidth}>
+                <label style={styles.label}>Email</label>
+                <input type="email" value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} placeholder="Email address" style={styles.input} />
+              </div>
             </div>
-            <div style={styles.halfWidth}>
-              <label style={styles.label}>Guest Count</label>
-              <input
-                type="text"
-                min="0"
-                value={guestCount}
-                onChange={(e) => {
-                  const val = parseInt(e.target.value);
-                  if (!isNaN(val) && val >= 0) setGuestCount(val);
-                  else if (e.target.value === '') setGuestCount('');
-                }}
-                placeholder="Number of guests"
-                style={styles.input}
-              />
+            <div style={styles.row}>
+              <div style={styles.fullWidth}>
+                <label style={styles.label}>Customer Address</label>
+                <input type="text" value={customerAddress} onChange={(e) => setCustomerAddress(e.target.value)} placeholder="Full address" style={styles.input} />
+              </div>
             </div>
-          </div>
 
-          <div style={styles.sectionTitle}>Line Items</div>
-          <table style={styles.table}>
-            <thead>
-              <tr>
-                <th style={{ ...styles.th, width: '30px' }}>#</th>
-                <th style={styles.th}>Description</th>
-                <th style={{ ...styles.th, width: '60px' }}>Qty</th>
-                <th style={{ ...styles.th, width: '80px' }}>Unit Price</th>
-                <th style={{ ...styles.th, width: '80px' }}>Total</th>
-                <th style={{ ...styles.th, width: '50px' }}></th>
-              </tr>
-            </thead>
-            <tbody>
-              {calculatedItems.map((item, index) => (
-                <tr key={item.id}>
-                  <td style={{ ...styles.td, textAlign: 'center', fontWeight: 'bold', color: '#C5A059' }}>
-                    {index + 1}
-                  </td>
-                  <td style={styles.td}>
-                    <input type="text" value={item.description} onChange={(e) => handleItemChange(item.id, 'description', e.target.value)} placeholder="Item description" style={styles.tdInput} />
-                  </td>
-                  <td style={styles.td}>
-                    <input type="text" min="0" value={item.qty} onChange={(e) => handleItemChange(item.id, 'qty', e.target.value)} style={{ ...styles.tdInput, textAlign: 'center' }} />
-                  </td>
-                  <td style={styles.td}>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={item.unitPrice}
-                      onChange={(e) =>
-                        handleItemChange(item.id, 'unitPrice', e.target.value)
-                      }
-                      placeholder="0.00"
-                      style={{ ...styles.tdInput, textAlign: 'right' }}
-                    />
-                  </td>
-                  <td style={{ ...styles.tdReadOnly, textAlign: 'right' }}>{formatCurrency(item.total)}</td>
-                  <td style={styles.td}>
-                    <button
-                      onClick={() => handleRemoveItem(item.id)}
-                      style={styles.deleteBtn}
-                      disabled={items.length <= 1}
-                      title="Remove item"
-                    >
-                      <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
-                        <path d="M2 2 L10 10 M10 2 L2 10" stroke="#BF360C" strokeWidth="2" strokeLinecap="round" />
-                      </svg>
-                    </button>
-                  </td>
+            <div style={styles.sectionTitle}>Event Details</div>
+            <div style={styles.row}>
+              <div style={styles.fullWidth}>
+                <label style={styles.label}>Event Address</label>
+                <input type="text" value={eventAddress} onChange={(e) => setEventAddress(e.target.value)} placeholder="Event venue address" style={styles.input} />
+              </div>
+            </div>
+            <div style={styles.row}>
+              <div style={styles.halfWidth}>
+                <label style={styles.label}>Event Date</label>
+                <input type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} style={styles.input} />
+              </div>
+              <div style={styles.halfWidth}>
+                <label style={styles.label}>Guest Count</label>
+                <input
+                  type="text"
+                  value={guestCount}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value);
+                    if (!isNaN(val) && val >= 0) setGuestCount(val);
+                    else if (e.target.value === '') setGuestCount('');
+                  }}
+                  placeholder="Number of guests"
+                  style={styles.input}
+                />
+              </div>
+            </div>
+
+            <div style={styles.sectionTitle}>Line Items</div>
+            <table style={styles.table}>
+              <thead>
+                <tr>
+                  <th style={{ ...styles.th, width: '30px' }}>#</th>
+                  <th style={styles.th}>Description</th>
+                  <th style={{ ...styles.th, width: '60px' }}>Qty</th>
+                  <th style={{ ...styles.th, width: '80px' }}>Unit Price</th>
+                  <th style={{ ...styles.th, width: '80px' }}>Total</th>
+                  <th style={{ ...styles.th, width: '50px' }}></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-          <button onClick={handleAddItem} style={styles.addBtn}>Add Item</button>
+              </thead>
+              <tbody>
+                {calculatedItems.map((item, index) => (
+                  <tr key={item.id}>
+                    <td style={{ ...styles.td, textAlign: 'center', fontWeight: 'bold', color: '#C5A059' }}>
+                      {index + 1}
+                    </td>
+                    <td style={styles.td}>
+                      <input type="text" value={item.description} onChange={(e) => handleItemChange(item.id, 'description', e.target.value)} placeholder="Item description" style={styles.tdInput} />
+                    </td>
+                    <td style={styles.td}>
+                      <input type="text" min="0" value={item.qty} onChange={(e) => handleItemChange(item.id, 'qty', e.target.value)} style={{ ...styles.tdInput, textAlign: 'center' }} />
+                    </td>
+                    <td style={styles.td}>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={item.unitPrice}
+                        onChange={(e) => handleItemChange(item.id, 'unitPrice', e.target.value)}
+                        placeholder="0.00"
+                        style={{ ...styles.tdInput, textAlign: 'right' }}
+                      />
+                    </td>
+                    <td style={{ ...styles.tdReadOnly, textAlign: 'right' }}>{formatCurrency(item.total)}</td>
+                    <td style={styles.td}>
+                      <button
+                        onClick={() => handleRemoveItem(item.id)}
+                        style={styles.deleteBtn}
+                        disabled={items.length <= 1}
+                        title="Remove item"
+                      >
+                        <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
+                          <path d="M2 2 L10 10 M10 2 L2 10" stroke="#BF360C" strokeWidth="2" strokeLinecap="round" />
+                        </svg>
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <button onClick={handleAddItem} style={styles.addBtn}>Add Item</button>
 
-          <div style={styles.sectionTitle}>Pricing</div>
-          <div style={styles.row}>
-            <div style={styles.fullWidth}>
-              <label style={{ ...styles.label, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                <input type="checkbox" checked={useDiscount} onChange={(e) => setUseDiscount(e.target.checked)} />
-                Apply Discount
-              </label>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={discount}
-                disabled={!useDiscount}
-                onChange={(e) => {
-                  const val = parseFloat(e.target.value);
-                  if (!isNaN(val) && val >= 0) setDiscount(val);
-                  else if (e.target.value === '') setDiscount(0);
-                }}
-                placeholder="Enter discount amount"
-                style={{ ...styles.input, ...(useDiscount ? {} : { opacity: 0.5 }) }}
-              />
+            <div style={styles.sectionTitle}>Pricing & Payment</div>
+            <div style={styles.row}>
+              <div style={styles.fullWidth}>
+                <label style={{ ...styles.label, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={useDiscount} onChange={(e) => setUseDiscount(e.target.checked)} />
+                  Apply Discount
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={discount}
+                  disabled={!useDiscount}
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value);
+                    if (!isNaN(val) && val >= 0) setDiscount(val);
+                    else if (e.target.value === '') setDiscount(0);
+                  }}
+                  placeholder="Enter discount amount"
+                  style={{ ...styles.input, ...(useDiscount ? {} : { opacity: 0.5 }) }}
+                />
+              </div>
+            </div>
+
+            <div style={styles.row}>
+              <div style={styles.fullWidth}>
+                <label style={{ ...styles.label, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={useDeposit} onChange={(e) => setUseDeposit(e.target.checked)} />
+                  Take Deposit (Fixed Amount)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={depositAmount}
+                  disabled={!useDeposit}
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value);
+                    if (!isNaN(val) && val >= 0) setDepositAmount(val);
+                    else if (e.target.value === '') setDepositAmount(0);
+                  }}
+                  placeholder="Enter deposit amount"
+                  style={{ ...styles.input, ...(useDeposit ? {} : { opacity: 0.5 }) }}
+                />
+              </div>
+            </div>
+
+            <div style={styles.sectionTitle}>Notes</div>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Enter any additional notes or special instructions..."
+              style={styles.notesArea}
+            />
+
+            <div style={styles.summaryBox}>
+              <div style={styles.summaryRow}><span>Subtotal</span><span>{formatCurrency(subtotal)}</span></div>
+              {useDiscount && (
+                <>
+                  <div style={styles.summaryRow}><span>Discount</span><span>-{formatCurrency(discountAmount)}</span></div>
+                  <div style={styles.summaryRow}><span>After Discount</span><span>{formatCurrency(subtotalAfterDiscount)}</span></div>
+                </>
+              )}
+              {useDeposit && (
+                <>
+                  <div style={styles.summaryRow}><span>Deposit Required</span><span>{formatCurrency(finalDepositAmount)}</span></div>
+                  <div style={styles.summaryRow}><span>Remaining Balance</span><span>{formatCurrency(remainingBalance)}</span></div>
+                </>
+              )}
+              <div style={styles.summaryTotal}><span>Grand Total</span><span>{formatCurrency(grandTotal)}</span></div>
+            </div>
+
+            <div style={styles.actionBar}>
+              <button onClick={handleSaveInvoice} style={styles.btnSecondary}>
+                Save Invoice
+              </button>
+              <button onClick={handleNewInvoice} style={styles.btnPrimary}>
+                New Invoice
+              </button>
+            </div>
+
+            <div style={styles.actionBar}>
+              <button onClick={() => handleExport('pdf')} disabled={isExporting} style={{ ...styles.btnPrimary, ...(isExporting ? styles.btnDisabled : {}) }}>
+                {isExporting ? 'Exporting...' : 'Download PDF'}
+              </button>
+              <button onClick={() => handleExport('jpg')} disabled={isExporting} style={{ ...styles.btnSecondary, ...(isExporting ? styles.btnDisabled : {}) }}>
+                {isExporting ? 'Exporting...' : 'Download JPG'}
+              </button>
             </div>
           </div>
 
-          <div style={styles.sectionTitle}>Notes</div>
-          <textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="Enter any additional notes or special instructions..."
-            style={styles.notesArea}
-          />
-
-          <div style={styles.summaryBox}>
-            <div style={styles.summaryRow}><span>Subtotal</span><span>{formatCurrency(subtotal)}</span></div>
-            {useDiscount && (
-              <>
-                <div style={styles.summaryRow}><span>Discount</span><span>-{formatCurrency(discountAmount)}</span></div>
-                <div style={styles.summaryRow}><span>Subtotal After Discount</span><span>{formatCurrency(subtotalAfterDiscount)}</span></div>
-              </>
-            )}
-            {useDeposit && (
-              <>
-                <div style={styles.summaryRow}><span>Deposit ({depositPercent}%)</span><span>{formatCurrency(depositAmount)}</span></div>
-                <div style={styles.summaryRow}><span>Remaining Balance</span><span>{formatCurrency(remainingBalance)}</span></div>
-              </>
-            )}
-            <div style={styles.summaryTotal}><span>Grand Total</span><span>{formatCurrency(grandTotal)}</span></div>
-          </div>
-
-          <div style={styles.actionBar}>
-            <button onClick={() => handleExport('pdf')} disabled={isExporting} style={{ ...styles.btnPrimary, ...(isExporting ? styles.btnDisabled : {}) }}>
-              {isExporting ? 'Exporting...' : 'Download PDF'}
-            </button>
-            <button onClick={() => handleExport('jpg')} disabled={isExporting} style={{ ...styles.btnSecondary, ...(isExporting ? styles.btnDisabled : {}) }}>
-              {isExporting ? 'Exporting...' : 'Download JPG'}
-            </button>
-          </div>
-        </div>
-
-        {/* ============ RIGHT: LIVE PREVIEW ============ */}
-        <div style={styles.previewColumn}>
-          <div style={{ position: 'relative' }}>
-            {isExporting && (
-              <div style={styles.loadingOverlay}>
-                <div style={styles.spinner} />
-              </div>
-            )}
-            <div ref={previewRef} style={styles.invoicePreview} id="invoice-preview">
-              <div style={styles.invHeader}>
-                <div style={styles.invLogoSection}>
-                  <img src={LOGO_URL} alt="BONNAS Logo" style={styles.invLogo} />
-                  <div>
-                    <h1 style={styles.invBrandName}>{BRAND_NAME}</h1>
-                    <p style={styles.invBrandSub}>{BRAND_SUBTITLE}</p>
-                    <p style={styles.invBrandContact}>{BRAND_WEBSITE}</p>
-                    <p style={styles.invBrandContact}>{BRAND_FACEBOOK}</p>
-                  </div>
-                </div>
-                <div style={styles.invDocInfo}>
-                  <h2 style={styles.invDocType}>{docType === 'invoice' ? 'INVOICE' : 'QUOTATION'}</h2>
-                  <p style={styles.invDocNumber}>{invoiceNumber}</p>
-                  <p style={styles.invDocDate}>
-                    Date: {invoiceDate ? new Date(invoiceDate).toLocaleDateString('en-GB') : 'N/A'}
-                  </p>
-                </div>
-              </div>
-
-              <div style={styles.invCustomerSection}>
-                <div style={styles.invCustomerBox}>
-                  <div style={styles.invCustomerLabel}>Bill To</div>
-                  <p style={styles.invCustomerText}><strong>{customerName || 'Customer Name'}</strong></p>
-                  {customerPhone && <p style={styles.invCustomerText}>Phone: {customerPhone}</p>}
-                  {customerEmail && <p style={styles.invCustomerText}>Email: {customerEmail}</p>}
-                  {customerAddress && <p style={styles.invCustomerText}>{customerAddress}</p>}
-                </div>
-                <div style={styles.invCustomerBox}>
-                  <div style={styles.invCustomerLabel}>Event Details</div>
-                  {eventAddress && <p style={styles.invCustomerText}>Venue: {eventAddress}</p>}
-                  {eventDate && <p style={styles.invCustomerText}>Date: {new Date(eventDate).toLocaleDateString('en-GB')}</p>}
-                  {guestCount && <p style={styles.invCustomerText}>Guests: {guestCount}</p>}
-                </div>
-              </div>
-
-              <table style={styles.invTable}>
-                <thead>
-                  <tr>
-                    <th style={{ ...styles.invTh, width: '30px' }}>#</th>
-                    <th style={styles.invTh}>Description</th>
-                    <th style={{ ...styles.invTh, width: '50px', textAlign: 'center' }}>Qty</th>
-                    <th style={{ ...styles.invTh, width: '80px', textAlign: 'right' }}>Unit Price</th>
-                    <th style={{ ...styles.invTh, width: '80px', textAlign: 'right' }}>Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {calculatedItems.map((item, index) => (
-                    <tr key={item.id}>
-                      <td style={{ ...styles.invTdCenter, fontWeight: 'bold', color: '#C5A059' }}>{index + 1}</td>
-                      <td style={styles.invTd}>{item.description || 'Item description'}</td>
-                      <td style={styles.invTdCenter}>{item.qty}</td>
-                      <td style={styles.invTdRight}>{formatCurrency(item.unitPrice)}</td>
-                      <td style={styles.invTdRight}>{formatCurrency(item.total)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-
-              <div style={styles.invSummaryContainer}>
-                <div style={styles.invSummaryBox}>
-                  <div style={styles.invSummaryRow}><span>Subtotal</span><span>{formatCurrency(subtotal)}</span></div>
-                  {useDiscount && (
-                    <>
-                      <div style={styles.invSummaryRow}><span>Discount</span><span>-{formatCurrency(discountAmount)}</span></div>
-                      <div style={styles.invSummaryRow}><span>Subtotal After Discount</span><span>{formatCurrency(subtotalAfterDiscount)}</span></div>
-                    </>
-                  )}
-                  {useDeposit && (
-                    <>
-                      <div style={styles.invSummaryRow}><span>Deposit ({depositPercent}%)</span><span>{formatCurrency(depositAmount)}</span></div>
-                      <div style={styles.invSummaryRow}><span>Remaining Balance</span><span>{formatCurrency(remainingBalance)}</span></div>
-                    </>
-                  )}
-                  <div style={styles.invSummaryTotal}><span>Grand Total</span><span>{formatCurrency(grandTotal)}</span></div>
-                </div>
-              </div>
-
-              {notes && (
-                <div style={styles.invNotesSection}>
-                  <div style={styles.invNotesTitle}>Notes</div>
-                  <div style={styles.invNotesText}>{notes}</div>
+          {/* ============ RIGHT: LIVE PREVIEW ============ */}
+          <div style={styles.previewColumn}>
+            <div style={{ position: 'relative' }}>
+              {isExporting && (
+                <div style={styles.loadingOverlay}>
+                  <div style={styles.spinner} />
                 </div>
               )}
+              <div ref={previewRef} style={styles.invoicePreview} id="invoice-preview">
+                <div style={styles.invHeader}>
+                  <div style={styles.invLogoSection}>
+                    <img src={LOGO_URL} alt="BONNAS Logo" style={styles.invLogo} />
+                    <div>
+                      <h1 style={styles.invBrandName}>{BRAND_NAME}</h1>
+                      <p style={styles.invBrandSub}>{BRAND_SUBTITLE}</p>
+                      <p style={styles.invBrandContact}>{BRAND_WEBSITE}</p>
+                      <p style={styles.invBrandContact}>{BRAND_FACEBOOK}</p>
+                    </div>
+                  </div>
+                  <div style={styles.invDocInfo}>
+                    <h2 style={styles.invDocType}>{docType === 'invoice' ? 'INVOICE' : 'QUOTATION'}</h2>
+                    <p style={styles.invDocNumber}>{invoiceNumber}</p>
+                    <p style={styles.invDocDate}>
+                      Date: {invoiceDate ? new Date(invoiceDate).toLocaleDateString('en-GB') : 'N/A'}
+                    </p>
+                  </div>
+                </div>
 
-              <div style={styles.invPolicySection}>
-                <div style={styles.invPolicyTitle}>Terms & Policies</div>
-                <ul style={styles.invPolicyList}>
-                  <li>• Collection only</li>
-                  <li>• Full payment required before event</li>
-                  <li>• Allergies must be informed in advance</li>
-                  <li>• Not VAT Registered</li>
-                  <li>• Invoice valid for 15 days</li>
-                </ul>
-              </div>
+                <div style={styles.invCustomerSection}>
+                  <div style={styles.invCustomerBox}>
+                    <div style={styles.invCustomerLabel}>Bill To</div>
+                    <p style={styles.invCustomerText}><strong>{customerName || 'Customer Name'}</strong></p>
+                    {customerPhone && <p style={styles.invCustomerText}>Phone: {customerPhone}</p>}
+                    {customerEmail && <p style={styles.invCustomerText}>Email: {customerEmail}</p>}
+                    {customerAddress && <p style={styles.invCustomerText}>{customerAddress}</p>}
+                  </div>
+                  <div style={styles.invCustomerBox}>
+                    <div style={styles.invCustomerLabel}>Event Details</div>
+                    {eventAddress && <p style={styles.invCustomerText}>Venue: {eventAddress}</p>}
+                    {eventDate && <p style={styles.invCustomerText}>Date: {new Date(eventDate).toLocaleDateString('en-GB')}</p>}
+                    {guestCount && <p style={styles.invCustomerText}>Guests: {guestCount}</p>}
+                  </div>
+                </div>
 
-              <div style={styles.invFooter}>
-                <p style={styles.invFooterBrand}>Thank you for choosing {BRAND_NAME}</p>
-                <p>{BRAND_SUBTITLE}</p>
-                <p>{BRAND_WEBSITE}</p>
+                <table style={styles.invTable}>
+                  <thead>
+                    <tr>
+                      <th style={{ ...styles.invTh, width: '30px' }}>#</th>
+                      <th style={styles.invTh}>Description</th>
+                      <th style={{ ...styles.invTh, width: '50px', textAlign: 'center' }}>Qty</th>
+                      <th style={{ ...styles.invTh, width: '80px', textAlign: 'right' }}>Unit Price</th>
+                      <th style={{ ...styles.invTh, width: '80px', textAlign: 'right' }}>Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {calculatedItems.map((item, index) => (
+                      <tr key={item.id}>
+                        <td style={{ ...styles.invTdCenter, fontWeight: 'bold', color: '#C5A059' }}>{index + 1}</td>
+                        <td style={styles.invTd}>{item.description || 'Item description'}</td>
+                        <td style={styles.invTdCenter}>{item.qty}</td>
+                        <td style={styles.invTdRight}>{formatCurrency(item.unitPrice)}</td>
+                        <td style={styles.invTdRight}>{formatCurrency(item.total)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                <div style={styles.invSummaryContainer}>
+                  <div style={styles.invSummaryBox}>
+                    <div style={styles.invSummaryRow}><span>Subtotal</span><span>{formatCurrency(subtotal)}</span></div>
+                    {useDiscount && (
+                      <>
+                        <div style={styles.invSummaryRow}><span>Discount</span><span>-{formatCurrency(discountAmount)}</span></div>
+                        <div style={styles.invSummaryRow}><span>After Discount</span><span>{formatCurrency(subtotalAfterDiscount)}</span></div>
+                      </>
+                    )}
+                    {useDeposit && (
+                      <>
+                        <div style={styles.invSummaryRow}><span>Deposit Required</span><span>{formatCurrency(finalDepositAmount)}</span></div>
+                        <div style={styles.invSummaryRow}><span>Remaining Balance</span><span>{formatCurrency(remainingBalance)}</span></div>
+                      </>
+                    )}
+                    <div style={styles.invSummaryTotal}><span>Grand Total</span><span>{formatCurrency(grandTotal)}</span></div>
+                  </div>
+                </div>
+
+                {notes && (
+                  <div style={styles.invNotesSection}>
+                    <div style={styles.invNotesTitle}>Notes</div>
+                    <div style={styles.invNotesText}>{notes}</div>
+                  </div>
+                )}
+
+                <div style={styles.invPolicySection}>
+                  <div style={styles.invPolicyTitle}>Terms & Policies</div>
+                  <ul style={styles.invPolicyList}>
+                    <li>• Collection only</li>
+                    <li>• Full payment required before event</li>
+                    <li>• Allergies must be informed in advance</li>
+                    <li>• Not VAT Registered</li>
+                    <li>• Invoice valid for 15 days</li>
+                  </ul>
+                </div>
+
+                <div style={styles.invFooter}>
+                  <p style={styles.invFooterBrand}>Thank you for choosing {BRAND_NAME}</p>
+                  <p>{BRAND_SUBTITLE}</p>
+                  <p>{BRAND_WEBSITE}</p>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
+
+      {/* HISTORY TAB */}
+      {activeTab === 'history' && (
+        <div style={styles.formColumn}>
+          <div style={styles.sectionTitle}>Saved Invoices</div>
+          {Object.keys(invoiceHistory).length === 0 ? (
+            <p style={{ color: '#8D6E63', fontSize: '14px' }}>No saved invoices yet.</p>
+          ) : (
+            <div style={styles.invoiceList}>
+              {Object.values(invoiceHistory)
+                .sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt))
+                .map((inv) => (
+                  <div
+                    key={inv.invoiceNumber}
+                    style={styles.invoiceListItem}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = styles.invoiceListItemHover.backgroundColor;
+                      e.currentTarget.style.borderColor = styles.invoiceListItemHover.borderColor;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = styles.invoiceListItem.backgroundColor;
+                      e.currentTarget.style.borderColor = styles.invoiceListItem.backgroundColor;
+                    }}
+                  >
+                    <div style={styles.invoiceListInfo}>
+                      <div style={styles.invoiceListNumber}>{inv.invoiceNumber}</div>
+                      <div style={styles.invoiceListMeta}>
+                        {inv.customerName} • {new Date(inv.invoiceDate).toLocaleDateString('en-GB')} • {inv.items.length} item{inv.items.length !== 1 ? 's' : ''}
+                      </div>
+                    </div>
+                    <div style={styles.invoiceListAmount}>{formatCurrency(inv.grandTotal)}</div>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        onClick={() => handleLoadInvoice(inv)}
+                        style={{
+                          padding: '8px 12px',
+                          backgroundColor: '#C5A059',
+                          color: '#FFFFFF',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                        }}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDuplicateInvoice(inv)}
+                        style={{
+                          padding: '8px 12px',
+                          backgroundColor: '#8D6E63',
+                          color: '#FFFFFF',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                        }}
+                      >
+                        Duplicate
+                      </button>
+                      <button
+                        onClick={() => handleDeleteInvoice(inv.invoiceNumber)}
+                        style={{
+                          padding: '8px 12px',
+                          backgroundColor: '#FBE9E7',
+                          color: '#BF360C',
+                          border: '1px solid #FFCCBC',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
