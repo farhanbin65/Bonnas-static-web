@@ -9,6 +9,14 @@ const FB_TOKEN = import.meta.env.FB_ACCESS_TOKEN;
 const YT_KEY = import.meta.env.YT_API_KEY;
 const YT_CHANNEL_ID = import.meta.env.YT_CHANNEL_ID;
 
+
+
+console.log("Facebook Page ID:", FB_PAGE_ID);
+console.log("Facebook Token:", FB_TOKEN ? "✓ Loaded" : "✗ Missing");
+console.log("Facebook Token Value:", FB_TOKEN);
+
+
+
 export default function Social() {
   const [ytVideos, setYtVideos] = useState([]);
   const [ytStats, setYtStats] = useState(null);
