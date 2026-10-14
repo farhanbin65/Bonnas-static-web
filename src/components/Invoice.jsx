@@ -649,6 +649,7 @@ const InvoiceGenerator = () => {
   // NEW: Flat deposit amount
   const [depositAmount, setDepositAmount] = useState(0);
   const [useDeposit, setUseDeposit] = useState(false);
+  const [amountPaid, setAmountPaid] = useState(0);
 
   // NEW: Flat discount amount
   const [discount, setDiscount] = useState(0);
@@ -699,6 +700,11 @@ const InvoiceGenerator = () => {
   );
 
   const grandTotal = subtotalAfterDiscount;
+
+  const outstandingBalance = useMemo(
+    () => Math.max(0, grandTotal - amountPaid),
+    [grandTotal, amountPaid]
+  );
 
   // --- Handlers ---
   const handlePasswordSubmit = (e) => {
@@ -761,6 +767,7 @@ const InvoiceGenerator = () => {
       useDiscount,
       depositAmount,
       useDeposit,
+      amountPaid,
       grandTotal,
       remainingBalance,
       savedAt: new Date().toISOString(),
@@ -789,6 +796,7 @@ const InvoiceGenerator = () => {
     setUseDiscount(invoice.useDiscount || false);
     setDepositAmount(invoice.depositAmount || 0);
     setUseDeposit(invoice.useDeposit || false);
+    setAmountPaid(invoice.amountPaid || 0);
     setActiveTab('create');
   };
 
@@ -810,6 +818,7 @@ const InvoiceGenerator = () => {
     setUseDiscount(false);
     setDepositAmount(0);
     setUseDeposit(false);
+    setAmountPaid(0);
     setSelectedInvoice(null);
   };
 
@@ -844,8 +853,59 @@ const InvoiceGenerator = () => {
     setUseDiscount(duplicated.useDiscount || false);
     setDepositAmount(duplicated.depositAmount || 0);
     setUseDeposit(duplicated.useDeposit || false);
+    setAmountPaid(duplicated.amountPaid || 0);
     setSelectedInvoice(null);
     setActiveTab('create');
+  };
+
+  const handleExportToExcel = () => {
+    const invoices = Object.values(invoiceHistory);
+
+    if (invoices.length === 0) {
+      alert('No invoices to export');
+      return;
+    }
+
+    const escapeCsvValue = (value) => `"${String(value ?? '').replace(/"/g, '""')}"`;
+    const headers = [
+      'Invoice #',
+      'Date',
+      'Customer',
+      'Phone',
+      'Email',
+      'Items Count',
+      'Subtotal',
+      'Discount',
+      'After Discount',
+      'Deposit',
+      'Amount Paid',
+      'Outstanding',
+      'Grand Total',
+      'Notes',
+    ];
+    const rows = invoices.map((inv) => [
+      inv.invoiceNumber,
+      inv.invoiceDate,
+      inv.customerName,
+      inv.customerPhone,
+      inv.customerEmail,
+      inv.items.length,
+      Number(inv.subtotal || 0).toFixed(2),
+      Number(inv.discountAmount || 0).toFixed(2),
+      (Number(inv.subtotal || 0) - Number(inv.discountAmount || 0)).toFixed(2),
+      Number(inv.depositAmount || 0).toFixed(2),
+      Number(inv.amountPaid || 0).toFixed(2),
+      Math.max(0, Number(inv.grandTotal || 0) - Number(inv.amountPaid || 0)).toFixed(2),
+      Number(inv.grandTotal || 0).toFixed(2),
+      inv.notes || '',
+    ]);
+    const csv = [headers, ...rows].map((row) => row.map(escapeCsvValue).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `bonnas-invoices-${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(link.href), 0);
   };
 
   const handleExport = async (format) => {
@@ -1194,6 +1254,25 @@ const InvoiceGenerator = () => {
               </div>
             </div>
 
+            <div style={styles.row}>
+              <div style={styles.fullWidth}>
+                <label style={styles.label}>Amount Paid</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={amountPaid}
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value);
+                    if (!isNaN(val) && val >= 0) setAmountPaid(val);
+                    else if (e.target.value === '') setAmountPaid(0);
+                  }}
+                  placeholder="Amount paid by customer"
+                  style={styles.input}
+                />
+              </div>
+            </div>
+
             <div style={styles.sectionTitle}>Notes</div>
             <textarea
               value={notes}
@@ -1216,6 +1295,8 @@ const InvoiceGenerator = () => {
                   <div style={styles.summaryRow}><span>Remaining Balance</span><span>{formatCurrency(remainingBalance)}</span></div>
                 </>
               )}
+              <div style={styles.summaryRow}><span>Amount Paid</span><span style={{ color: '#4CAF50', fontWeight: 'bold' }}>{formatCurrency(amountPaid)}</span></div>
+              <div style={styles.summaryRow}><span>Outstanding Balance</span><span style={{ color: amountPaid >= grandTotal ? '#4CAF50' : '#BF360C', fontWeight: 'bold' }}>{formatCurrency(outstandingBalance)}</span></div>
               <div style={styles.summaryTotal}><span>Grand Total</span><span>{formatCurrency(grandTotal)}</span></div>
             </div>
 
@@ -1320,6 +1401,8 @@ const InvoiceGenerator = () => {
                         <div style={styles.invSummaryRow}><span>Remaining Balance</span><span>{formatCurrency(remainingBalance)}</span></div>
                       </>
                     )}
+                    <div style={styles.invSummaryRow}><span>Amount Paid</span><span style={{ color: '#4CAF50', fontWeight: 'bold' }}>{formatCurrency(amountPaid)}</span></div>
+                    <div style={styles.invSummaryRow}><span>Outstanding Balance</span><span style={{ color: amountPaid >= grandTotal ? '#4CAF50' : '#BF360C', fontWeight: 'bold' }}>{formatCurrency(outstandingBalance)}</span></div>
                     <div style={styles.invSummaryTotal}><span>Grand Total</span><span>{formatCurrency(grandTotal)}</span></div>
                   </div>
                 </div>
@@ -1357,6 +1440,12 @@ const InvoiceGenerator = () => {
       {activeTab === 'history' && (
         <div style={styles.formColumn}>
           <div style={styles.sectionTitle}>Saved Invoices</div>
+          <button
+            onClick={handleExportToExcel}
+            style={{ ...styles.btnPrimary, marginBottom: '20px' }}
+          >
+            Export All to CSV
+          </button>
           {Object.keys(invoiceHistory).length === 0 ? (
             <p style={{ color: '#8D6E63', fontSize: '14px' }}>No saved invoices yet.</p>
           ) : (
