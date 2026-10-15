@@ -16,11 +16,11 @@ export default function Social() {
   useEffect(() => {
     const fetchAll = async () => {
       try {
-        // Get env vars
-        const FB_PAGE_ID = import.meta.env.FB_PAGE_ID;
-        const FB_TOKEN = import.meta.env.FB_ACCESS_TOKEN;
-        const YT_KEY = import.meta.env.YT_API_KEY;
-        const YT_CHANNEL_ID = import.meta.env.YT_CHANNEL_ID;
+        // Get env vars with VITE_ prefix
+        const FB_PAGE_ID = import.meta.env.VITE_FB_PAGE_ID;
+        const FB_TOKEN = import.meta.env.VITE_FB_ACCESS_TOKEN;
+        const YT_KEY = import.meta.env.VITE_YT_API_KEY;
+        const YT_CHANNEL_ID = import.meta.env.VITE_YT_CHANNEL_ID;
 
         // YouTube Videos & Stats
         if (YT_KEY && YT_CHANNEL_ID) {
@@ -165,7 +165,7 @@ export default function Social() {
             <div className="flex items-center gap-2 mb-5">
               <ThumbsUp className="w-5 h-5 text-pink-bonnas" strokeWidth={1.75} />
               <p className="text-cream font-semibold text-sm">Facebook</p>
-              <a href={`https://facebook.com/${import.meta.env.FB_PAGE_ID}`} target="_blank" rel="noreferrer"
+              <a href={`https://facebook.com/${import.meta.env.VITE_FB_PAGE_ID}`} target="_blank" rel="noreferrer"
                 className="ml-auto text-pink-bonnas text-xs hover:underline">Visit Page →</a>
             </div>
             <div className="grid grid-cols-3 gap-3">
@@ -197,7 +197,7 @@ export default function Social() {
             {fbLive.embed_html ? (
               <div dangerouslySetInnerHTML={{ __html: fbLive.embed_html }} className="w-full rounded-xl overflow-hidden" />
             ) : (
-              <a href={`https://facebook.com/${import.meta.env.FB_PAGE_ID}/videos`} target="_blank" rel="noreferrer"
+              <a href={`https://facebook.com/${import.meta.env.VITE_FB_PAGE_ID}/videos`} target="_blank" rel="noreferrer"
                 className="inline-flex items-center bg-red-500 text-white px-5 py-2 rounded-full text-sm font-semibold hover:bg-red-600 transition-colors">
                 Watch Live on Facebook →
               </a>
@@ -210,7 +210,7 @@ export default function Social() {
           <div className="mb-16">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-semibold text-cream">Latest from Facebook</h3>
-              <a href={`https://facebook.com/${import.meta.env.FB_PAGE_ID}`} target="_blank" rel="noreferrer"
+              <a href={`https://facebook.com/${import.meta.env.VITE_FB_PAGE_ID}`} target="_blank" rel="noreferrer"
                 className="text-pink-bonnas text-xs hover:underline">See all →</a>
             </div>
             <motion.div
