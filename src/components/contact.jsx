@@ -1,128 +1,288 @@
 import { useEffect, useRef, useState } from "react";
-import { Polyline } from "react-leaflet";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
-import L from "leaflet";
-import { FaFacebookF, FaInstagram, FaTiktok, FaYoutube } from "react-icons/fa";
 import { motion } from "framer-motion";
-import { MapPin, Mail, Clock, UtensilsCrossed, Navigation } from "lucide-react";
 import { fadeUp, fadeInLeft, fadeInRight, staggerContainer, staggerItem, scrollRevealViewport } from "../lib/motion";
 
-import "leaflet/dist/leaflet.css";
-
-const BONNAS_POS = [51.5265, -0.0554];
-
-const SOCIALS = [
-  { icon: <FaFacebookF />,  href: "https://www.facebook.com/bonnas.cooking1",  label: "Facebook"  },
-  { icon: <FaInstagram />,  href: "https://instagram.com/bonnas_cuisine",       label: "Instagram" },
-  { icon: <FaTiktok />,     href: "https://www.tiktok.com/@bonnas.cuisine",     label: "TikTok"    },
-  { icon: <FaYoutube />,    href: "https://www.youtube.com/@bonnas.cooking",    label: "YouTube"   },
+const DISHES = [
+  { id: 1, name: "Roast Polao (Bonna's Special)", category: "Biriyani", price: "£10", image: "a1.jpeg" },
+  { id: 2, name: "Lamb Biriyani", category: "Biriyani", price: "£10", image: "a2.jpeg" },
+  { id: 3, name: "Beef Biriyani", category: "Biriyani", price: "£9", image: "a3.jpeg" },
+  { id: 4, name: "Beef Tehari", category: "Biriyani", price: "£8", image: "a4.jpeg" },
+  { id: 5, name: "Chicken Biriyani", category: "Biriyani", price: "£8", image: "a5.jpeg" },
+  { id: 6, name: "Biya Bari Platter - 1", category: "Platters", price: "£12", image: "a6.jpeg" },
+  { id: 7, name: "Ilish Fish (2pcs)", category: "Curry's", price: "£10", image: "a7.jpeg" },
+  { id: 8, name: "Rupchada Fish", category: "Curry's", price: "£7", image: "a8.jpeg" },
+  { id: 9, name: "Milk Egg Pudding (5pcs)", category: "Desserts", price: "£8", image: "a9.jpeg" },
+  { id: 10, name: "Nawabi Shemai (5pcs)", category: "Desserts", price: "£6", image: "a10.jpeg" },
 ];
 
-const HOURS = [
-  { day: "Monday – Friday", time: "12:00 – 21:00" },
-  { day: "Saturday",        time: "11:00 – 22:00" },
-  { day: "Sunday",          time: "11:00 – 21:00" },
+const QUIZ_QUESTIONS = [
+  {
+    id: 1,
+    question: "What's your vibe today?",
+    options: [
+      { text: "Fancy & Aromatic", value: "biriyani" },
+      { text: "Simple & Satisfying", value: "platter" },
+      { text: "Fresh & Seafood", value: "curry" },
+      { text: "Sweet & Indulgent", value: "dessert" },
+    ],
+  },
+  {
+    id: 2,
+    question: "How adventurous are you?",
+    options: [
+      { text: "Classic Favourites", value: "classic" },
+      { text: "Premium & Special", value: "premium" },
+      { text: "Try Anything", value: "anything" },
+    ],
+  },
+  {
+    id: 3,
+    question: "Eating solo or sharing?",
+    options: [
+      { text: "Just for me", value: "single" },
+      { text: "With my squad", value: "shared" },
+    ],
+  },
 ];
 
-const bonnasIcon = new L.DivIcon({
-  html: `<div style="
-    width:38px;height:38px;border-radius:50%;
-    background:#F2A8B5;border:3px solid #fff;
-    display:flex;align-items:center;justify-content:center;
-    box-shadow:0 0 0 4px rgba(242,168,181,0.35);">
-    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0D0A07" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M12 2c1 2 2 3 2 5a2 2 0 1 1-4 0c0-2 1-3 2-5Z"/>
-      <path d="M5 13a7 7 0 0 1 14 0H5Z"/>
-      <path d="M5 13h14v2a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-2Z"/>
-    </svg>
-  </div>`,
-  className: "",
-  iconSize: [38, 38],
-  iconAnchor: [19, 19],
-});
+const RECOMMENDATIONS = {
+  biriyani: {
+    classic: { dish: DISHES[1], message: "Timeless. Every grain counts. ✨" },
+    premium: { dish: DISHES[0], message: "Our signature. Bonna's take on perfection." },
+    anything: { dish: DISHES[4], message: "Golden, aromatic, pure comfort." },
+  },
+  platter: {
+    classic: { dish: DISHES[5], message: "Everything on one plate. The OG." },
+    premium: { dish: DISHES[5], message: "Mix of textures. Mix of love." },
+    anything: { dish: DISHES[5], message: "Feast mode unlocked." },
+  },
+  curry: {
+    classic: { dish: DISHES[8], message: "Fresh catch, slow cooked, pure heaven." },
+    premium: { dish: DISHES[7], message: "Rupchada — Bonna's fish legend." },
+    anything: { dish: DISHES[6], message: "Ilish. Bengali gold on your plate." },
+  },
+  dessert: {
+    classic: { dish: DISHES[8], message: "Creamy. Dreamy. Bonna's way." },
+    premium: { dish: DISHES[9], message: "Nawabi Shemai — fit for royalty." },
+    anything: { dish: DISHES[8], message: "Sweet ending, lasting memory." },
+  },
+};
 
-const userIcon = new L.DivIcon({
-  html: `<div style="
-    width:16px;height:16px;border-radius:50%;
-    background:#fff;border:3px solid #F2A8B5;
-    box-shadow:0 0 0 4px rgba(242,168,181,0.35);">
-  </div>`,
-  className: "",
-  iconSize: [16, 16],
-  iconAnchor: [8, 8],
-});
+function FlavorQuiz({ onComplete }) {
+  const [currentQ, setCurrentQ] = useState(0);
+  const [answers, setAnswers] = useState({});
+  const [recommendation, setRecommendation] = useState(null);
 
-function FlyTo({ pos }) {
-  const map = useMap();
-  useEffect(() => {
-    if (pos) {
-      map.flyToBounds([BONNAS_POS, pos], { padding: [60, 60], duration: 1.4 });
+  const handleAnswer = (value) => {
+    const newAnswers = { ...answers, [currentQ]: value };
+    setAnswers(newAnswers);
+
+    if (currentQ < QUIZ_QUESTIONS.length - 1) {
+      setCurrentQ(currentQ + 1);
+    } else {
+      // Generate recommendation
+      const vibe = newAnswers[0];
+      const level = newAnswers[1] || "classic";
+      const rec = RECOMMENDATIONS[vibe][level];
+      setRecommendation(rec);
     }
-  }, [pos, map]);
-  return null;
-}
-function RouteLine({ from, to }) {
-  const [route, setRoute] = useState(null);
+  };
 
-  useEffect(() => {
-    if (!from || !to) return;
+  if (recommendation) {
+    return (
+      <motion.div className="text-center" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }}>
+        <div className="mb-6 rounded-2xl overflow-hidden border border-gold-dust h-64">
+          <img src={recommendation.dish.image} alt={recommendation.dish.name} className="w-full h-full object-cover" />
+        </div>
 
-    const controller = new AbortController();
+        <h3 className="text-2xl md:text-3xl font-bold text-cream mb-2">{recommendation.dish.name}</h3>
+        <p className="text-pink-bonnas text-lg font-medium mb-4">{recommendation.message}</p>
+        <p className="text-sand text-sm mb-6">{recommendation.dish.category} • {recommendation.dish.price}</p>
 
-    async function fetchRoute() {
-      try {
-        // OSRM expects lng,lat order (opposite of Leaflet's lat,lng)
-        const url = `https://router.project-osrm.org/route/v1/driving/${from[1]},${from[0]};${to[1]},${to[0]}?overview=full&geometries=geojson`;
-        const res = await fetch(url, { signal: controller.signal });
-        const data = await res.json();
-        const coords = data.routes?.[0]?.geometry?.coordinates;
-        if (coords) {
-          // Convert back to [lat, lng] for Leaflet
-          setRoute(coords.map(([lng, lat]) => [lat, lng]));
-        }
-      } catch (err) {
-        if (err.name !== "AbortError") console.error("Route fetch error:", err);
-      }
-    }
+        <a
+          href="https://wa.me/447912795556?text=Hi%20Bonna's!%20I'd%20like%20to%20order%20the%20{recommendation.dish.name}"
+          target="_blank"
+          rel="noreferrer"
+          className="inline-block bg-pink-bonnas text-night px-8 py-3 rounded-full font-semibold hover:bg-pink-dark transition-colors mb-4"
+        >
+          Order on WhatsApp
+        </a>
 
-    fetchRoute();
-    return () => controller.abort();
-  }, [from, to]);
+        <button
+          onClick={() => {
+            setCurrentQ(0);
+            setAnswers({});
+            setRecommendation(null);
+            onComplete();
+          }}
+          className="block mx-auto text-pink-bonnas text-sm hover:underline"
+        >
+          Try another quiz
+        </button>
+      </motion.div>
+    );
+  }
 
-  if (!route) return null;
+  const question = QUIZ_QUESTIONS[currentQ];
 
   return (
-    <Polyline
-      positions={route}
-      pathOptions={{ color: "#F2A8B5", weight: 4, opacity: 0.85 }}
-    />
+    <motion.div key={currentQ} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
+      <div className="mb-8">
+        <div className="flex gap-1 mb-4">
+          {QUIZ_QUESTIONS.map((_, idx) => (
+            <div
+              key={idx}
+              className={`h-1 flex-1 rounded-full transition-colors ${idx <= currentQ ? "bg-pink-bonnas" : "bg-gold-dust"}`}
+            />
+          ))}
+        </div>
+        <h3 className="text-2xl md:text-3xl font-bold text-cream">{question.question}</h3>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {question.options.map((opt) => (
+          <button
+            key={opt.value}
+            onClick={() => handleAnswer(opt.value)}
+            className="text-left p-4 rounded-xl border border-gold-dust bg-night hover:border-pink-bonnas hover:bg-night transition-colors text-cream font-medium text-sm"
+          >
+            {opt.text}
+          </button>
+        ))}
+      </div>
+    </motion.div>
   );
 }
 
-export default function Contact() {
-  const [userPos, setUserPos] = useState(null);
-  const [locating, setLocating] = useState(false);
-  const [error, setError] = useState("");
+function SpiceRoulette({ onComplete }) {
+  const [isSpinning, setIsSpinning] = useState(false);
+  const [winner, setWinner] = useState(null);
+  const wheelRef = useRef(null);
 
-  const handleLocate = () => {
-    setError("");
-    setLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setUserPos([pos.coords.latitude, pos.coords.longitude]);
-        setLocating(false);
-      },
-      () => {
-        setError("Could not get your location. Please allow location access.");
-        setLocating(false);
-      }
-    );
+  const handleSpin = () => {
+    if (isSpinning) return;
+    setIsSpinning(true);
+    setWinner(null);
+
+    const randomDish = DISHES[Math.floor(Math.random() * DISHES.length)];
+    const randomRotation = Math.random() * 360 + 720;
+
+    if (wheelRef.current) {
+      wheelRef.current.style.transform = `rotate(${randomRotation}deg)`;
+      wheelRef.current.style.transition = "transform 3s cubic-bezier(0.25, 0.46, 0.45, 0.94)";
+    }
+
+    setTimeout(() => {
+      setWinner(randomDish);
+      setIsSpinning(false);
+    }, 3000);
   };
 
-  return (
-    <section id="contact" className="py-20 px-6 md:px-20 bg-ember">
-      <div className="max-w-7xl mx-auto">
+  if (winner) {
+    return (
+      <motion.div className="text-center" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }}>
+        <div className="mb-6 rounded-2xl overflow-hidden border border-gold-dust h-64">
+          <img src={winner.image} alt={winner.name} className="w-full h-full object-cover" />
+        </div>
 
+        <h3 className="text-2xl md:text-3xl font-bold text-cream mb-2">🎉 You got lucky!</h3>
+        <p className="text-pink-bonnas text-xl font-bold mb-2">{winner.name}</p>
+        <p className="text-sand text-sm mb-6">{winner.category} • {winner.price}</p>
+
+        <a
+          href={`https://wa.me/447912795556?text=Hi%20Bonna's!%20The%20wheel%20picked%20${winner.name.replace(/\s/g, "%20")}%20for%20me!`}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-block bg-pink-bonnas text-night px-8 py-3 rounded-full font-semibold hover:bg-pink-dark transition-colors mb-4"
+        >
+          Order on WhatsApp
+        </a>
+
+        <button
+          onClick={() => {
+            setWinner(null);
+            onComplete();
+          }}
+          className="block mx-auto text-pink-bonnas text-sm hover:underline"
+        >
+          Spin again
+        </button>
+      </motion.div>
+    );
+  }
+
+  return (
+    <motion.div className="flex flex-col items-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
+      <div className="mb-8 relative w-64 h-64">
+        <svg className="absolute inset-0" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+          {/* Pointer */}
+          <polygon points="200,20 180,60 220,60" fill="#F2A8B5" />
+
+          {/* Wheel background */}
+          <circle cx="200" cy="200" r="180" fill="#1E160D" stroke="#F2A8B5" strokeWidth="3" />
+        </svg>
+
+        <div
+          ref={wheelRef}
+          className="absolute inset-0 flex items-center justify-center"
+          style={{
+            background: `conic-gradient(
+              #F2A8B5 0deg 36deg,
+              #E89AAA 36deg 72deg,
+              #DC8699 72deg 108deg,
+              #D0728E 108deg 144deg,
+              #C45E83 144deg 180deg,
+              #B84A78 180deg 216deg,
+              #AC366D 216deg 252deg,
+              #A02262 252deg 288deg,
+              #940E57 288deg 324deg,
+              #881A5C 324deg 360deg
+            )`,
+            borderRadius: "50%",
+            width: "320px",
+            height: "320px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: "10px",
+            fontWeight: "bold",
+            color: "#0D0A07",
+          }}
+        >
+          {DISHES.slice(0, 10).map((_, idx) => (
+            <div
+              key={idx}
+              style={{
+                position: "absolute",
+                transform: `rotate(${(idx * 36 + 18)}deg) translateY(-140px) rotate(${-(idx * 36 + 18)}deg)`,
+              }}
+            >
+              {idx + 1}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <button
+        onClick={handleSpin}
+        disabled={isSpinning}
+        className="bg-pink-bonnas text-night px-8 py-3 rounded-full font-bold text-lg hover:bg-pink-dark transition-colors disabled:opacity-50"
+      >
+        {isSpinning ? "Spinning..." : "SPIN THE WHEEL"}
+      </button>
+
+      <p className="text-sand text-sm mt-4">What will the wheel pick for you?</p>
+    </motion.div>
+  );
+}
+
+export default function InteractiveHub() {
+  const [activeTab, setActiveTab] = useState("quiz");
+  const [showGame, setShowGame] = useState(true);
+
+  return (
+    <section id="interactive" className="py-20 px-6 md:px-20 bg-ember">
+      <div className="max-w-4xl mx-auto">
         {/* Header */}
         <motion.div
           className="text-center mb-12"
@@ -131,163 +291,92 @@ export default function Contact() {
           whileInView="visible"
           viewport={scrollRevealViewport}
         >
-          <p className="text-pink-bonnas text-sm font-semibold tracking-widest uppercase mb-2">Get In Touch</p>
-          <h2 className="text-3xl md:text-4xl font-bold text-cream">Contact Us</h2>
-          <p className="text-sand text-sm mt-2">Find us on the map or reach out directly</p>
+          <p className="text-pink-bonnas text-sm font-semibold tracking-widest uppercase mb-2">Find Your Perfect Dish</p>
+          <h2 className="text-3xl md:text-4xl font-bold text-cream">What's Your Flavour Today?</h2>
+          <p className="text-sand text-sm mt-2">Pick a vibe, get a recommendation, order on WhatsApp</p>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 gap-10">
-
-          {/* MAP */}
-          <motion.div
-            className="flex flex-col gap-3"
-            variants={fadeInLeft}
-            initial="hidden"
-            whileInView="visible"
-            viewport={scrollRevealViewport}
+        {/* Tabs */}
+        <motion.div
+          className="flex gap-3 mb-10 justify-center"
+          variants={fadeInLeft}
+          initial="hidden"
+          whileInView="visible"
+          viewport={scrollRevealViewport}
+        >
+          <button
+            onClick={() => {
+              setActiveTab("quiz");
+              setShowGame(true);
+            }}
+            className={`px-6 py-2.5 rounded-full font-semibold text-sm transition-colors ${
+              activeTab === "quiz"
+                ? "bg-pink-bonnas text-night"
+                : "bg-night border border-gold-dust text-cream hover:border-pink-bonnas"
+            }`}
           >
+            Flavour Quiz
+          </button>
+          <button
+            onClick={() => {
+              setActiveTab("roulette");
+              setShowGame(true);
+            }}
+            className={`px-6 py-2.5 rounded-full font-semibold text-sm transition-colors ${
+              activeTab === "roulette"
+                ? "bg-pink-bonnas text-night"
+                : "bg-night border border-gold-dust text-cream hover:border-pink-bonnas"
+            }`}
+          >
+            Spice Roulette
+          </button>
+        </motion.div>
 
-            {/* Locate button */}
-            <div className="flex items-center gap-3">
+        {/* Content */}
+        <motion.div
+          className="bg-night border border-gold-dust rounded-2xl p-8 md:p-10"
+          variants={fadeInRight}
+          initial="hidden"
+          whileInView="visible"
+          viewport={scrollRevealViewport}
+        >
+          {showGame && activeTab === "quiz" && (
+            <FlavorQuiz onComplete={() => setShowGame(false)} />
+          )}
+          {showGame && activeTab === "roulette" && (
+            <SpiceRoulette onComplete={() => setShowGame(false)} />
+          )}
+          {!showGame && (
+            <motion.div className="text-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              <p className="text-sand mb-4">Ready for another round?</p>
               <button
-                onClick={handleLocate}
-                disabled={locating}
-                className="flex items-center gap-2 bg-pink-bonnas text-night px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-pink-dark transition-colors disabled:opacity-50"
+                onClick={() => setShowGame(true)}
+                className="bg-pink-bonnas text-night px-8 py-3 rounded-full font-semibold hover:bg-pink-dark transition-colors"
               >
-                <Navigation className="w-4 h-4" strokeWidth={2} />
-                {locating ? "Locating…" : "Show my location"}
+                Yes, let's go again
               </button>
-              {userPos && (
-                <span className="text-sand text-xs">Location found — map updated</span>
-              )}
-              {error && (
-                <span className="text-red-400 text-xs">{error}</span>
-              )}
-            </div>
+            </motion.div>
+          )}
+        </motion.div>
 
-            {/* Map */}
-            <div className="rounded-2xl overflow-hidden border border-gold-dust" style={{ height: "420px" }}>
-              <MapContainer
-                center={BONNAS_POS}
-                zoom={14}
-                style={{ height: "100%", width: "100%", background: "#0D0A07" }}
-                zoomControl={false}
-                scrollWheelZoom={false}
-              >
-                <TileLayer
-                  url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-                  attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-                  className="golden-tiles"
-                />
-
-                {/* Bonna's marker */}
-                <Marker position={BONNAS_POS} icon={bonnasIcon}>
-                  <Popup className="bonnas-popup">
-                    <div style={{ background: "#1E160D", color: "#F5ECD7", padding: "6px 10px", borderRadius: "8px", fontSize: "13px", fontWeight: 600 }}>
-                      Bonna's — London E2
-                    </div>
-                  </Popup>
-                </Marker>
-
-                {/* User marker */}
-                {userPos && (
-                  <Marker position={userPos} icon={userIcon}>
-                    <Popup>
-                      <div style={{ background: "#1E160D", color: "#F5ECD7", padding: "6px 10px", borderRadius: "8px", fontSize: "13px" }}>
-                        You are here
-                      </div>
-                    </Popup>
-                  </Marker>
-                )}
-
-                {userPos && <FlyTo pos={userPos} />}
-                {userPos && <RouteLine from={userPos} to={BONNAS_POS} />}
-              </MapContainer>
-            </div>
-          </motion.div>
-
-          {/* RIGHT — details */}
-          <motion.div
-            className="flex flex-col gap-5"
-            variants={staggerContainer}
-            initial="hidden"
-            whileInView="visible"
-            viewport={scrollRevealViewport}
+        {/* WhatsApp CTA */}
+        <motion.div
+          className="text-center mt-10"
+          variants={fadeUp}
+          initial="hidden"
+          whileInView="visible"
+          viewport={scrollRevealViewport}
+        >
+          <p className="text-sand text-sm">Or message us directly</p>
+          <a
+            href="https://wa.me/447912795556"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-block mt-3 bg-emerald-600 text-white px-8 py-3 rounded-full font-semibold hover:bg-emerald-700 transition-colors"
           >
-
-            {/* Address */}
-            <motion.a
-              variants={staggerItem}
-              href="https://maps.google.com/?q=E2+London+UK"
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-start gap-4 bg-night border border-gold-dust hover:border-pink-bonnas/50 rounded-2xl p-5 transition-colors group"
-            >
-              <div className="w-10 h-10 rounded-full bg-pink-bonnas/10 border border-pink-bonnas/30 flex items-center justify-center shrink-0">
-                <MapPin className="w-4.5 h-4.5 text-pink-bonnas" strokeWidth={1.75} />
-              </div>
-              <div>
-                <p className="text-cream font-semibold text-sm">Location</p>
-                <p className="text-sand text-xs mt-0.5">London, E2, UK</p>
-                <p className="text-pink-bonnas text-xs mt-1 group-hover:underline">Get directions →</p>
-              </div>
-            </motion.a>
-
-            {/* Email */}
-            <motion.a
-              variants={staggerItem}
-              href="mailto:info@bonnas.co.uk"
-              className="flex items-start gap-4 bg-night border border-gold-dust hover:border-pink-bonnas/50 rounded-2xl p-5 transition-colors group"
-            >
-              <div className="w-10 h-10 rounded-full bg-pink-bonnas/10 border border-pink-bonnas/30 flex items-center justify-center shrink-0">
-                <Mail className="w-4.5 h-4.5 text-pink-bonnas" strokeWidth={1.75} />
-              </div>
-              <div>
-                <p className="text-cream font-semibold text-sm">Email</p>
-                <p className="text-sand text-xs mt-0.5">info@bonnas.co.uk</p>
-                <p className="text-pink-bonnas text-xs mt-1 group-hover:underline">Send us an email →</p>
-              </div>
-            </motion.a>
-
-            {/* Hours */}
-            <motion.div variants={staggerItem} className="bg-night border border-gold-dust rounded-2xl p-5">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-pink-bonnas/10 border border-pink-bonnas/30 flex items-center justify-center shrink-0">
-                  <Clock className="w-4.5 h-4.5 text-pink-bonnas" strokeWidth={1.75} />
-                </div>
-                <p className="text-cream font-semibold text-sm">Opening Hours</p>
-              </div>
-              <div className="flex flex-col gap-2">
-                {HOURS.map((h) => (
-                  <div key={h.day} className="flex justify-between items-center border-b border-gold-dust pb-2 last:border-0 last:pb-0">
-                    <span className="text-sand text-xs">{h.day}</span>
-                    <span className="text-cream text-xs font-medium">{h.time}</span>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-
-            {/* Socials */}
-            <motion.div variants={staggerItem} className="bg-night border border-gold-dust rounded-2xl p-5">
-              <p className="text-cream font-semibold text-sm mb-4">Follow Us</p>
-              <div className="flex gap-3">
-                {SOCIALS.map((s) => (
-                  <a
-                    key={s.label}
-                    href={s.href}
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label={s.label}
-                    className="w-10 h-10 rounded-full bg-pink-bonnas/10 border border-pink-bonnas/30 hover:bg-pink-bonnas hover:text-night text-pink-bonnas flex items-center justify-center transition-colors text-sm"
-                  >
-                    {s.icon}
-                  </a>
-                ))}
-              </div>
-            </motion.div>
-
-          </motion.div>
-        </div>
+            Open WhatsApp
+          </a>
+        </motion.div>
       </div>
     </section>
   );
