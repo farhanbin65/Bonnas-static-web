@@ -4,74 +4,88 @@ import { PlayCircle, ThumbsUp, Radio } from "lucide-react";
 import { fadeUp, fadeInLeft, fadeInRight, staggerContainer, staggerItem, scrollRevealViewport } from "../lib/motion";
 import TiltCard from "./TiltCard";
 
-const FB_PAGE_ID = import.meta.env.FB_PAGE_ID;
-const FB_TOKEN = import.meta.env.FB_ACCESS_TOKEN;
-const YT_KEY = import.meta.env.YT_API_KEY;
-const YT_CHANNEL_ID = import.meta.env.YT_CHANNEL_ID;
-
-
-
-console.log("Facebook Page ID:", FB_PAGE_ID);
-console.log("Facebook Token:", FB_TOKEN ? "✓ Loaded" : "✗ Missing");
-console.log("Facebook Token Value:", FB_TOKEN);
-
-
-
 export default function Social() {
   const [ytVideos, setYtVideos] = useState([]);
   const [ytStats, setYtStats] = useState(null);
   const [fbPosts, setFbPosts] = useState([]);
   const [fbStats, setFbStats] = useState(null);
   const [fbLive, setFbLive] = useState(null);
+  const [avgLikes, setAvgLikes] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchAll = async () => {
       try {
-        const YT_CACHE_KEY = "yt_cache";
-        const YT_CACHE_TTL = 1000 * 60 * 60 * 3;
-        const cached = localStorage.getItem(YT_CACHE_KEY);
-        const cachedTime = localStorage.getItem(YT_CACHE_KEY + "_time");
-        const isExpired = !cachedTime || Date.now() - parseInt(cachedTime) > YT_CACHE_TTL;
+        // Get env vars
+        const FB_PAGE_ID = import.meta.env.FB_PAGE_ID;
+        const FB_TOKEN = import.meta.env.FB_ACCESS_TOKEN;
+        const YT_KEY = import.meta.env.YT_API_KEY;
+        const YT_CHANNEL_ID = import.meta.env.YT_CHANNEL_ID;
 
-        if (cached && !isExpired) {
-          const { videos, stats } = JSON.parse(cached);
-          setYtVideos(videos);
-          setYtStats(stats);
-        } else {
-          const ytVideosRes = await fetch(
-            "https://www.googleapis.com/youtube/v3/search?key=" + YT_KEY + "&channelId=" + YT_CHANNEL_ID + "&part=snippet,id&order=date&maxResults=4&type=video"
-          );
-          const ytVideosData = await ytVideosRes.json();
-          const ytStatsRes = await fetch(
-            "https://www.googleapis.com/youtube/v3/channels?key=" + YT_KEY + "&id=" + YT_CHANNEL_ID + "&part=statistics"
-          );
-          const ytStatsData = await ytStatsRes.json();
-          const videos = ytVideosData.items || [];
-          const stats = ytStatsData.items?.[0]?.statistics || null;
-          setYtVideos(videos);
-          setYtStats(stats);
-          localStorage.setItem(YT_CACHE_KEY, JSON.stringify({ videos, stats }));
-          localStorage.setItem(YT_CACHE_KEY + "_time", Date.now().toString());
+        // YouTube Videos & Stats
+        if (YT_KEY && YT_CHANNEL_ID) {
+          const YT_CACHE_KEY = "yt_cache";
+          const YT_CACHE_TTL = 1000 * 60 * 60 * 3;
+          const cached = localStorage.getItem(YT_CACHE_KEY);
+          const cachedTime = localStorage.getItem(YT_CACHE_KEY + "_time");
+          const isExpired = !cachedTime || Date.now() - parseInt(cachedTime) > YT_CACHE_TTL;
+
+          if (cached && !isExpired) {
+            const { videos, stats } = JSON.parse(cached);
+            setYtVideos(videos);
+            setYtStats(stats);
+          } else {
+            const ytVideosRes = await fetch(
+              `https://www.googleapis.com/youtube/v3/search?key=${YT_KEY}&channelId=${YT_CHANNEL_ID}&part=snippet,id&order=date&maxResults=4&type=video`
+            );
+            const ytVideosData = await ytVideosRes.json();
+            
+            const ytStatsRes = await fetch(
+              `https://www.googleapis.com/youtube/v3/channels?key=${YT_KEY}&id=${YT_CHANNEL_ID}&part=statistics`
+            );
+            const ytStatsData = await ytStatsRes.json();
+            
+            const videos = ytVideosData.items || [];
+            const stats = ytStatsData.items?.[0]?.statistics || null;
+            
+            setYtVideos(videos);
+            setYtStats(stats);
+            localStorage.setItem(YT_CACHE_KEY, JSON.stringify({ videos, stats }));
+            localStorage.setItem(YT_CACHE_KEY + "_time", Date.now().toString());
+          }
         }
 
-        const fbStatsRes = await fetch(
-          "https://graph.facebook.com/v25.0/" + FB_PAGE_ID + "?fields=fan_count,followers_count,name&access_token=" + FB_TOKEN
-        );
-        const fbStatsData = await fbStatsRes.json();
-        setFbStats(fbStatsData);
+        // Facebook Stats
+        if (FB_PAGE_ID && FB_TOKEN) {
+          const fbStatsRes = await fetch(
+            `https://graph.facebook.com/v25.0/${FB_PAGE_ID}?fields=followers_count,name&access_token=${FB_TOKEN}`
+          );
+          const fbStatsData = await fbStatsRes.json();
+          setFbStats(fbStatsData);
 
-        const fbPostsRes = await fetch(
-          "https://graph.facebook.com/v25.0/" + FB_PAGE_ID + "/posts?fields=id,message,created_time,full_picture,permalink_url&limit=8&access_token=" + FB_TOKEN
-        );
-        const fbPostsData = await fbPostsRes.json();
-        setFbPosts(fbPostsData.data || []);
+          // Get posts + calculate average engagement
+          const fbPostsRes = await fetch(
+            `https://graph.facebook.com/v25.0/${FB_PAGE_ID}/posts?fields=id,message,created_time,full_picture,permalink_url,likes.limit(0).summary(true)&limit=8&access_token=${FB_TOKEN}`
+          );
+          const fbPostsData = await fbPostsRes.json();
+          const posts = fbPostsData.data || [];
+          setFbPosts(posts);
 
-        const fbLiveRes = await fetch(
-          "https://graph.facebook.com/v25.0/" + FB_PAGE_ID + "/live_videos?status=LIVE&fields=id,title,embed_html&access_token=" + FB_TOKEN
-        );
-        const fbLiveData = await fbLiveRes.json();
-        setFbLive(fbLiveData.data?.[0] || null);
+          // Calculate average likes
+          if (posts.length > 0) {
+            const totalLikes = posts.reduce((sum, post) => {
+              return sum + (post.likes?.summary?.total_count || 0);
+            }, 0);
+            setAvgLikes(Math.round(totalLikes / posts.length));
+          }
+
+          // Facebook Live Videos
+          const fbLiveRes = await fetch(
+            `https://graph.facebook.com/v25.0/${FB_PAGE_ID}/live_videos?status=LIVE&fields=id,title,embed_html&access_token=${FB_TOKEN}`
+          );
+          const fbLiveData = await fbLiveRes.json();
+          setFbLive(fbLiveData.data?.[0] || null);
+        }
 
       } catch (err) {
         console.error("Social fetch error:", err);
@@ -79,6 +93,7 @@ export default function Social() {
         setLoading(false);
       }
     };
+    
     fetchAll();
   }, []);
 
@@ -129,7 +144,7 @@ export default function Social() {
             <div className="flex items-center gap-2 mb-5">
               <PlayCircle className="w-5 h-5 text-pink-bonnas" strokeWidth={1.75} />
               <p className="text-cream font-semibold text-sm">YouTube</p>
-              <a href={"https://youtube.com/@bonnas.cooking"} target="_blank" rel="noreferrer"
+              <a href="https://youtube.com/@bonnas.cooking" target="_blank" rel="noreferrer"
                 className="ml-auto text-pink-bonnas text-xs hover:underline">Visit Channel →</a>
             </div>
             <div className="grid grid-cols-3 gap-3">
@@ -150,12 +165,12 @@ export default function Social() {
             <div className="flex items-center gap-2 mb-5">
               <ThumbsUp className="w-5 h-5 text-pink-bonnas" strokeWidth={1.75} />
               <p className="text-cream font-semibold text-sm">Facebook</p>
-              <a href={"https://facebook.com/" + FB_PAGE_ID} target="_blank" rel="noreferrer"
+              <a href={`https://facebook.com/${import.meta.env.FB_PAGE_ID}`} target="_blank" rel="noreferrer"
                 className="ml-auto text-pink-bonnas text-xs hover:underline">Visit Page →</a>
             </div>
             <div className="grid grid-cols-3 gap-3">
               <StatCard label="Followers"  value={formatCount(fbStats?.followers_count)} sub="Facebook" />
-              <StatCard label="Page Likes" value={formatCount(fbStats?.fan_count)}       sub="All time" />
+              <StatCard label="Avg Likes"  value={avgLikes}                              sub="Per post" />
               <StatCard label="Page"       value={fbStats?.name || "Bonna's"}            sub="Name" />
             </div>
           </motion.div>
@@ -182,7 +197,7 @@ export default function Social() {
             {fbLive.embed_html ? (
               <div dangerouslySetInnerHTML={{ __html: fbLive.embed_html }} className="w-full rounded-xl overflow-hidden" />
             ) : (
-              <a href={"https://facebook.com/" + FB_PAGE_ID + "/videos"} target="_blank" rel="noreferrer"
+              <a href={`https://facebook.com/${import.meta.env.FB_PAGE_ID}/videos`} target="_blank" rel="noreferrer"
                 className="inline-flex items-center bg-red-500 text-white px-5 py-2 rounded-full text-sm font-semibold hover:bg-red-600 transition-colors">
                 Watch Live on Facebook →
               </a>
@@ -195,7 +210,7 @@ export default function Social() {
           <div className="mb-16">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-semibold text-cream">Latest from Facebook</h3>
-              <a href={"https://facebook.com/" + FB_PAGE_ID} target="_blank" rel="noreferrer"
+              <a href={`https://facebook.com/${import.meta.env.FB_PAGE_ID}`} target="_blank" rel="noreferrer"
                 className="text-pink-bonnas text-xs hover:underline">See all →</a>
             </div>
             <motion.div
@@ -235,7 +250,7 @@ export default function Social() {
         <div>
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-xl font-semibold text-cream">Latest Videos</h3>
-            <a href={"https://youtube.com/@bonnas.cooking"} target="_blank" rel="noreferrer"
+            <a href="https://youtube.com/@bonnas.cooking" target="_blank" rel="noreferrer"
               className="text-pink-bonnas text-xs hover:underline">See all →</a>
           </div>
 
@@ -254,7 +269,7 @@ export default function Social() {
               {ytVideos.map((video) => (
                 <motion.div key={video.id.videoId} variants={staggerItem} className="rounded-2xl overflow-hidden border border-gold-dust">
                   <iframe
-                    src={"https://www.youtube.com/embed/" + video.id.videoId}
+                    src={`https://www.youtube.com/embed/${video.id.videoId}`}
                     title={video.snippet.title}
                     height="260"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
