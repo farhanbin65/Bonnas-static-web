@@ -118,6 +118,10 @@ export default function Blog() {
             <p className="text-sand text-sm mt-2">
               Food stories, guides and inspiration from our kitchen to yours
             </p>
+
+            <p className="text-sand text-xs mt-3">
+              {posts.length} {posts.length === 1 ? "blog post" : "blog posts"} published
+            </p>
           </div>
 
           {/* Loading */}
