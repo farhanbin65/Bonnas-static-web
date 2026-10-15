@@ -650,6 +650,7 @@ const InvoiceGenerator = () => {
   const [depositAmount, setDepositAmount] = useState(0);
   const [useDeposit, setUseDeposit] = useState(false);
   const [amountPaid, setAmountPaid] = useState(0);
+  const [useAmountPaid, setUseAmountPaid] = useState(false);
 
   // NEW: Flat discount amount
   const [discount, setDiscount] = useState(0);
@@ -701,9 +702,14 @@ const InvoiceGenerator = () => {
 
   const grandTotal = subtotalAfterDiscount;
 
+  const finalAmountPaid = useMemo(
+    () => (useAmountPaid ? Math.max(0, Number(amountPaid) || 0) : 0),
+    [useAmountPaid, amountPaid]
+  );
+
   const outstandingBalance = useMemo(
-    () => Math.max(0, grandTotal - amountPaid),
-    [grandTotal, amountPaid]
+    () => Math.max(0, grandTotal - finalAmountPaid),
+    [grandTotal, finalAmountPaid]
   );
 
   // --- Handlers ---
@@ -768,6 +774,7 @@ const InvoiceGenerator = () => {
       depositAmount,
       useDeposit,
       amountPaid,
+      useAmountPaid,
       grandTotal,
       remainingBalance,
       savedAt: new Date().toISOString(),
@@ -797,6 +804,9 @@ const InvoiceGenerator = () => {
     setDepositAmount(invoice.depositAmount || 0);
     setUseDeposit(invoice.useDeposit || false);
     setAmountPaid(invoice.amountPaid || 0);
+    setUseAmountPaid(
+      invoice.useAmountPaid ?? Number(invoice.amountPaid || 0) > 0
+    );
     setActiveTab('create');
   };
 
@@ -819,6 +829,7 @@ const InvoiceGenerator = () => {
     setDepositAmount(0);
     setUseDeposit(false);
     setAmountPaid(0);
+    setUseAmountPaid(false);
     setSelectedInvoice(null);
   };
 
@@ -854,6 +865,9 @@ const InvoiceGenerator = () => {
     setDepositAmount(duplicated.depositAmount || 0);
     setUseDeposit(duplicated.useDeposit || false);
     setAmountPaid(duplicated.amountPaid || 0);
+    setUseAmountPaid(
+      duplicated.useAmountPaid ?? Number(duplicated.amountPaid || 0) > 0
+    );
     setSelectedInvoice(null);
     setActiveTab('create');
   };
@@ -1256,19 +1270,40 @@ const InvoiceGenerator = () => {
 
             <div style={styles.row}>
               <div style={styles.fullWidth}>
-                <label style={styles.label}>Amount Paid</label>
+                <label
+                  style={{
+                    ...styles.label,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={useAmountPaid}
+                    onChange={(e) => setUseAmountPaid(e.target.checked)}
+                  />
+                  Amount Paid
+                </label>
+
                 <input
                   type="number"
                   min="0"
                   step="0.01"
                   value={amountPaid}
+                  disabled={!useAmountPaid}
                   onChange={(e) => {
                     const val = parseFloat(e.target.value);
+
                     if (!isNaN(val) && val >= 0) setAmountPaid(val);
                     else if (e.target.value === '') setAmountPaid(0);
                   }}
                   placeholder="Amount paid by customer"
-                  style={styles.input}
+                  style={{
+                    ...styles.input,
+                    ...(useAmountPaid ? {} : { opacity: 0.5 }),
+                  }}
                 />
               </div>
             </div>
@@ -1295,8 +1330,28 @@ const InvoiceGenerator = () => {
                   <div style={styles.summaryRow}><span>Remaining Balance</span><span>{formatCurrency(remainingBalance)}</span></div>
                 </>
               )}
-              <div style={styles.summaryRow}><span>Amount Paid</span><span style={{ color: '#4CAF50', fontWeight: 'bold' }}>{formatCurrency(amountPaid)}</span></div>
-              <div style={styles.summaryRow}><span>Outstanding Balance</span><span style={{ color: amountPaid >= grandTotal ? '#4CAF50' : '#BF360C', fontWeight: 'bold' }}>{formatCurrency(outstandingBalance)}</span></div>
+              {useAmountPaid && (
+                <>
+                  <div style={styles.summaryRow}>
+                    <span>Amount Paid</span>
+                    <span style={{ color: '#4CAF50', fontWeight: 'bold' }}>
+                      {formatCurrency(finalAmountPaid)}
+                    </span>
+                  </div>
+
+                  <div style={styles.summaryRow}>
+                    <span>Outstanding Balance</span>
+                    <span
+                      style={{
+                        color: finalAmountPaid >= grandTotal ? '#4CAF50' : '#BF360C',
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      {formatCurrency(outstandingBalance)}
+                    </span>
+                  </div>
+                </>
+              )}
               <div style={styles.summaryTotal}><span>Grand Total</span><span>{formatCurrency(grandTotal)}</span></div>
             </div>
 
@@ -1401,8 +1456,28 @@ const InvoiceGenerator = () => {
                         <div style={styles.invSummaryRow}><span>Remaining Balance</span><span>{formatCurrency(remainingBalance)}</span></div>
                       </>
                     )}
-                    <div style={styles.invSummaryRow}><span>Amount Paid</span><span style={{ color: '#4CAF50', fontWeight: 'bold' }}>{formatCurrency(amountPaid)}</span></div>
-                    <div style={styles.invSummaryRow}><span>Outstanding Balance</span><span style={{ color: amountPaid >= grandTotal ? '#4CAF50' : '#BF360C', fontWeight: 'bold' }}>{formatCurrency(outstandingBalance)}</span></div>
+                    {useAmountPaid && (
+                      <>
+                        <div style={styles.invSummaryRow}>
+                          <span>Amount Paid</span>
+                          <span style={{ color: '#4CAF50', fontWeight: 'bold' }}>
+                            {formatCurrency(finalAmountPaid)}
+                          </span>
+                        </div>
+
+                        <div style={styles.invSummaryRow}>
+                          <span>Outstanding Balance</span>
+                          <span
+                            style={{
+                              color: finalAmountPaid >= grandTotal ? '#4CAF50' : '#BF360C',
+                              fontWeight: 'bold',
+                            }}
+                          >
+                            {formatCurrency(outstandingBalance)}
+                          </span>
+                        </div>
+                      </>
+                    )}
                     <div style={styles.invSummaryTotal}><span>Grand Total</span><span>{formatCurrency(grandTotal)}</span></div>
                   </div>
                 </div>
