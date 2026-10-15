@@ -9,13 +9,31 @@ const NAV_ITEMS = [
   { label: "Blog",         href: "/blog",           route: true  },
   { label: "Gallery",      href: "/#gallery",      route: false },
   { label: "Reservations", href: "/#reservations", route: false },
-  { label: "Contact",      href: "/#contact",      route: false },
+  { label: "Games",        href: "/#interactive",  route: false },
 ];
+
+const GamePadIcon = () => (
+  <svg className="w-5 h-5 inline-block mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    {/* Controller body */}
+    <rect x="1" y="6" width="22" height="12" rx="2" ry="2" />
+
+    {/* Left D-pad */}
+    <circle cx="7" cy="12" r="1.5" fill="currentColor" />
+    <line x1="7" y1="10" x2="7" y2="14" strokeWidth="2" />
+    <line x1="5" y1="12" x2="9" y2="12" strokeWidth="2" />
+
+    {/* Right buttons */}
+    <circle cx="17" cy="10" r="1.2" fill="currentColor" opacity="0.7" />
+    <circle cx="19" cy="12" r="1.2" fill="currentColor" opacity="0.7" />
+    <circle cx="17" cy="14" r="1.2" fill="currentColor" opacity="0.7" />
+  </svg>
+);
+
 export default function Navbar() {
   const [open, setOpen] = useState(false);
 
-  const linkClass = "text-sand hover:text-pink-bonnas text-sm font-medium transition-colors";
-  const mobileLinkClass = "text-cream text-2xl font-medium hover:text-pink-bonnas transition-colors";
+  const linkClass = "text-sand hover:text-pink-bonnas text-sm font-medium transition-colors flex items-center";
+  const mobileLinkClass = "text-cream text-2xl font-medium hover:text-pink-bonnas transition-colors flex items-center";
 
   return (
     <>
@@ -31,8 +49,14 @@ export default function Navbar() {
 
           <div className="hidden md:flex items-center gap-7">
             {NAV_ITEMS.map((l) => l.route
-              ? <Link key={l.href} to={l.href} className={linkClass}>{l.label}</Link>
-              : <a key={l.href} href={l.href} className={linkClass}>{l.label}</a>
+              ? <Link key={l.href} to={l.href} className={linkClass}>
+                  {l.label === "Games" && <GamePadIcon />}
+                  {l.label}
+                </Link>
+              : <a key={l.href} href={l.href} className={linkClass}>
+                  {l.label === "Games" && <GamePadIcon />}
+                  {l.label}
+                </a>
             )}
           </div>
 
@@ -57,8 +81,14 @@ export default function Navbar() {
           </div>
 
           {NAV_ITEMS.map((l) => l.route
-            ? <Link key={l.href} to={l.href} onClick={() => setOpen(false)} className={mobileLinkClass}>{l.label}</Link>
-            : <a key={l.href} href={l.href} onClick={() => setOpen(false)} className={mobileLinkClass}>{l.label}</a>
+            ? <Link key={l.href} to={l.href} onClick={() => setOpen(false)} className={mobileLinkClass}>
+                {l.label === "Games" && <GamePadIcon />}
+                {l.label}
+              </Link>
+            : <a key={l.href} href={l.href} onClick={() => setOpen(false)} className={mobileLinkClass}>
+                {l.label === "Games" && <GamePadIcon />}
+                {l.label}
+              </a>
           )}
 
           <Link to="/menu" onClick={() => setOpen(false)} className="mt-4 bg-pink-bonnas text-night px-10 py-3 rounded-full text-lg font-semibold hover:bg-pink-dark transition-colors">

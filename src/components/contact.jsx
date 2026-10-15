@@ -2,17 +2,35 @@ import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { fadeUp, fadeInLeft, fadeInRight, staggerContainer, staggerItem, scrollRevealViewport } from "../lib/motion";
 
-const DISHES = [
-  { id: 1, name: "Roast Polao (Bonna's Special)", category: "Biriyani", price: "£10", image: "a1.jpeg" },
-  { id: 2, name: "Lamb Biriyani", category: "Biriyani", price: "£10", image: "a2.jpeg" },
-  { id: 3, name: "Beef Biriyani", category: "Biriyani", price: "£9", image: "a3.jpeg" },
-  { id: 4, name: "Beef Tehari", category: "Biriyani", price: "£8", image: "a4.jpeg" },
-  { id: 5, name: "Chicken Biriyani", category: "Biriyani", price: "£8", image: "a5.jpeg" },
-  { id: 6, name: "Biya Bari Platter - 1", category: "Platters", price: "£12", image: "a6.jpeg" },
-  { id: 7, name: "Ilish Fish (2pcs)", category: "Curry's", price: "£10", image: "a7.jpeg" },
-  { id: 8, name: "Rupchada Fish", category: "Curry's", price: "£7", image: "a8.jpeg" },
-  { id: 9, name: "Milk Egg Pudding (5pcs)", category: "Desserts", price: "£8", image: "a9.jpeg" },
-  { id: 10, name: "Nawabi Shemai (5pcs)", category: "Desserts", price: "£6", image: "a10.jpeg" },
+// All dishes for random recommendations
+const ALL_DISHES = [
+  { id: 1, name: "Fried Rice with Tandoori Chicken & Salad", image: "/photos/a1.jpeg" },
+  { id: 2, name: "Meat Samosa", image: "/photos/a2.jpeg" },
+  { id: 3, name: "Fruit Faluda", image: "/photos/a3.jpeg" },
+  { id: 4, name: "Gulaab Jamun", image: "/photos/a4.jpeg" },
+  { id: 5, name: "Potato Singara", image: "/photos/a5.jpeg" },
+  { id: 6, name: "Shikh Kabab", image: "/photos/a6.jpeg" },
+  { id: 7, name: "Fish Curry", image: "/photos/a7.jpeg" },
+  { id: 8, name: "Dum Biriyani", image: "/photos/a8.jpeg" },
+  { id: 9, name: "Chicken Mom's", image: "/photos/a9.jpeg" },
+  { id: 10, name: "Chicken Wings", image: "/photos/a10.jpeg" },
+];
+
+// Memory game cards (6 pairs)
+const MEMORY_CARDS = [
+  { id: 1, name: "Fried Rice with Tandoori Chicken & Salad", image: "/photos/a1.jpeg", pairId: 1 },
+  { id: 2, name: "Meat Samosa", image: "/photos/a2.jpeg", pairId: 2 },
+  { id: 3, name: "Fruit Faluda", image: "/photos/a3.jpeg", pairId: 3 },
+  { id: 4, name: "Gulaab Jamun", image: "/photos/a4.jpeg", pairId: 4 },
+  { id: 5, name: "Potato Singara", image: "/photos/a5.jpeg", pairId: 5 },
+  { id: 6, name: "Shikh Kabab", image: "/photos/a6.jpeg", pairId: 6 },
+  // Duplicates for pairs
+  { id: 7, name: "Fried Rice with Tandoori Chicken & Salad", image: "/photos/a1.jpeg", pairId: 1 },
+  { id: 8, name: "Meat Samosa", image: "/photos/a2.jpeg", pairId: 2 },
+  { id: 9, name: "Fruit Faluda", image: "/photos/a3.jpeg", pairId: 3 },
+  { id: 10, name: "Gulaab Jamun", image: "/photos/a4.jpeg", pairId: 4 },
+  { id: 11, name: "Potato Singara", image: "/photos/a5.jpeg", pairId: 5 },
+  { id: 12, name: "Shikh Kabab", image: "/photos/a6.jpeg", pairId: 6 },
 ];
 
 const QUIZ_QUESTIONS = [
@@ -20,10 +38,10 @@ const QUIZ_QUESTIONS = [
     id: 1,
     question: "What's your vibe today?",
     options: [
-      { text: "Fancy & Aromatic", value: "biriyani" },
-      { text: "Simple & Satisfying", value: "platter" },
-      { text: "Fresh & Seafood", value: "curry" },
-      { text: "Sweet & Indulgent", value: "dessert" },
+      { text: "Fancy & Aromatic", value: "fancy" },
+      { text: "Simple & Satisfying", value: "simple" },
+      { text: "Fresh & Seafood", value: "seafood" },
+      { text: "Sweet & Indulgent", value: "sweet" },
     ],
   },
   {
@@ -35,43 +53,16 @@ const QUIZ_QUESTIONS = [
       { text: "Try Anything", value: "anything" },
     ],
   },
-  {
-    id: 3,
-    question: "Eating solo or sharing?",
-    options: [
-      { text: "Just for me", value: "single" },
-      { text: "With my squad", value: "shared" },
-    ],
-  },
 ];
 
-const RECOMMENDATIONS = {
-  biriyani: {
-    classic: { dish: DISHES[1], message: "Timeless. Every grain counts. ✨" },
-    premium: { dish: DISHES[0], message: "Our signature. Bonna's take on perfection." },
-    anything: { dish: DISHES[4], message: "Golden, aromatic, pure comfort." },
-  },
-  platter: {
-    classic: { dish: DISHES[5], message: "Everything on one plate. The OG." },
-    premium: { dish: DISHES[5], message: "Mix of textures. Mix of love." },
-    anything: { dish: DISHES[5], message: "Feast mode unlocked." },
-  },
-  curry: {
-    classic: { dish: DISHES[8], message: "Fresh catch, slow cooked, pure heaven." },
-    premium: { dish: DISHES[7], message: "Rupchada — Bonna's fish legend." },
-    anything: { dish: DISHES[6], message: "Ilish. Bengali gold on your plate." },
-  },
-  dessert: {
-    classic: { dish: DISHES[8], message: "Creamy. Dreamy. Bonna's way." },
-    premium: { dish: DISHES[9], message: "Nawabi Shemai — fit for royalty." },
-    anything: { dish: DISHES[8], message: "Sweet ending, lasting memory." },
-  },
-};
-
-function FlavorQuiz({ onComplete }) {
+function FlavorQuiz() {
   const [currentQ, setCurrentQ] = useState(0);
   const [answers, setAnswers] = useState({});
   const [recommendation, setRecommendation] = useState(null);
+
+  const getRandomDish = () => {
+    return ALL_DISHES[Math.floor(Math.random() * ALL_DISHES.length)];
+  };
 
   const handleAnswer = (value) => {
     const newAnswers = { ...answers, [currentQ]: value };
@@ -80,30 +71,26 @@ function FlavorQuiz({ onComplete }) {
     if (currentQ < QUIZ_QUESTIONS.length - 1) {
       setCurrentQ(currentQ + 1);
     } else {
-      // Generate recommendation
-      const vibe = newAnswers[0];
-      const level = newAnswers[1] || "classic";
-      const rec = RECOMMENDATIONS[vibe][level];
-      setRecommendation(rec);
+      const dish = getRandomDish();
+      setRecommendation({ dish, message: "Your perfect match awaits! ✨" });
     }
   };
 
   if (recommendation) {
     return (
       <motion.div className="text-center" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }}>
-        <div className="mb-6 rounded-2xl overflow-hidden border border-gold-dust h-64">
+        <div className="mb-6 rounded-2xl overflow-hidden border border-gold-dust h-48">
           <img src={recommendation.dish.image} alt={recommendation.dish.name} className="w-full h-full object-cover" />
         </div>
 
-        <h3 className="text-2xl md:text-3xl font-bold text-cream mb-2">{recommendation.dish.name}</h3>
+        <h3 className="text-xl font-bold text-cream mb-2">{recommendation.dish.name}</h3>
         <p className="text-pink-bonnas text-lg font-medium mb-4">{recommendation.message}</p>
-        <p className="text-sand text-sm mb-6">{recommendation.dish.category} • {recommendation.dish.price}</p>
 
         <a
-          href="https://wa.me/447912795556?text=Hi%20Bonna's!%20I'd%20like%20to%20order%20the%20{recommendation.dish.name}"
+          href={`https://wa.me/447912795556?text=Hi%20Bonna's!%20I'd%20like%20to%20order%20${recommendation.dish.name.replace(/\s/g, "%20")}`}
           target="_blank"
           rel="noreferrer"
-          className="inline-block bg-pink-bonnas text-night px-8 py-3 rounded-full font-semibold hover:bg-pink-dark transition-colors mb-4"
+          className="inline-block bg-pink-bonnas text-night px-6 py-2 rounded-full font-semibold hover:bg-pink-dark transition-colors text-sm"
         >
           Order on WhatsApp
         </a>
@@ -113,9 +100,8 @@ function FlavorQuiz({ onComplete }) {
             setCurrentQ(0);
             setAnswers({});
             setRecommendation(null);
-            onComplete();
           }}
-          className="block mx-auto text-pink-bonnas text-sm hover:underline"
+          className="block mx-auto text-pink-bonnas text-xs hover:underline mt-3"
         >
           Try another quiz
         </button>
@@ -126,9 +112,9 @@ function FlavorQuiz({ onComplete }) {
   const question = QUIZ_QUESTIONS[currentQ];
 
   return (
-    <motion.div key={currentQ} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
-      <div className="mb-8">
-        <div className="flex gap-1 mb-4">
+    <motion.div key={currentQ} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3 }}>
+      <div className="mb-6">
+        <div className="flex gap-1 mb-3">
           {QUIZ_QUESTIONS.map((_, idx) => (
             <div
               key={idx}
@@ -136,15 +122,15 @@ function FlavorQuiz({ onComplete }) {
             />
           ))}
         </div>
-        <h3 className="text-2xl md:text-3xl font-bold text-cream">{question.question}</h3>
+        <h3 className="text-lg md:text-xl font-bold text-cream">{question.question}</h3>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-2">
         {question.options.map((opt) => (
           <button
             key={opt.value}
             onClick={() => handleAnswer(opt.value)}
-            className="text-left p-4 rounded-xl border border-gold-dust bg-night hover:border-pink-bonnas hover:bg-night transition-colors text-cream font-medium text-sm"
+            className="text-left p-3 rounded-lg border border-gold-dust bg-night hover:border-pink-bonnas hover:bg-night transition-colors text-cream font-medium text-sm"
           >
             {opt.text}
           </button>
@@ -154,135 +140,153 @@ function FlavorQuiz({ onComplete }) {
   );
 }
 
-function SpiceRoulette({ onComplete }) {
-  const [isSpinning, setIsSpinning] = useState(false);
-  const [winner, setWinner] = useState(null);
-  const wheelRef = useRef(null);
+function MemoryGame() {
+  const [cards, setCards] = useState([]);
+  const [flipped, setFlipped] = useState(new Set());
+  const [matched, setMatched] = useState(new Set());
+  const [moves, setMoves] = useState(0);
+  const [time, setTime] = useState(0);
+  const [gameWon, setGameWon] = useState(false);
+  const timerRef = useRef(null);
 
-  const handleSpin = () => {
-    if (isSpinning) return;
-    setIsSpinning(true);
-    setWinner(null);
+  // Initialize game
+  useEffect(() => {
+    const shuffled = [...MEMORY_CARDS].sort(() => Math.random() - 0.5);
+    setCards(shuffled);
+    setFlipped(new Set());
+    setMatched(new Set());
+    setMoves(0);
+    setTime(0);
+    setGameWon(false);
+  }, []);
 
-    const randomDish = DISHES[Math.floor(Math.random() * DISHES.length)];
-    const randomRotation = Math.random() * 360 + 720;
-
-    if (wheelRef.current) {
-      wheelRef.current.style.transform = `rotate(${randomRotation}deg)`;
-      wheelRef.current.style.transition = "transform 3s cubic-bezier(0.25, 0.46, 0.45, 0.94)";
+  // Timer
+  useEffect(() => {
+    if (!gameWon && cards.length > 0) {
+      timerRef.current = setInterval(() => setTime((t) => t + 1), 1000);
     }
+    return () => clearInterval(timerRef.current);
+  }, [gameWon, cards.length]);
 
-    setTimeout(() => {
-      setWinner(randomDish);
-      setIsSpinning(false);
-    }, 3000);
+  const handleCardClick = (index) => {
+    if (flipped.has(index) || matched.has(index) || gameWon) return;
+
+    const newFlipped = new Set(flipped);
+    newFlipped.add(index);
+    setFlipped(newFlipped);
+
+    if (newFlipped.size === 2) {
+      const [first, second] = Array.from(newFlipped);
+      setMoves(moves + 1);
+
+      if (cards[first].pairId === cards[second].pairId) {
+        const newMatched = new Set(matched);
+        newMatched.add(first);
+        newMatched.add(second);
+        setMatched(newMatched);
+        setFlipped(new Set());
+
+        if (newMatched.size === MEMORY_CARDS.length) {
+          setGameWon(true);
+        }
+      } else {
+        setTimeout(() => setFlipped(new Set()), 600);
+      }
+    }
   };
 
-  if (winner) {
+  const resetGame = () => {
+    const shuffled = [...MEMORY_CARDS].sort(() => Math.random() - 0.5);
+    setCards(shuffled);
+    setFlipped(new Set());
+    setMatched(new Set());
+    setMoves(0);
+    setTime(0);
+    setGameWon(false);
+  };
+
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  if (gameWon) {
     return (
       <motion.div className="text-center" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }}>
-        <div className="mb-6 rounded-2xl overflow-hidden border border-gold-dust h-64">
-          <img src={winner.image} alt={winner.name} className="w-full h-full object-cover" />
+        <h3 className="text-3xl font-bold text-pink-bonnas mb-4">🎉 You Won!</h3>
+        <div className="bg-night border border-gold-dust rounded-xl p-4 mb-6">
+          <p className="text-cream text-sm mb-2">⏱️ Time: <span className="font-bold text-pink-bonnas">{formatTime(time)}</span></p>
+          <p className="text-cream text-sm">🎮 Moves: <span className="font-bold text-pink-bonnas">{moves}</span></p>
         </div>
 
-        <h3 className="text-2xl md:text-3xl font-bold text-cream mb-2">🎉 You got lucky!</h3>
-        <p className="text-pink-bonnas text-xl font-bold mb-2">{winner.name}</p>
-        <p className="text-sand text-sm mb-6">{winner.category} • {winner.price}</p>
-
-        <a
-          href={`https://wa.me/447912795556?text=Hi%20Bonna's!%20The%20wheel%20picked%20${winner.name.replace(/\s/g, "%20")}%20for%20me!`}
-          target="_blank"
-          rel="noreferrer"
-          className="inline-block bg-pink-bonnas text-night px-8 py-3 rounded-full font-semibold hover:bg-pink-dark transition-colors mb-4"
-        >
-          Order on WhatsApp
-        </a>
-
         <button
-          onClick={() => {
-            setWinner(null);
-            onComplete();
-          }}
-          className="block mx-auto text-pink-bonnas text-sm hover:underline"
+          onClick={resetGame}
+          className="bg-pink-bonnas text-night px-6 py-2 rounded-full font-semibold hover:bg-pink-dark transition-colors text-sm mb-3"
         >
-          Spin again
+          Play Again
         </button>
+        <p className="text-sand text-xs">Ready for a new challenge?</p>
       </motion.div>
     );
   }
 
   return (
-    <motion.div className="flex flex-col items-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
-      <div className="mb-8 relative w-64 h-64">
-        <svg className="absolute inset-0" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
-          {/* Pointer */}
-          <polygon points="200,20 180,60 220,60" fill="#F2A8B5" />
-
-          {/* Wheel background */}
-          <circle cx="200" cy="200" r="180" fill="#1E160D" stroke="#F2A8B5" strokeWidth="3" />
-        </svg>
-
-        <div
-          ref={wheelRef}
-          className="absolute inset-0 flex items-center justify-center"
-          style={{
-            background: `conic-gradient(
-              #F2A8B5 0deg 36deg,
-              #E89AAA 36deg 72deg,
-              #DC8699 72deg 108deg,
-              #D0728E 108deg 144deg,
-              #C45E83 144deg 180deg,
-              #B84A78 180deg 216deg,
-              #AC366D 216deg 252deg,
-              #A02262 252deg 288deg,
-              #940E57 288deg 324deg,
-              #881A5C 324deg 360deg
-            )`,
-            borderRadius: "50%",
-            width: "320px",
-            height: "320px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: "10px",
-            fontWeight: "bold",
-            color: "#0D0A07",
-          }}
-        >
-          {DISHES.slice(0, 10).map((_, idx) => (
-            <div
-              key={idx}
-              style={{
-                position: "absolute",
-                transform: `rotate(${(idx * 36 + 18)}deg) translateY(-140px) rotate(${-(idx * 36 + 18)}deg)`,
-              }}
-            >
-              {idx + 1}
-            </div>
-          ))}
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
+      <div className="flex justify-between items-center mb-4 text-sm">
+        <div className="text-cream">
+          ⏱️ <span className="font-bold text-pink-bonnas">{formatTime(time)}</span>
+        </div>
+        <h3 className="font-bold text-cream">Memory Game</h3>
+        <div className="text-cream">
+          🎮 <span className="font-bold text-pink-bonnas">{moves}</span>
         </div>
       </div>
 
-      <button
-        onClick={handleSpin}
-        disabled={isSpinning}
-        className="bg-pink-bonnas text-night px-8 py-3 rounded-full font-bold text-lg hover:bg-pink-dark transition-colors disabled:opacity-50"
-      >
-        {isSpinning ? "Spinning..." : "SPIN THE WHEEL"}
-      </button>
+      <div className="grid grid-cols-3 gap-2 mb-4">
+        {cards.map((card, idx) => (
+          <motion.button
+            key={idx}
+            onClick={() => handleCardClick(idx)}
+            className="relative h-24 rounded-lg overflow-hidden border-2 border-gold-dust bg-night hover:border-pink-bonnas transition-colors cursor-pointer"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            {flipped.has(idx) || matched.has(idx) ? (
+              <motion.div
+                initial={{ rotateY: 180 }}
+                animate={{ rotateY: 0 }}
+                transition={{ duration: 0.3 }}
+                className="w-full h-full"
+              >
+                <img src={card.image} alt={card.name} className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-black bg-opacity-40 flex items-end justify-center p-1">
+                  <p className="text-cream text-xs text-center font-bold line-clamp-2">{card.name}</p>
+                </div>
+              </motion.div>
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-pink-bonnas to-pink-dark flex items-center justify-center">
+                <span className="text-2xl">🍲</span>
+              </div>
+            )}
+          </motion.button>
+        ))}
+      </div>
 
-      <p className="text-sand text-sm mt-4">What will the wheel pick for you?</p>
+      <button
+        onClick={resetGame}
+        className="w-full bg-pink-bonnas text-night py-2 rounded-lg font-semibold hover:bg-pink-dark transition-colors text-sm"
+      >
+        Reset Game
+      </button>
     </motion.div>
   );
 }
 
 export default function InteractiveHub() {
-  const [activeTab, setActiveTab] = useState("quiz");
-  const [showGame, setShowGame] = useState(true);
-
   return (
     <section id="interactive" className="py-20 px-6 md:px-20 bg-ember">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         {/* Header */}
         <motion.div
           className="text-center mb-12"
@@ -293,88 +297,46 @@ export default function InteractiveHub() {
         >
           <p className="text-pink-bonnas text-sm font-semibold tracking-widest uppercase mb-2">Find Your Perfect Dish</p>
           <h2 className="text-3xl md:text-4xl font-bold text-cream">What's Your Flavour Today?</h2>
-          <p className="text-sand text-sm mt-2">Pick a vibe, get a recommendation, order on WhatsApp</p>
+          <p className="text-sand text-sm mt-2">Play our games and discover your next favourite dish!</p>
         </motion.div>
 
-        {/* Tabs */}
+        {/* Two Games Side by Side */}
         <motion.div
-          className="flex gap-3 mb-10 justify-center"
-          variants={fadeInLeft}
-          initial="hidden"
-          whileInView="visible"
-          viewport={scrollRevealViewport}
-        >
-          <button
-            onClick={() => {
-              setActiveTab("quiz");
-              setShowGame(true);
-            }}
-            className={`px-6 py-2.5 rounded-full font-semibold text-sm transition-colors ${
-              activeTab === "quiz"
-                ? "bg-pink-bonnas text-night"
-                : "bg-night border border-gold-dust text-cream hover:border-pink-bonnas"
-            }`}
-          >
-            Flavour Quiz
-          </button>
-          <button
-            onClick={() => {
-              setActiveTab("roulette");
-              setShowGame(true);
-            }}
-            className={`px-6 py-2.5 rounded-full font-semibold text-sm transition-colors ${
-              activeTab === "roulette"
-                ? "bg-pink-bonnas text-night"
-                : "bg-night border border-gold-dust text-cream hover:border-pink-bonnas"
-            }`}
-          >
-            Spice Roulette
-          </button>
-        </motion.div>
-
-        {/* Content */}
-        <motion.div
-          className="bg-night border border-gold-dust rounded-2xl p-8 md:p-10"
+          className="grid grid-cols-1 lg:grid-cols-2 gap-8"
           variants={fadeInRight}
           initial="hidden"
           whileInView="visible"
           viewport={scrollRevealViewport}
         >
-          {showGame && activeTab === "quiz" && (
-            <FlavorQuiz onComplete={() => setShowGame(false)} />
-          )}
-          {showGame && activeTab === "roulette" && (
-            <SpiceRoulette onComplete={() => setShowGame(false)} />
-          )}
-          {!showGame && (
-            <motion.div className="text-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <p className="text-sand mb-4">Ready for another round?</p>
-              <button
-                onClick={() => setShowGame(true)}
-                className="bg-pink-bonnas text-night px-8 py-3 rounded-full font-semibold hover:bg-pink-dark transition-colors"
-              >
-                Yes, let's go again
-              </button>
-            </motion.div>
-          )}
+          {/* Quiz */}
+          <div className="bg-night border border-gold-dust rounded-2xl p-8">
+            <h3 className="text-2xl font-bold text-cream mb-6 text-center">✨ Flavour Quiz</h3>
+            <FlavorQuiz />
+          </div>
+
+          {/* Memory Game */}
+          <div className="bg-night border border-gold-dust rounded-2xl p-8">
+            <h3 className="text-2xl font-bold text-cream mb-6 text-center">🎮 Memory Game</h3>
+            <MemoryGame />
+          </div>
         </motion.div>
 
         {/* WhatsApp CTA */}
         <motion.div
-          className="text-center mt-10"
+          className="text-center mt-12"
           variants={fadeUp}
           initial="hidden"
           whileInView="visible"
           viewport={scrollRevealViewport}
         >
-          <p className="text-sand text-sm">Or message us directly</p>
+          <p className="text-sand text-sm mb-4">Or message us directly on WhatsApp</p>
           <a
             href="https://wa.me/447912795556"
             target="_blank"
             rel="noreferrer"
-            className="inline-block mt-3 bg-emerald-600 text-white px-8 py-3 rounded-full font-semibold hover:bg-emerald-700 transition-colors"
+            className="inline-block bg-emerald-600 text-white px-8 py-3 rounded-full font-semibold hover:bg-emerald-700 transition-colors"
           >
-            Open WhatsApp
+            💬 Open WhatsApp
           </a>
         </motion.div>
       </div>

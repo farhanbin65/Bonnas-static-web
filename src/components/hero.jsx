@@ -157,12 +157,14 @@ export default function Hero() {
                 variants={staggerItem}
                 className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4"
               >
-                <a
-                  href="#menu"
-                  className="flex-1 bg-pink-bonnas text-night px-6 py-3.5 rounded-full text-sm font-bold text-center hover:bg-pink-dark transition-colors duration-200"
-                >
-                  Order Now
-                </a>
+              <a
+                href="https://wa.me/447912795556"
+                target="_blank"
+                rel="noreferrer"
+                className="flex-1 bg-pink-bonnas text-night px-6 py-3.5 rounded-full text-sm font-bold text-center hover:bg-pink-dark transition-colors duration-200"
+              >
+                Whatsapp
+              </a>
 
                 {/* PDF PREVIEW BUTTON */}
                 <button
@@ -170,7 +172,7 @@ export default function Hero() {
                   onClick={() => setShowPdfPreview(true)}
                   className="flex-1 border border-pink-bonnas text-pink-bonnas px-6 py-3.5 rounded-full text-sm font-medium text-center hover:bg-pink-bonnas hover:text-night transition-colors duration-200"
                 >
-                  View Menu PDF
+                   Menu
                 </button>
               </motion.div>
             </motion.aside>
