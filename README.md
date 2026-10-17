@@ -26,61 +26,67 @@ A full-stack restaurant website for **Bonna's**, a home-based Bangladeshi cateri
 
 ---
 
+---
+
 ```mermaid
 flowchart TD
-    A([🕐 GitHub Actions Cron\nMon / Wed / Fri 08:00 UTC]) --> B
+    A([GitHub Actions Cron\nMon / Wed / Fri 08:00 UTC]) --> B
 
-    B[Check calendar.json\nSeasonal event active?]
-    B -->|Yes — within publish window| C[Prioritise seasonal topic\ne.g. Ramadan, Eid, Boishakh]
-    B -->|No| D[Content type rotation\nby day of week]
+    B{Check calendar.json\nMultiple events active?}
+    B -->|Yes — seasonal window open| C[Weighted random pick\nby event priority]
+    B -->|No| D[Evergreen rotation\nby post count % content types]
 
-    C --> E[Select topic from topics.json\nmark as used]
+    C --> E[Select seasonal topic\nfrom topics.json\nmark used + year]
     D --> E
 
-    E --> F[Find related posts\nfrom post_index.json\nkeyword overlap scoring]
+    E --> F[Find related posts\nfrom post_index.json\nkeyword overlap]
 
-    F --> G[Resolve image\nlocal images.json first]
-    G -->|Match found| H[Use local photo\nfrom public/photos/]
-    G -->|No match| I[Unsplash API fallback]
-    I -->|No result| J[Pexels API fallback]
-    I -->|Found| K[External image URL]
-    J -->|Found| K
-    J -->|No result| L[No image — text only]
+    F --> G[Get keyword context\nfrom keywords.json\nsupporting keywords + intent]
 
-    H --> M
-    K --> M
-    L --> M
+    G --> H[Resolve image\nlocal images.json first]
+    H -->|Match found| I[Use local photo\nfrom public/photos/]
+    H -->|No match| J[Unsplash API fallback]
+    J -->|No result| K[Pexels API fallback]
+    J -->|Found| L[External image URL]
+    K -->|Found| L
+    K -->|No result| M[No image — text only]
 
-    M[Fetch RSS headlines\nGoogle Trends / Reddit / BBC Food\ntrend hook only]
+    I --> N
+    L --> N
+    M --> N
 
-    M --> N[Build Groq prompt\n- content type guidance\n- target keyword\n- seasonal hook\n- related posts for linking\n- trend headlines\n- no markdown rules]
+    N[Build Groq prompt\n- business facts collection only\n- content type guidance\n- primary + secondary keywords\n- seasonal hook if active\n- weekly hook Mon/Wed/Fri\n- area focus + angles\n- spelling variants\n- supporting keywords\n- internal links\n- directAnswer + faqs required]
 
-    N --> O[Groq llama-3.3-70b-versatile\nJSON mode — max 3 attempts]
+    N --> O[Groq: generate JSON\ntitle, excerpt, body, keywords\ndirectAnswer, faqs, contentType]
 
-    O -->|Success| P[Validate JSON fields\ntitle, excerpt, body, keywords\ndirectAnswer, faqs, contentType]
-    O -->|Fail| Q[Retry — wait 2s\nup to 3 attempts]
-    Q -->|All failed| R([❌ Pipeline fails])
+    O -->|Success| P[Validate JSON\nNo delivery claims\nPrimary keyword in body\nFAQs must be 3 items]
+    O -->|Fail| Q[Retry — wait 2s\nmax 3 attempts]
+    Q -->|All failed| R([Pipeline fails])
     Q -->|Retry success| P
 
-    P --> S[format_body\nStrip markdown\nPARA markers to paragraphs\nValidate LINK markers]
+    P --> S[format_body\nStrip markdown\nPARA to paragraphs\nValidate LINK markers]
 
-    S --> T[post_to_sanity\nSave title, slug, excerpt, body\nkeywords, directAnswer, faqs\nfeaturedImageUrl, contentType]
+    S --> T[post_to_sanity\nSave all fields +\ndirectAnswer, faqs\nfeaturedImageUrl]
 
-    T -->|200 OK| U[update_post_index\nAppend to post_index.json]
+    T -->|200 OK| U[update_post_index\nAppend post entry]
     T -->|Error| R
 
-    U --> V[GitHub Actions commits back\ntopics.json + post_index.json]
+    U --> V[mark_keyword_used\nSet used + last_used date]
 
-    V --> W([✅ Post live on bonnas.co.uk/blog])
+    V --> W[GitHub Actions commits\ntopics.json\npost_index.json\nkeywords.json]
 
-    W --> X[BlogPost.jsx renders]
-    X --> X1[Helmet — BlogPosting + FAQPage JSON-LD]
-    X --> X2[Featured Image]
-    X --> X3[Quick Answer Box\nChat bubble style]
-    X --> X4[Blog Body — renderBody\nLINK markers to React Router links]
-    X --> X5[FAQ Accordion\nFramer Motion animation]
-    X --> X6[Ready to Order CTA]
+    W --> X([Post live on bonnas.co.uk/blog])
+
+    X --> Y[BlogPost.jsx renders]
+    Y --> Y1[Helmet — BlogPosting + FAQPage JSON-LD]
+    Y --> Y2[Featured Image]
+    Y --> Y3[Direct Answer Box\nQuestion + Answer]
+    Y --> Y4[Blog Body\nPARA to paragraph breaks\nLINK markers to React Router]
+    Y --> Y5[FAQ Accordion\n3 items, expandable]
+    Y --> Y6[CTA to bonnas.co.uk/menu]
 ```
+
+---
 
 ---
 
