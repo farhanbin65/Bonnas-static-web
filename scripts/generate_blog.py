@@ -63,17 +63,17 @@ BUSINESS_FACTS = """BUSINESS FACTS (always true, never contradict them):
 - Do NOT invent prices, minimum order values, opening hours, distances, travel times, awards, years in business or reviews."""
 
 AREA_ANGLES = {
-    "stepney green":   "family gatherings and community events",
-    "mile end":        "student society and university events",
-    "cambridge heath": "easy collection for neighbours and local gatherings",
-    "whitechapel":     "a home cooked alternative to the curry houses",
-    "roman road":      "family parties and community gatherings",
-    "bow":             "family parties and community gatherings",
-    "shoreditch":      "office lunches and team events",
-    "shadwell":        "family gatherings and celebrations",
-    "tower hamlets":   "family and community food",
-    "hackney":         "home cooked food and events",
-    "bethnal green":   "the neighbourhood where Bonna's kitchen is based",
+    "stepney green":   "customers in the area can pre-order and collect from E2 0RB, bethnal green",
+    "mile end":        "customers in the area can pre-order and collect from E2 0RB, bethnal green",
+    "cambridge heath": "customers in the area can pre-order and collect from E2 0RB, bethnal green",
+    "whitechapel":     "customers in the area can pre-order and collect from E2 0RB, bethnal green",
+    "roman road":      "the neighbourhood where Bonna's kitchen is based at E2 0RB, bethnal green",
+    "bow":             "customers in the area can pre-order and collect from E2 0RB, bethnal green",
+    "shoreditch":      "customers in the area can pre-order and collect from E2 0RB, bethnal green",
+    "shadwell":        "customers in the area can pre-order and collect from E2 0RB, bethnal green",
+    "tower hamlets":   "customers can pre-order and collect from E2 0RB, bethnal green",
+    "hackney":         "customers in the area can pre-order and collect from E2 0RB, bethnal green",
+    "bethnal green":   "the neighbourhood where Bonna's kitchen is based at E2 0RB, bethnal green",
 }
 
 STOPWORDS = set(
@@ -472,9 +472,8 @@ def generate_post(headlines, topic, content_type, season=None, related_posts=Non
     if kw_ctx["variants"]:
         extras += f'\nSPELLING: use the main spelling most often, and mention one alternative spelling once naturally: {"; ".join(kw_ctx["variants"])}'
     if kw_ctx["area"]:
-        name, angle = kw_ctx["area"]
-        extras += (f'\nAREA FOCUS: {name.title()}. Angle: {angle}. Mention the area naturally 3-4 times and say customers '
-                   f'collect from E2 0RB. Do not invent landmarks, distances or travel times.')
+        extras += (f'\nAREA FOCUS: {name.title()}. Angle: {angle}. Mention the area naturally 2-3 times. '
+            f'Always say "collect from E2 0RB on Roman Road" (that is where the kitchen is). Do not invent landmarks, distances or travel times.')
     extras += "\n" + cta_for_intent(kw_ctx["intent"])
 
     links = ""
