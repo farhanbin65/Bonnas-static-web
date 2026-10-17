@@ -1,39 +1,150 @@
 {
+  "_notes": "Moveable Islamic dates are expected dates (moon sighting can shift by 1 day). Update the 'dates' lists each year. Fixed events use 'recurring' as MM-DD.",
   "events": [
     {
-      "name": "Ramadan 2027",
+      "name": "Shab-e-Barat",
+      "season_key": "shab_e_barat",
+      "dates": ["2027-01-24", "2028-01-13"],
+      "publish_window_days_before": 14,
+      "active_days_after_start": 0,
+      "priority": 3,
+      "chance": 0.7,
+      "hook": "Shab-e-Barat is near, and many Bengali families prepare halwa and ruti to share with neighbours."
+    },
+    {
+      "name": "Ramadan",
       "season_key": "ramadan",
-      "start": "2027-02-17",
+      "dates": ["2027-02-08", "2028-01-28"],
       "publish_window_days_before": 21,
-      "hook": "With Ramadan approaching, families across London are planning their iftar meals."
+      "active_days_after_start": 21,
+      "priority": 5,
+      "chance": 0.9,
+      "hook": "With Ramadan approaching, families across East London are planning their iftar tables."
     },
     {
-      "name": "Eid ul-Fitr 2027",
-      "season_key": "eid_fitr",
-      "start": "2027-03-20",
-      "publish_window_days_before": 14,
-      "hook": "Eid celebrations are just around the corner — the perfect time to plan your feast."
-    },
-    {
-      "name": "Eid ul-Adha 2027",
-      "season_key": "eid_adha",
-      "start": "2027-05-27",
-      "publish_window_days_before": 14,
-      "hook": "Eid ul-Adha is almost here — a time for sharing, giving, and of course, incredible food."
-    },
-    {
-      "name": "Pohela Boishakh 2027",
-      "season_key": "boishakh",
-      "start": "2027-04-14",
+      "name": "Pohela Falgun",
+      "season_key": "pohela_falgun",
+      "recurring": "02-14",
       "publish_window_days_before": 10,
-      "hook": "Pohela Boishakh — Bengali New Year — is a celebration of culture, community and food."
+      "active_days_after_start": 0,
+      "priority": 3,
+      "chance": 0.6,
+      "hook": "Pohela Falgun welcomes spring in Bengali culture with colour, gatherings and festive food."
     },
     {
-    "name": "Winter",
-    "season_key": "winter",
-    "start": "2026-11-01",
-    "publish_window_days_before": 14,
-    "hook": "As the cold sets in across London, nothing beats warming Bengali comfort food."
+      "name": "Ekushey February",
+      "season_key": "ekushey",
+      "recurring": "02-21",
+      "publish_window_days_before": 10,
+      "active_days_after_start": 0,
+      "priority": 4,
+      "chance": 0.7,
+      "hook": "On 21 February, Bengali communities across London gather to honour the language movement."
+    },
+    {
+      "name": "Mothering Sunday",
+      "season_key": "mothers_day",
+      "dates": ["2027-03-07", "2028-03-26"],
+      "publish_window_days_before": 10,
+      "active_days_after_start": 0,
+      "priority": 3,
+      "chance": 0.6,
+      "hook": "Mothering Sunday is a lovely reason to gather the family around a home cooked meal."
+    },
+    {
+      "name": "Eid ul-Fitr",
+      "season_key": "eid_fitr",
+      "dates": ["2027-03-10", "2028-02-27"],
+      "publish_window_days_before": 14,
+      "active_days_after_start": 3,
+      "priority": 5,
+      "chance": 0.9,
+      "hook": "Eid is just around the corner, the perfect time to plan your family feast."
+    },
+    {
+      "name": "Independence Day",
+      "season_key": "independence_day",
+      "recurring": "03-26",
+      "publish_window_days_before": 10,
+      "active_days_after_start": 0,
+      "priority": 4,
+      "chance": 0.7,
+      "hook": "On 26 March, Bangladeshi families and community groups in London come together to celebrate Independence Day."
+    },
+    {
+      "name": "Pohela Boishakh",
+      "season_key": "boishakh",
+      "recurring": "04-14",
+      "publish_window_days_before": 14,
+      "active_days_after_start": 0,
+      "priority": 4,
+      "chance": 0.8,
+      "hook": "Pohela Boishakh, the Bengali New Year, is a celebration of culture, community and food."
+    },
+    {
+      "name": "Wedding Season",
+      "season_key": "wedding_season",
+      "recurring": "04-20",
+      "publish_window_days_before": 14,
+      "active_days_after_start": 150,
+      "priority": 2,
+      "chance": 0.5,
+      "hook": "Wedding season is almost here, and good caterers fill their diaries early."
+    },
+    {
+      "name": "Eid ul-Adha",
+      "season_key": "eid_adha",
+      "dates": ["2027-05-17", "2028-05-05"],
+      "publish_window_days_before": 14,
+      "active_days_after_start": 3,
+      "priority": 5,
+      "chance": 0.9,
+      "hook": "Eid ul-Adha is almost here, a time for sharing, giving and gathering around good food."
+    },
+    {
+      "name": "Eid-e-Milad-un-Nabi",
+      "season_key": "eid_milad",
+      "dates": ["2027-08-15", "2028-08-04"],
+      "publish_window_days_before": 14,
+      "active_days_after_start": 0,
+      "priority": 3,
+      "chance": 0.7,
+      "hook": "Milad gatherings bring families and communities together for dua, remembrance and shared food."
+    },
+    {
+      "name": "Winter",
+      "season_key": "winter",
+      "recurring": "11-01",
+      "publish_window_days_before": 14,
+      "active_days_after_start": 120,
+      "priority": 2,
+      "chance": 0.5,
+      "hook": "As the cold sets in across London, nothing beats warming Bengali comfort food."
+    },
+    {
+      "name": "Victory Day",
+      "season_key": "victory_day",
+      "recurring": "12-16",
+      "publish_window_days_before": 10,
+      "active_days_after_start": 0,
+      "priority": 4,
+      "chance": 0.7,
+      "hook": "On 16 December, Bangladeshi communities in London come together to remember and celebrate Victory Day."
+    },
+    {
+      "name": "Christmas and New Year",
+      "season_key": "christmas_newyear",
+      "recurring": "12-15",
+      "publish_window_days_before": 14,
+      "active_days_after_start": 16,
+      "priority": 3,
+      "chance": 0.6,
+      "hook": "December is full of office parties and family get-togethers, and halal guests deserve a proper feast."
     }
-  ]
+  ],
+  "weekly_hooks": {
+    "0": "Planning food for later in the week? Pre-orders need two days notice, so today is a good day to book.",
+    "2": "Planning weekend food? Pre-orders need two days notice, so ordering by midweek works well.",
+    "4": "Planning for next week or a family gathering? Order ahead, with two days notice, for freshly cooked food."
+  }
 }

@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import re
 import random
@@ -8,10 +9,21 @@ import feedparser
 from datetime import datetime, timezone, date
 from groq import Groq
 
-GROQ_API_KEY           = os.environ["GROQ_API_KEY"]
-SANITY_WRITE_TOKEN     = os.environ["SANITY_WRITE_TOKEN"]
-UNSPLASH_ACCESS_KEY    = os.environ.get("UNSPLASH_ACCESS_KEY", "")
-PEXELS_API_KEY         = os.environ.get("PEXELS_API_KEY", "")
+# ---------------------------------------------------------------
+# CONFIG
+# Test locally:  python scripts/generate_blog.py --dry-run
+# Test a date:   python scripts/generate_blog.py --dry-run --date 2027-01-25
+# ---------------------------------------------------------------
+NO_LLM = "--no-llm" in sys.argv
+DRY_RUN = "--dry-run" in sys.argv or NO_LLM
+TODAY = date.today()
+if "--date" in sys.argv:
+    TODAY = date.fromisoformat(sys.argv[sys.argv.index("--date") + 1])
+
+GROQ_API_KEY        = os.environ.get("GROQ_API_KEY", "")
+SANITY_WRITE_TOKEN  = os.environ.get("SANITY_WRITE_TOKEN", "")
+UNSPLASH_ACCESS_KEY = os.environ.get("UNSPLASH_ACCESS_KEY", "")
+PEXELS_API_KEY      = os.environ.get("PEXELS_API_KEY", "")
 
 VITE_SANITY_PROJECT_ID = "u5i02ojt"
 VITE_SANITY_DATASET    = "production"
@@ -19,261 +31,387 @@ VITE_SANITY_DATASET    = "production"
 TOPICS_FILE   = "scripts/topics.json"
 IMAGES_FILE   = "scripts/images.json"
 CALENDAR_FILE = "scripts/calendar.json"
+KEYWORDS_FILE = "scripts/keywords.json"
+INDEX_FILE    = "scripts/post_index.json"
 
 RSS_FEEDS = [
     "https://trends.google.com/trends/trendingsearches/daily/rss?geo=GB",
     "https://www.reddit.com/r/UKFood/.rss",
     "https://feeds.bbci.co.uk/food/rss.xml",
 ]
+USE_TRENDS = False  # feeds currently return noise, set True to re-enable
 
-# Content type rotation order
 CONTENT_ROTATION = [
-    "recipes",
-    "restaurant_seo",
-    "listicles",
-    "local_restaurant",
-    "deep_dives",
-    "guides",
-    "history",
-    "stories",
-    "local",
+    "recipes", "restaurant_seo", "listicles", "local_restaurant", "deep_dives",
+    "guides", "history", "stories", "local",
 ]
 
+INTENT_BY_TYPE = {
+    "guides": "commercial", "local": "commercial", "local_restaurant": "commercial",
+    "restaurant_seo": "commercial", "listicles": "informational", "recipes": "informational",
+    "deep_dives": "informational", "history": "informational", "stories": None,
+}
+
+BUSINESS_FACTS = """BUSINESS FACTS (always true, never contradict them):
+- Bonna's is a home cooked Bangladeshi food and catering kitchen in London E2. Customers collect from E2 0RB.
+- COLLECTION ONLY. There is NO delivery. Never write that food is delivered and never offer delivery.
+- Pre-order only, with at least 2 days notice. Everything is cooked fresh to order.
+- 100 percent halal.
+- Caters for all events, small and large: weddings, aqiqah, walima, gaye holud, milad, Eid, iftar, birthdays, office lunches.
+- Menu includes: Biya Bari platters, polao, chicken roast, korma, dum biriyani, tehari, vorta, fish curries, daal, bhaji, kebabs and chops, chotpoti, fuchka, haleem, pakon pitha, milk egg pudding, shahi jorda, nawabi shemai, rice pudding.
+- Customers order at bonnas.co.uk/menu, by WhatsApp, or at orders@bonnas.co.uk.
+- Do NOT invent prices, minimum order values, opening hours, distances, travel times, awards, years in business or reviews."""
+
+AREA_ANGLES = {
+    "stepney green":   "family gatherings and community events",
+    "mile end":        "student society and university events",
+    "cambridge heath": "easy collection for neighbours and local gatherings",
+    "whitechapel":     "a home cooked alternative to the curry houses",
+    "roman road":      "family parties and community gatherings",
+    "bow":             "family parties and community gatherings",
+    "shoreditch":      "office lunches and team events",
+    "shadwell":        "family gatherings and celebrations",
+    "tower hamlets":   "family and community food",
+    "hackney":         "home cooked food and events",
+    "bethnal green":   "the neighbourhood where Bonna's kitchen is based",
+}
+
+STOPWORDS = set(
+    "a an the and or of in on at to for with from by is are was were be your you our we how what "
+    "why which who best top ways way guide near london east about into this that it its as vs "
+    "food catering".split()
+)
+VARIANT_MAP = {
+    "biriyani": "biryani", "biriani": "biryani", "briyani": "biryani",
+    "bhorta": "vorta", "bharta": "vorta", "bhurta": "vorta",
+    "phuchka": "fuchka", "puchka": "fuchka",
+    "pulao": "polao", "polau": "polao", "halim": "haleem",
+    "bangla": "bangladeshi", "bengali": "bangladeshi", "desi": "bangladeshi",
+}
+
+# Blocks claims like "we deliver" / "delivered to your door"
+DELIVERY_CLAIM = re.compile(
+    r"\b(we deliver|delivered to|free delivery|home delivery|doorstep|"
+    r"delivery (?:across|to|within)|deliver(?:s|ed|ing)? (?:your|to|across|straight))\b",
+    re.I,
+)
+
+FALLBACK_DIRECT_ANSWER = {
+    "question": "Where can I get authentic halal Bangladeshi food near E2?",
+    "answer": "Bonna's cooks fresh, 100 percent halal Bangladeshi food in London E2. Everything is pre-order only with two days notice and collected from E2 0RB. Order at bonnas.co.uk/menu or contact us by WhatsApp or email.",
+}
+FALLBACK_FAQS = [
+    {"question": "Is Bonna's food halal?",
+     "answer": "Yes. All food at Bonna's is 100 percent halal and cooked fresh at home in East London using traditional Bangladeshi recipes."},
+    {"question": "How do I order from Bonna's?",
+     "answer": "Pre-order at bonnas.co.uk/menu, by WhatsApp or at orders@bonnas.co.uk. Please allow at least two days notice so everything can be cooked fresh for you."},
+    {"question": "Do you deliver?",
+     "answer": "No, Bonna's is collection only. You collect your pre-order from E2 0RB, freshly cooked and ready for you."},
+]
+
+
 # ---------------------------------------------------------------
-# INTERNAL LINKING — find related posts from index
+# HELPERS
+# ---------------------------------------------------------------
+def load_json(path, default=None):
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return default
+
+
+def save_json(path, data):
+    if DRY_RUN:
+        return
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+
+
+def _terms(items):
+    """Meaningful lowercase words, spelling variants normalised."""
+    if isinstance(items, str):
+        items = [items]
+    out = set()
+    for text in items:
+        for w in re.findall(r"[a-z]+", text.lower()):
+            if len(w) >= 3 and w not in STOPWORDS:
+                out.add(VARIANT_MAP.get(w, w))
+    return out
+
+
+def strip_markdown(text):
+    text = re.sub(r"\*\*(.+?)\*\*", r"\1", text)
+    text = re.sub(r"\*(.+?)\*", r"\1", text)
+    text = re.sub(r"__(.+?)__", r"\1", text)
+    text = re.sub(r"_(.+?)_", r"\1", text)
+    return text.strip()
+
+
+# ---------------------------------------------------------------
+# INTERNAL LINKING
 # ---------------------------------------------------------------
 def get_related_posts(topic, max_results=3):
-    """Find previously published posts whose keywords overlap
-    with the current topic. Returns list of {title, slug, keywords}"""
-    index_file = "scripts/post_index.json"
-
-    try:
-        with open(index_file, "r", encoding="utf-8") as f:
-            data = json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        return []
-
-    posts = data.get("posts", [])
+    posts = load_json(INDEX_FILE, {"posts": []}).get("posts", [])
     if not posts:
         return []
-
-    # Build search terms from current topic
-    topic_keywords = set(kw.lower() for kw in topic.get("keywords", []))
-    topic_words = set(topic["title"].lower().split())
-    search_terms = topic_keywords | topic_words
-
-    # Score each indexed post by keyword overlap
+    search_terms = _terms([topic["title"]] + topic.get("keywords", []))
     scored = []
     for post in posts:
-        post_keywords = set(kw.lower() for kw in post.get("keywords", []))
-        post_words = set(post.get("title", "").lower().split())
-        post_terms = post_keywords | post_words
-
-        score = len(search_terms & post_terms)
-        if score > 0:
+        score = len(search_terms & _terms([post.get("title", "")] + post.get("keywords", [])))
+        if score >= 2:
             scored.append((score, post))
-
-    # Sort by score descending, return top results
     scored.sort(key=lambda x: x[0], reverse=True)
-    related = [post for _, post in scored[:max_results]]
-
+    related = [p for _, p in scored[:max_results]]
     print(f"Found {len(related)} related posts for internal linking")
     return related
 
 
 def update_post_index(title, slug, keywords, content_type):
-    """Append newly published post to post_index.json"""
-    index_file = "scripts/post_index.json"
-
-    try:
-        with open(index_file, "r", encoding="utf-8") as f:
-            data = json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        data = {"posts": []}
-
-    # Avoid duplicates
-    existing_slugs = {p["slug"] for p in data["posts"]}
-    if slug not in existing_slugs:
-        data["posts"].append({
-            "title":       title,
-            "slug":        slug,
-            "keywords":    keywords,
-            "contentType": content_type,
-            "publishedAt": datetime.now(timezone.utc).isoformat(),
-        })
-
-        with open(index_file, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
-
-        print(f"Post index updated: {title}")
-    else:
+    data = load_json(INDEX_FILE, {"posts": []})
+    if slug in {p["slug"] for p in data["posts"]}:
         print(f"Post already in index: {slug}")
-# ---------------------------------------------------------------
-# 1. CALENDAR — check if a seasonal event is coming up
-# ---------------------------------------------------------------
-def get_seasonal_context():
-    """Returns (season_key, hook) if a seasonal event publish window
-    is active today, otherwise returns (None, None)."""
-    with open(CALENDAR_FILE, "r", encoding="utf-8") as f:
-        data = json.load(f)
-
-    today = date.today()
-
-    for event in data["events"]:
-        event_date = date.fromisoformat(event["start"])
-        days_until = (event_date - today).days
-        window = event.get("publish_window_days_before", 14)
-
-        if 0 <= days_until <= window:
-            print(f"Seasonal event active: {event['name']} ({days_until} days away)")
-            return event["season_key"], event.get("hook", "")
-
-    return None, None
+        return
+    data["posts"].append({
+        "title": title, "slug": slug, "keywords": keywords,
+        "contentType": content_type,
+        "publishedAt": datetime.now(timezone.utc).isoformat(),
+    })
+    save_json(INDEX_FILE, data)
+    print(f"Post index updated: {title}")
 
 
 # ---------------------------------------------------------------
-# 2. TOPIC SELECTION — rotation + seasonal priority
+# 1. CALENDAR
 # ---------------------------------------------------------------
-def get_target_topic(season_key=None):
-    """Pick a topic from topics.json. If a season is active, prioritise
-    topics matching that season. Otherwise rotate through content types."""
-    with open(TOPICS_FILE, "r", encoding="utf-8") as f:
-        data = json.load(f)
-
-    # If seasonal event is active, prioritise matching topics
-    if season_key:
-        seasonal_topics = []
-        for content_type, topics in data.items():
-            for topic in topics:
-                if topic.get("season") == season_key and not topic.get("used", False):
-                    seasonal_topics.append((content_type, topic))
-
-        if seasonal_topics:
-            content_type, topic = random.choice(seasonal_topics)
-            print(f"Seasonal topic selected [{content_type}]: {topic['title']}")
-            _mark_topic_used(data, content_type, topic["title"])
-            return content_type, topic
-
-    # Otherwise rotate through content types
-    # Pick content type based on day of week to enforce variety
-    day_index = date.today().weekday()  # 0=Mon, 2=Wed, 4=Fri (your cron days)
-    rotation_index = day_index % len(CONTENT_ROTATION)
-    preferred_type = CONTENT_ROTATION[rotation_index]
-
-    # Try preferred type first, then fall back to any unused topic
-    for content_type in [preferred_type] + CONTENT_ROTATION:
-        if content_type not in data:
-            continue
-        unused = [t for t in data[content_type] if not t.get("used", False)]
-        if unused:
-            topic = random.choice(unused)
-            print(f"Topic selected [{content_type}]: {topic['title']}")
-            _mark_topic_used(data, content_type, topic["title"])
-            return content_type, topic
-
-    # All topics used — reset everything
-    print("All topics used — resetting topic bank")
-    for content_type, topics in data.items():
-        for topic in topics:
-            topic["used"] = False
-
-    with open(TOPICS_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
-
-    return get_target_topic(season_key)
+def _event_dates(event):
+    if event.get("recurring"):
+        m, d = map(int, event["recurring"].split("-"))
+        return [date(y, m, d) for y in (TODAY.year - 1, TODAY.year, TODAY.year + 1)]
+    return [date.fromisoformat(x) for x in event.get("dates", [])]
 
 
-def _mark_topic_used(data, content_type, title):
+def get_active_events():
+    """All events whose publish window is open today."""
+    data = load_json(CALENDAR_FILE, {"events": []})
+    active = []
+    for e in data["events"]:
+        window = e.get("publish_window_days_before", 14)
+        after = e.get("active_days_after_start", 0)
+        for d in _event_dates(e):
+            days_until = (d - TODAY).days
+            if -after <= days_until <= window:
+                active.append({
+                    "key": e["season_key"], "name": e["name"], "hook": e.get("hook", ""),
+                    "year": d.year, "priority": e.get("priority", 3),
+                    "chance": e.get("chance", 0.7), "days_until": days_until,
+                })
+                print(f"Active event: {e['name']} ({days_until} days)")
+                break
+    return active
+
+
+def check_calendar_health():
+    data = load_json(CALENDAR_FILE, {"events": []})
+    for e in data["events"]:
+        if e.get("dates") and not any(date.fromisoformat(d) >= TODAY for d in e["dates"]):
+            print(f"WARNING: no future date for '{e['name']}' in calendar.json - please update it")
+
+
+def get_weekly_hook():
+    hooks = load_json(CALENDAR_FILE, {}).get("weekly_hooks", {})
+    return hooks.get(str(TODAY.weekday()), "")
+
+
+# ---------------------------------------------------------------
+# 2. TOPIC SELECTION
+# ---------------------------------------------------------------
+def _priority_map():
+    bank = load_json(KEYWORDS_FILE, {}).get("keyword_bank", [])
+    return {e["keyword"].lower(): e.get("priority", 3) for e in bank}
+
+
+def _pick(pool, key=lambda x: x):
+    """Weighted random pick: topics whose keywords have higher priority win more often."""
+    prio = _priority_map()
+    def weight(item):
+        t = key(item)
+        return max([prio.get(k.lower(), 3) for k in t.get("keywords", [])] or [3])
+    return random.choices(pool, weights=[weight(i) for i in pool])[0]
+
+
+def _is_available(topic, event=None):
+    if event:
+        return topic.get("season") == event["key"] and (
+            not topic.get("used", False) or topic.get("used_year", 0) < event["year"]
+        )
+    return topic.get("season", "all") == "all" and not topic.get("used", False)
+
+
+def _mark_topic_used(data, content_type, title, year):
     for topic in data[content_type]:
         if topic["title"] == title:
             topic["used"] = True
-    with open(TOPICS_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
+            topic["used_year"] = year
+    save_json(TOPICS_FILE, data)
+
+
+def get_target_topic(active_events):
+    """Returns (content_type, topic, event_or_None)."""
+    data = load_json(TOPICS_FILE, {})
+
+    # Seasonal first: weighted by event priority, each event rolls its own chance
+    events = list(active_events)
+    while events:
+        ev = random.choices(events, weights=[e["priority"] for e in events])[0]
+        events.remove(ev)
+        if random.random() > ev["chance"]:
+            continue
+        pool = [(ct, t) for ct, ts in data.items() for t in ts if _is_available(t, ev)]
+        if pool:
+            ct, topic = _pick(pool, key=lambda x: x[1])
+            print(f"Seasonal topic [{ct}] for {ev['name']}: {topic['title']}")
+            _mark_topic_used(data, ct, topic["title"], ev["year"])
+            return ct, topic, ev
+
+    # Evergreen rotation: cycles through every content type by post count
+    post_count = len(load_json(INDEX_FILE, {"posts": []}).get("posts", []))
+    start = post_count % len(CONTENT_ROTATION)
+    for ct in CONTENT_ROTATION[start:] + CONTENT_ROTATION[:start]:
+        pool = [t for t in data.get(ct, []) if _is_available(t)]
+        if pool:
+            topic = _pick(pool)
+            print(f"Topic selected [{ct}]: {topic['title']}")
+            _mark_topic_used(data, ct, topic["title"], TODAY.year)
+            return ct, topic, None
+
+    if DRY_RUN or not any(t.get("season", "all") == "all" for ts in data.values() for t in ts):
+        raise RuntimeError("No unused evergreen topics left - add more to topics.json")
+    print("All evergreen topics used - resetting them")
+    for ts in data.values():
+        for t in ts:
+            if t.get("season", "all") == "all":
+                t["used"] = False
+    save_json(TOPICS_FILE, data)
+    return get_target_topic(active_events)
 
 
 # ---------------------------------------------------------------
-# 3. IMAGE RESOLUTION — local DB first, then Unsplash/Pexels
+# 3. KEYWORD CONTEXT (uses keywords.json)
+# ---------------------------------------------------------------
+def get_keyword_context(topic, content_type=""):
+    data = load_json(KEYWORDS_FILE, {})
+    bank = data.get("keyword_bank", [])
+    variants = data.get("spelling_variants", {})
+
+    primary = (topic["keywords"][0] if topic.get("keywords") else topic["title"]).lower()
+    own = {k.lower() for k in topic.get("keywords", [])}
+    topic_terms = _terms([topic["title"]] + topic.get("keywords", []))
+
+    intent, scored = None, []
+    for e in bank:
+        kw = e["keyword"].lower()
+        if kw == primary:
+            intent = e.get("intent")
+        if kw in own:
+            continue
+        score = len(_terms(kw) & topic_terms)
+        if score >= 2:
+            scored.append((score, e.get("priority", 3), not e.get("used", False), kw))
+    scored.sort(reverse=True)
+
+    intent = intent or INTENT_BY_TYPE.get(content_type)
+    text = (topic["title"] + " " + " ".join(topic.get("keywords", []))).lower()
+    alts = []
+    for std, alt in variants.items():
+        others = [a for a in alt if a != std]
+        if std in text and others:
+            alts.append(f'{std} (also spelled {", ".join(others[:2])})')
+
+    area = next(((a, angle) for a, angle in AREA_ANGLES.items() if a in text), None)
+
+    return {
+        "supporting": [s[3] for s in scored[:3]],
+        "intent": intent,
+        "variants": alts[:3],
+        "area": area,
+    }
+
+
+def mark_keyword_used(primary):
+    data = load_json(KEYWORDS_FILE, {})
+    changed = False
+    for e in data.get("keyword_bank", []):
+        if e["keyword"].lower() == primary.lower():
+            e["used"] = True
+            e["last_used"] = TODAY.isoformat()
+            changed = True
+    if changed:
+        save_json(KEYWORDS_FILE, data)
+
+
+def cta_for_intent(intent):
+    if intent == "transactional":
+        return "End with a clear, confident call to pre-order at bonnas.co.uk/menu (2 days notice, collection from E2 0RB)."
+    if intent == "commercial":
+        return "End with a helpful call to action: invite the reader to pre-order or ask about their event at bonnas.co.uk."
+    return "End with a soft, non-pushy mention that Bonna's cooks this fresh to order."
+
+
+# ---------------------------------------------------------------
+# 4. IMAGE RESOLUTION
 # ---------------------------------------------------------------
 def get_image(topic, content_type):
-    """Find the best matching image. Checks local DB first,
-    then falls back to Unsplash, then Pexels."""
-
-    with open(IMAGES_FILE, "r", encoding="utf-8") as f:
-        image_data = json.load(f)
-
-    # Build search terms from topic keywords + title words
+    image_data = load_json(IMAGES_FILE, {})
     topic_keywords = topic.get("keywords", [])
-    title_words = topic["title"].lower().split()
-    search_terms = set(topic_keywords + title_words)
+    search_terms = _terms([topic["title"]] + topic_keywords)
 
-    # Score each local image by how many tags match
-    best_image = None
-    best_score = 0
-
+    best_image, best_score = None, 0
     for img in image_data.get("local_images", []):
-        img_tags = [t.lower() for t in img.get("tags", [])]
-        score = sum(1 for term in search_terms if any(term in tag for tag in img_tags))
+        score = len(search_terms & _terms(img.get("tags", [])))
         if score > best_score:
-            best_score = score
-            best_image = img
+            best_score, best_image = score, img
 
-    if best_image and best_score > 0:
+    if best_image:
         print(f"Local image matched (score {best_score}): {best_image['path']}")
-        return {
-            "url": f"https://www.bonnas.co.uk{best_image['path']}",
-            "alt": best_image["alt"],
-            "source": "local"
-        }
+        return {"url": f"https://www.bonnas.co.uk{best_image['path']}",
+                "alt": best_image["alt"], "source": "local"}
 
-    # Fallback — Unsplash
     search_query = topic_keywords[0] if topic_keywords else "bangladeshi food"
     if UNSPLASH_ACCESS_KEY:
         try:
             res = requests.get(
                 "https://api.unsplash.com/search/photos",
                 params={"query": search_query, "per_page": 5, "orientation": "landscape"},
-                headers={"Authorization": f"Client-ID {UNSPLASH_ACCESS_KEY}"},
-                timeout=10,
-            )
+                headers={"Authorization": f"Client-ID {UNSPLASH_ACCESS_KEY}"}, timeout=10)
             results = res.json().get("results", [])
             if results:
                 photo = random.choice(results[:3])
-                print(f"Unsplash image found: {photo['urls']['regular']}")
-                return {
-                    "url": photo["urls"]["regular"],
-                    "alt": photo.get("alt_description") or search_query,
-                    "source": "unsplash"
-                }
+                return {"url": photo["urls"]["regular"],
+                        "alt": photo.get("alt_description") or search_query, "source": "unsplash"}
         except Exception as e:
             print(f"Unsplash error: {e}")
 
-    # Fallback — Pexels
     if PEXELS_API_KEY:
         try:
             res = requests.get(
                 "https://api.pexels.com/v1/search",
                 params={"query": search_query, "per_page": 5, "orientation": "landscape"},
-                headers={"Authorization": PEXELS_API_KEY},
-                timeout=10,
-            )
+                headers={"Authorization": PEXELS_API_KEY}, timeout=10)
             results = res.json().get("photos", [])
             if results:
                 photo = random.choice(results[:3])
-                print(f"Pexels image found: {photo['src']['large']}")
-                return {
-                    "url": photo["src"]["large"],
-                    "alt": photo.get("alt") or search_query,
-                    "source": "pexels"
-                }
+                return {"url": photo["src"]["large"],
+                        "alt": photo.get("alt") or search_query, "source": "pexels"}
         except Exception as e:
             print(f"Pexels error: {e}")
 
-    print("No image found — using None")
+    print("No image found")
     return None
 
 
 # ---------------------------------------------------------------
-# 4. TREND HEADLINES — inspiration hook only
+# 5. TREND HEADLINES
 # ---------------------------------------------------------------
 def fetch_headlines():
     headlines = []
@@ -291,85 +429,98 @@ def fetch_headlines():
 
 
 # ---------------------------------------------------------------
-# 5. GENERATE POST
+# 6. GENERATE POST
 # ---------------------------------------------------------------
-def generate_post(headlines, topic, content_type, season_hook="", related_posts=None, max_attempts=3):
-    client = Groq(api_key=GROQ_API_KEY)
-    topics_str = "\n".join(["- " + h for h in headlines])
-    primary_keyword = topic["keywords"][0] if topic["keywords"] else topic["title"]
+def generate_post(headlines, topic, content_type, season=None, related_posts=None,
+                  kw_ctx=None, weekly_hook="", max_attempts=3):
 
-    content_type_guidance = {
-        "recipes": "Write a practical, step-by-step recipe guide. Include ingredients naturally in the prose, method overview, and serving suggestions. Warm kitchen tone — like a family member sharing a recipe.",
-        "history": "Write an engaging cultural history piece. Educate the reader about origins, traditions, and cultural significance. Reference Bangladesh, Bengal, East London where natural. Build authority and trust.",
+    kw_ctx = kw_ctx or {"supporting": [], "intent": None, "variants": [], "area": None}
+    topics_str = "\n".join("- " + h for h in headlines) or "(none today, write an evergreen post)"
+    primary_keyword = topic["keywords"][0] if topic.get("keywords") else topic["title"]
+
+    guidance = {
+        "recipes": "Write a practical, step-by-step recipe guide. Include ingredients naturally in the prose, method overview, and serving suggestions. Warm kitchen tone, like a family member sharing a recipe.",
+        "history": "Write an engaging cultural history piece. Educate the reader about origins, traditions and cultural significance. Reference Bangladesh, Bengal and East London where natural. Build authority and trust.",
         "stories": "Write a warm brand story from Bonna's perspective. Personal, genuine, community-focused. This is about who we are, not just what we sell.",
-        "guides": "Write a practical decision/planning guide for someone researching this topic. Answer the real questions they have. Position Bonna's as the expert and natural choice at the end.",
-        "local": "Write with a strong East London/London focus throughout. Mention specific areas (Tower Hamlets, Bethnal Green, Whitechapel, Hackney) naturally. Help local readers find what they need.",
-        "restaurant_seo": "Write an honest comparison or guide about Bengali/Bangladeshi food options in London. Acknowledge restaurants exist but highlight the unique advantages of home catering. Never dishonest — just clear about what makes Bonna's different.",
-        "local_restaurant": "Write a local food guide for a specific London area. Be genuinely helpful about the food scene. Position Bonna's home catering as a premium, personal alternative.",
+        "guides": "Write a practical decision or planning guide for someone researching this topic. Answer the real questions they have. Position Bonna's as the expert and natural choice at the end.",
+        "local": "Write with a strong East London focus. Mention the specific area in the title naturally and explain that customers pre-order and collect from E2 0RB. Never describe delivery.",
+        "restaurant_seo": "Write an honest comparison or guide about Bengali and Bangladeshi food options in London. Acknowledge restaurants and takeaways exist but explain what is different about pre-order home cooking. Never dishonest.",
+        "local_restaurant": "Write a local food guide for a specific London area. Be genuinely helpful about the food scene. Position Bonna's as a personal, pre-order, collect-from-E2 alternative. Never describe delivery.",
         "listicles": "Write a numbered list article. Engaging intro, then clear numbered items each with a heading and 2-3 sentences. End with a strong summary and soft call to action.",
-        "deep_dives": "Write an in-depth explainer about one specific dish, ingredient, or technique. Teach the reader something they genuinely didn't know. Be the most informative article on this topic.",
+        "deep_dives": "Write an in-depth explainer about one specific dish, ingredient or technique. Teach the reader something they genuinely did not know. Be the most informative article on this topic.",
     }
 
-    listicle_types = ["listicles"]
-    is_listicle = content_type in listicle_types or any(
-        trigger in primary_keyword.lower()
-        for trigger in ["dishes to try", "ideas", "tips", "best", "must-try", "ways to", "things to", "reasons"]
+    is_listicle = content_type == "listicles" or any(
+        t in primary_keyword.lower()
+        for t in ["dishes to try", "ideas", "tips", "best", "must-try", "ways to", "things to", "reasons"]
     )
-
     if is_listicle:
-        structure_instruction = (
-            'Structure as a numbered list: 2-3 sentence intro, then 5-8 numbered items '
-            'in format "N. Item Name: 1-2 sentence description.", each separated by [PARA]. '
-            'After the list, write a 2-3 sentence closing with a soft call to action, separated by [PARA].'
-        )
+        structure = ('Structure as a numbered list: 2-3 sentence intro, then 5-8 numbered items in format '
+                     '"N. Item Name: 1-2 sentence description.", each separated by [PARA]. '
+                     'After the list, write a 2-3 sentence closing with a call to action, separated by [PARA].')
     else:
-        structure_instruction = (
-            'Structure as 5-7 short paragraphs, each 2-4 sentences, separated by [PARA]. '
-            'Last paragraph: brief inline FAQ (2-3 questions woven into prose) plus soft call to action.'
-        )
+        structure = ('Structure as 5-7 short paragraphs, each 2-4 sentences, separated by [PARA]. '
+                     'The last paragraph is a short closing with the call to action.')
 
-    season_hook_instruction = ""
-    if season_hook:
-        season_hook_instruction = f'\nSEASONAL HOOK — open the post with this context naturally: "{season_hook}"'
+    extras = ""
+    if season and season.get("hook"):
+        extras += f'\nSEASONAL HOOK: open the post with this context naturally: "{season["hook"]}"'
+    if weekly_hook:
+        extras += f'\nWEEKLY NOTE: if it fits, use this idea in the closing paragraph in one sentence only: "{weekly_hook}"'
+    if kw_ctx["supporting"]:
+        extras += f'\nSUPPORTING KEYWORDS: use 1-3 of these naturally where they fit, never stuff: {json.dumps(kw_ctx["supporting"])}'
+    if kw_ctx["variants"]:
+        extras += f'\nSPELLING: use the main spelling most often, and mention one alternative spelling once naturally: {"; ".join(kw_ctx["variants"])}'
+    if kw_ctx["area"]:
+        name, angle = kw_ctx["area"]
+        extras += (f'\nAREA FOCUS: {name.title()}. Angle: {angle}. Mention the area naturally 3-4 times and say customers '
+                   f'collect from E2 0RB. Do not invent landmarks, distances or travel times.')
+    extras += "\n" + cta_for_intent(kw_ctx["intent"])
 
-# Internal linking instruction
-    internal_links_instruction = ""
+    links = ""
     if related_posts:
-        links_list = "\n".join([
-            f'- Title: "{p["title"]}" | Slug: {p["slug"]}'
-            for p in related_posts
-        ])
-        internal_links_instruction = f"""
-INTERNAL LINKS — naturally reference 1-2 of these related Bonna's blog posts within the body where genuinely relevant. Use this exact marker format: [LINK: slug-here | Anchor text here]
+        links_list = "\n".join(f'- Title: "{p["title"]}" | Slug: {p["slug"]}' for p in related_posts)
+        links = f"""
+INTERNAL LINKS: naturally reference 1-2 of these related Bonna's blog posts where genuinely relevant. Use this exact marker format: [LINK: slug-here | Anchor text here]
 Example: [LINK: chicken-biryani-recipe | our chicken biryani recipe]
 Related posts available:
 {links_list}
-Only use a link if it fits naturally — never force it."""
+Only use a link if it fits naturally, never force it."""
 
-    prompt = f"""You are an SEO content writer for Bonna's — an authentic Bangladeshi home catering service based in London E2. All food is halal and homemade.
+    prompt = f"""You are an SEO content writer for Bonna's, a Bangladeshi home cooking and catering kitchen in London E2.
+
+{BUSINESS_FACTS}
 
 CONTENT TYPE: {content_type}
-CONTENT GUIDANCE: {content_type_guidance.get(content_type, content_type_guidance['guides'])}
+CONTENT GUIDANCE: {guidance.get(content_type, guidance['guides'])}
 
-POST TITLE (use this as the basis): "{topic['title']}"
+POST TITLE (use as the basis): "{topic['title']}"
 PRIMARY TARGET KEYWORD: "{primary_keyword}"
-SECONDARY KEYWORDS: {json.dumps(topic['keywords'][1:] if len(topic['keywords']) > 1 else [])}
-{season_hook_instruction}
+SECONDARY KEYWORDS: {json.dumps(topic['keywords'][1:] if len(topic.get('keywords', [])) > 1 else [])}
+{extras}
 
-Today's trending UK food topics (INSPIRATION ONLY — weave in as a hook if genuinely relevant, otherwise ignore):
+Today's trending UK food topics (INSPIRATION ONLY, weave in as a hook only if genuinely relevant):
 {topics_str}
 
 Return a JSON object with these exact fields:
-- "title": SEO title based on the post title above, max 65 characters, written like a real search result. Must contain the primary keyword naturally.
-- "excerpt": meta description 150-160 characters, contains primary keyword, makes reader want to click
-- "body": full blog post, 500-700 words. Primary keyword in first 100 words and 3-5 times total. {structure_instruction} Use [PARA] as the ONLY separator — ABSOLUTELY NO markdown of any kind. No asterisks (*), no double asterisks (**), no underscores (_), no hash symbols (#). Plain prose only.
-- "keywords": array of 4 strings — first must be exactly "{primary_keyword}", then 3 natural search variations
-- "trendSource": the trending topic used as hook, or "evergreen" if none used
+- "title": SEO title based on the post title above, max 65 characters, like a real search result. Contains the primary keyword naturally.
+- "excerpt": meta description 150-160 characters, contains the primary keyword, makes the reader want to click
+- "body": full blog post, 500-700 words. Primary keyword in the first 100 words and 3-5 times in total. {structure} Use [PARA] as the ONLY separator. ABSOLUTELY NO markdown of any kind: no asterisks, no underscores, no hash symbols. Plain prose only.
+- "directAnswer": an object with keys "question" and "answer". The question is the main thing a searcher wants to know about this topic. The answer is 40-60 words of plain text that starts with the direct answer.
+- "faqs": an array of exactly 3 objects, each with keys "question" and "answer". Real questions people search about this topic. Each answer 30-50 words, plain text. At least one question must be practical (ordering, pre-order notice, collection or halal).
+- "keywords": array of 4 strings. The first must be exactly "{primary_keyword}", then 3 natural search variations
+- "trendSource": the trending topic used as a hook, or "evergreen" if none used
 - "contentType": "{content_type}"
+{links}
 
-{internal_links_instruction}
+CRITICAL: Valid JSON only. Body must be a single-line string. Use [PARA] for all breaks. Keep [LINK:...] markers exactly as shown, the frontend converts them to links."""
 
-CRITICAL: Valid JSON only. Body must be a single-line string. Use [PARA] for all breaks. Keep [LINK:...] markers exactly as shown — they will be converted to real links by the frontend."""
+    if NO_LLM:
+        print("\n===== PROMPT THAT WOULD BE SENT =====\n")
+        print(prompt)
+        sys.exit(0)
+
+    client = Groq(api_key=GROQ_API_KEY)
 
     last_error = None
     for attempt in range(1, max_attempts + 1):
@@ -378,68 +529,53 @@ CRITICAL: Valid JSON only. Body must be a single-line string. Use [PARA] for all
             response = client.chat.completions.create(
                 model="openai/gpt-oss-20b",
                 messages=[
-                    {
-                        "role": "system",
-                        "content": "You are an SEO content writer. Always respond with valid JSON only. No markdown, no explanations, just the JSON object."
-                    },
-                    {"role": "user", "content": prompt}
+                    {"role": "system", "content": "You are an SEO content writer. Always respond with valid JSON only. No markdown, no explanations, just the JSON object."},
+                    {"role": "user", "content": prompt},
                 ],
                 temperature=0.65,
                 max_tokens=4000,
                 reasoning_effort="low",
             )
-
-                        # Full debug — check what the model actually returned
             choice = response.choices[0]
             print(f"Finish reason: {choice.finish_reason}")
-            print(f"Message role: {choice.message.role}")
-            raw = choice.message.content
-            print(f"Raw response (first 300 chars): {repr(raw[:300] if raw else 'EMPTY')}")
-            
-            # Check if model used reasoning tokens instead
-            if hasattr(choice.message, 'reasoning') and choice.message.reasoning:
-                print(f"Reasoning field present: {repr(choice.message.reasoning[:100])}")
-            
-            raw = raw.strip() if raw else ""
-
-            # Strip markdown code fences if model wraps in them
+            raw = (choice.message.content or "").strip()
             raw = re.sub(r"^```json\s*", "", raw)
             raw = re.sub(r"^```\s*", "", raw)
-            raw = re.sub(r"\s*```$", "", raw)
-            raw = raw.strip()
+            raw = re.sub(r"\s*```$", "", raw).strip()
 
             data = json.loads(raw, strict=False)
 
-                        # Core fields are required
             for field in ["title", "excerpt", "body", "keywords"]:
                 if not data.get(field):
                     raise ValueError(f"Missing field: {field}")
 
-            # directAnswer and faqs are optional — generate fallbacks if missing
-            if not data.get("directAnswer") or not data["directAnswer"].get("question"):
-                primary_kw = topic["keywords"][0] if topic.get("keywords") else topic["title"]
-                data["directAnswer"] = {
-                    "question": f"Where can I find authentic Bangladeshi food in London?",
-                    "answer": f"Bonna's offers authentic halal Bangladeshi home catering across East London, including Tower Hamlets, Bethnal Green and Hackney. All food is freshly prepared and delivered to your door. Order online at bonnas.co.uk."
-                }
-                print("directAnswer missing — using fallback")
+            # directAnswer
+            da = data.get("directAnswer")
+            if isinstance(da, dict) and da.get("question") and da.get("answer"):
+                data["directAnswer"] = {"question": strip_markdown(da["question"]),
+                                        "answer": strip_markdown(da["answer"])}
+            else:
+                data["directAnswer"] = FALLBACK_DIRECT_ANSWER
+                print("directAnswer missing - using fallback")
 
-            if not data.get("faqs") or len(data["faqs"]) < 2:
-                data["faqs"] = [
-                    {
-                        "question": "Do you offer halal Bangladeshi food delivery in London?",
-                        "answer": "Yes, Bonna's provides 100% halal home cooked Bangladeshi food delivery across East London. All dishes are freshly prepared using family recipes."
-                    },
-                    {
-                        "question": "What is the minimum order for Bonna's catering?",
-                        "answer": "The minimum order is £20 for delivery. We cater for individuals, families and events of all sizes across East London."
-                    },
-                    {
-                        "question": "How do I order from Bonna's?",
-                        "answer": "You can order online at bonnas.co.uk/menu or contact us directly via WhatsApp. We deliver across East London including Tower Hamlets and Bethnal Green."
-                    }
-                ]
-                print("faqs missing — using fallback")
+            # faqs
+            faqs = [
+                {"question": strip_markdown(f["question"]), "answer": strip_markdown(f["answer"])}
+                for f in (data.get("faqs") or [])
+                if isinstance(f, dict) and f.get("question") and f.get("answer")
+            ]
+            if len(faqs) < 2:
+                faqs = FALLBACK_FAQS
+                print("faqs missing - using fallback")
+            data["faqs"] = faqs[:3]
+
+            # Never allow delivery claims
+            all_text = " ".join([data["body"], json.dumps(data["directAnswer"]), json.dumps(data["faqs"])])
+            if DELIVERY_CLAIM.search(all_text):
+                raise ValueError("Output claims delivery (collection only)")
+
+            if primary_keyword.lower() not in data["body"].lower():
+                print(f"Note: primary keyword '{primary_keyword}' not found verbatim in body")
 
             return data
 
@@ -456,38 +592,28 @@ CRITICAL: Valid JSON only. Body must be a single-line string. Use [PARA] for all
 
 
 # ---------------------------------------------------------------
-# 6. BODY FORMATTING
+# 7. BODY FORMATTING
 # ---------------------------------------------------------------
 def format_body(body):
-    # Strip markdown that Groq outputs despite instructions
-    body = re.sub(r'\*\*(.+?)\*\*', r'\1', body)
-    body = re.sub(r'\*(.+?)\*', r'\1', body)
-    body = re.sub(r'__(.+?)__', r'\1', body)
-    body = re.sub(r'_(.+?)_', r'\1', body)
+    body = strip_markdown(body)
 
-    # Validate [LINK:] markers are well-formed, remove broken ones
-    # Valid format: [LINK: some-slug | Anchor text]
     def validate_link(match):
         content = match.group(1)
         if "|" in content:
-            parts = content.split("|", 1)
-            slug = parts[0].strip()
-            anchor = parts[1].strip()
+            slug, anchor = [p.strip() for p in content.split("|", 1)]
             if slug and anchor:
                 return f"[LINK: {slug} | {anchor}]"
-        return ""  # Remove malformed markers
+        return ""
 
-    body = re.sub(r'\[LINK:\s*([^\]]+)\]', validate_link, body)
+    body = re.sub(r"\[LINK:\s*([^\]]+)\]", validate_link, body)
 
     if "[PARA]" in body:
-        parts = [p.strip() for p in body.split("[PARA]") if p.strip()]
-        return "\n\n".join(parts)
+        return "\n\n".join(p.strip() for p in body.split("[PARA]") if p.strip())
 
-    # Fallback: chunk every 3 sentences
-    sentences = re.split(r'(?<=[.!?])\s+', body.strip())
+    sentences = re.split(r"(?<=[.!?])\s+", body.strip())
     paragraphs, chunk = [], []
-    for sentence in sentences:
-        chunk.append(sentence)
+    for s in sentences:
+        chunk.append(s)
         if len(chunk) >= 3:
             paragraphs.append(" ".join(chunk))
             chunk = []
@@ -495,8 +621,9 @@ def format_body(body):
         paragraphs.append(" ".join(chunk))
     return "\n\n".join(paragraphs)
 
+
 # ---------------------------------------------------------------
-# 7. SLUG
+# 8. SLUG
 # ---------------------------------------------------------------
 def slugify(title):
     slug = title.lower()
@@ -505,39 +632,47 @@ def slugify(title):
     return slug[:80]
 
 
+def unique_slug(title):
+    base = slugify(title)
+    taken = {p["slug"] for p in load_json(INDEX_FILE, {"posts": []}).get("posts", [])}
+    slug, n = base, 2
+    while slug in taken:
+        slug = f"{base[:74]}-{n}"
+        n += 1
+    return slug
+
+
 # ---------------------------------------------------------------
-# 8. POST TO SANITY
+# 9. POST TO SANITY
 # ---------------------------------------------------------------
-def post_to_sanity(data, image):
+def post_to_sanity(data, image, slug):
+    if not SANITY_WRITE_TOKEN:
+        raise RuntimeError("SANITY_WRITE_TOKEN is not set")
+
     doc = {
         "_type":        "blogPost",
         "title":        data["title"],
-        "slug":         {"_type": "slug", "current": slugify(data["title"])},
+        "slug":         {"_type": "slug", "current": slug},
         "excerpt":      data["excerpt"],
         "body":         data["body"],
         "keywords":     data["keywords"],
         "trendSource":  data.get("trendSource", "evergreen"),
         "contentType":  data.get("contentType", ""),
+        "directAnswer": data["directAnswer"],
+        "faqs":         [{"_key": f"faq{i}", **f} for i, f in enumerate(data["faqs"])],
         "publishedAt":  datetime.now(timezone.utc).isoformat(),
     }
-
-    # Add image if resolved
     if image:
         doc["featuredImageUrl"] = image["url"]
         doc["featuredImageAlt"] = image["alt"]
         doc["imageSource"]      = image["source"]
 
     url = f"https://{VITE_SANITY_PROJECT_ID}.api.sanity.io/v2024-01-01/data/mutate/{VITE_SANITY_DATASET}"
-
     res = requests.post(
         url,
-        headers={
-            "Content-Type":  "application/json",
-            "Authorization": f"Bearer {SANITY_WRITE_TOKEN}",
-        },
+        headers={"Content-Type": "application/json", "Authorization": f"Bearer {SANITY_WRITE_TOKEN}"},
         json={"mutations": [{"create": doc}]},
     )
-
     if res.status_code == 200:
         print(f"Posted: {data['title']}")
     else:
@@ -549,39 +684,32 @@ def post_to_sanity(data, image):
 # MAIN
 # ---------------------------------------------------------------
 if __name__ == "__main__":
-    print("Checking seasonal calendar...")
-    season_key, season_hook = get_seasonal_context()
+    if DRY_RUN:
+        print("DRY RUN: nothing will be saved or posted")
+    print(f"Date: {TODAY}")
 
-    print("Selecting topic...")
-    content_type, topic = get_target_topic(season_key)
+    check_calendar_health()
+    active_events = get_active_events()
 
-    print("Finding related posts for internal linking...")
+    content_type, topic, season = get_target_topic(active_events)
     related_posts = get_related_posts(topic)
-
-    print("Resolving image...")
+    kw_ctx = get_keyword_context(topic, content_type)
     image = get_image(topic, content_type)
-
-    print("Fetching trend headlines...")
-    headlines = fetch_headlines()
+    headlines = fetch_headlines() if USE_TRENDS else []
+    weekly_hook = get_weekly_hook()
 
     print("Generating post with Groq...")
-    post_data = generate_post(headlines, topic, content_type, season_hook, related_posts)
+    post_data = generate_post(headlines, topic, content_type, season, related_posts, kw_ctx, weekly_hook)
     print(f"Title: {post_data['title']}")
 
-    print("Formatting body...")
     post_data["body"] = format_body(post_data["body"])
+    slug = unique_slug(post_data["title"])
 
-    slug = slugify(post_data["title"])
+    if DRY_RUN:
+        print(json.dumps({"slug": slug, "image": image, **post_data}, indent=2, ensure_ascii=False))
+        sys.exit(0)
 
-    print("Saving to Sanity...")
-    post_to_sanity(post_data, image)
-
-    print("Updating post index...")
-    update_post_index(
-        title=post_data["title"],
-        slug=slug,
-        keywords=post_data["keywords"],
-        content_type=content_type,
-    )
-
+    post_to_sanity(post_data, image, slug)
+    update_post_index(post_data["title"], slug, post_data["keywords"], content_type)
+    mark_keyword_used(topic["keywords"][0])
     print("Done!")
