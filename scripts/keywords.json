@@ -1,64 +1,104 @@
 {
   "keyword_bank": [
-    {
-      "keyword": "halal catering london",
-      "intent": "commercial",
-      "used": false
-    },
-    {
-      "keyword": "bengali wedding catering",
-      "intent": "commercial",
-      "used": true
-    },
-    {
-      "keyword": "biryani catering for party london",
-      "intent": "commercial",
-      "used": true
-    },
-    {
-      "keyword": "what is bhuna",
-      "intent": "informational",
-      "used": true
-    },
-    {
-      "keyword": "bangladeshi food for office party",
-      "intent": "commercial",
-      "used": true
-    },
-    {
-      "keyword": "bengali sweets london",
-      "intent": "informational",
-      "used": true
-    },
-    {
-      "keyword": "what to serve at a desi dinner party",
-      "intent": "informational",
-      "used": true
-    },
-    {
-      "keyword": "halal home cooked food delivery london",
-      "intent": "transactional",
-      "used": true
-    },
-    {
-      "keyword": "ramadan iftar catering london",
-      "intent": "commercial",
-      "used": true
-    },
-    {
-      "keyword": "eid party food ideas",
-      "intent": "informational",
-      "used": false
-    },
-    {
-      "keyword": "best bangladeshi dishes to try",
-      "intent": "informational",
-      "used": true
-    },
-    {
-      "keyword": "catering for 50 guests london cost",
-      "intent": "commercial",
-      "used": false
-    }
-  ]
+    { "keyword": "halal catering london", "intent": "commercial", "used": false, "cluster": "catering_core", "priority": 4 },
+    { "keyword": "bengali wedding catering", "intent": "commercial", "used": true, "cluster": "events", "priority": 3 },
+    { "keyword": "biryani catering for party london", "intent": "commercial", "used": true, "cluster": "events", "priority": 3 },
+    { "keyword": "what is bhuna", "intent": "informational", "used": true, "cluster": "questions", "priority": 2 },
+    { "keyword": "bangladeshi food for office party", "intent": "commercial", "used": true, "cluster": "events", "priority": 3 },
+    { "keyword": "bengali sweets london", "intent": "informational", "used": true, "cluster": "menu_sweets", "priority": 3 },
+    { "keyword": "what to serve at a desi dinner party", "intent": "informational", "used": true, "cluster": "events", "priority": 2 },
+    { "keyword": "halal home cooked food delivery london", "intent": "transactional", "used": true, "cluster": "order_collection", "priority": 1, "note": "conflicts with collection-only, do not reuse" },
+    { "keyword": "ramadan iftar catering london", "intent": "commercial", "used": true, "cluster": "ramadan_eid", "priority": 5 },
+    { "keyword": "eid party food ideas", "intent": "informational", "used": false, "cluster": "ramadan_eid", "priority": 3 },
+    { "keyword": "best bangladeshi dishes to try", "intent": "informational", "used": true, "cluster": "menu_dishes", "priority": 3 },
+    { "keyword": "catering for 50 guests london cost", "intent": "commercial", "used": false, "cluster": "catering_core", "priority": 3 },
+
+    { "keyword": "bangladeshi catering london", "intent": "commercial", "used": false, "cluster": "catering_core", "priority": 5 },
+    { "keyword": "bangladeshi catering near me", "intent": "commercial", "used": false, "cluster": "catering_core", "priority": 5 },
+    { "keyword": "bangla catering london", "intent": "commercial", "used": false, "cluster": "catering_core", "priority": 5 },
+    { "keyword": "bengali catering near me", "intent": "commercial", "used": false, "cluster": "catering_core", "priority": 5 },
+    { "keyword": "bangladeshi food catering near me", "intent": "commercial", "used": false, "cluster": "catering_core", "priority": 5 },
+    { "keyword": "authentic bengali food catering service", "intent": "commercial", "used": false, "cluster": "catering_core", "priority": 4 },
+    { "keyword": "100 percent halal bangladeshi catering", "intent": "commercial", "used": false, "cluster": "catering_core", "priority": 4 },
+    { "keyword": "fresh pre order bangladeshi food london", "intent": "transactional", "used": false, "cluster": "order_collection", "priority": 4 },
+    { "keyword": "order bangladeshi food online for collection", "intent": "transactional", "used": false, "cluster": "order_collection", "priority": 4 },
+    { "keyword": "bangladeshi food collection e2", "intent": "transactional", "used": false, "cluster": "order_collection", "priority": 4 },
+    { "keyword": "bangladeshi takeaway near bethnal green", "intent": "transactional", "used": false, "cluster": "order_collection", "priority": 3 },
+    { "keyword": "homemade bangladeshi food london", "intent": "commercial", "used": false, "cluster": "order_collection", "priority": 4 },
+    { "keyword": "do bangladeshi caterers deliver or collection only", "intent": "informational", "used": false, "cluster": "order_collection", "priority": 3 },
+
+    { "keyword": "aqiqah catering london", "intent": "commercial", "used": false, "cluster": "events", "priority": 4 },
+    { "keyword": "walima catering london", "intent": "commercial", "used": false, "cluster": "events", "priority": 4 },
+    { "keyword": "gaye holud catering london", "intent": "commercial", "used": false, "cluster": "events", "priority": 4 },
+    { "keyword": "engagement party halal food london", "intent": "commercial", "used": false, "cluster": "events", "priority": 3 },
+    { "keyword": "birthday party halal catering london", "intent": "commercial", "used": false, "cluster": "events", "priority": 3 },
+    { "keyword": "milad and dua mahfil food catering london", "intent": "commercial", "used": false, "cluster": "events", "priority": 3 },
+    { "keyword": "halal corporate lunch catering london", "intent": "commercial", "used": false, "cluster": "events", "priority": 3 },
+    { "keyword": "graduation party halal food london", "intent": "commercial", "used": false, "cluster": "events", "priority": 2 },
+    { "keyword": "biye bari platter london", "intent": "commercial", "used": false, "cluster": "events", "priority": 3 },
+
+    { "keyword": "iftar platter london", "intent": "transactional", "used": false, "cluster": "ramadan_eid", "priority": 5 },
+    { "keyword": "iftar party catering east london", "intent": "commercial", "used": false, "cluster": "ramadan_eid", "priority": 5 },
+    { "keyword": "bangladeshi iftar items", "intent": "informational", "used": false, "cluster": "ramadan_eid", "priority": 4 },
+    { "keyword": "haleem for iftar london", "intent": "transactional", "used": false, "cluster": "ramadan_eid", "priority": 5 },
+    { "keyword": "eid dinner catering london", "intent": "commercial", "used": false, "cluster": "ramadan_eid", "priority": 4 },
+    { "keyword": "order eid food london pre order", "intent": "transactional", "used": false, "cluster": "ramadan_eid", "priority": 4 },
+
+    { "keyword": "dum biryani london", "intent": "transactional", "used": false, "cluster": "menu_dishes", "priority": 4 },
+    { "keyword": "layer dum biriyani", "intent": "informational", "used": false, "cluster": "menu_dishes", "priority": 3 },
+    { "keyword": "beef tehari london", "intent": "transactional", "used": false, "cluster": "menu_dishes", "priority": 3 },
+    { "keyword": "bangladeshi polao and chicken roast", "intent": "transactional", "used": false, "cluster": "menu_dishes", "priority": 4 },
+    { "keyword": "bangladeshi chicken korma takeaway", "intent": "transactional", "used": false, "cluster": "menu_dishes", "priority": 3 },
+    { "keyword": "dhakai style food london", "intent": "commercial", "used": false, "cluster": "menu_dishes", "priority": 3 },
+    { "keyword": "bangladeshi fish curry london", "intent": "transactional", "used": false, "cluster": "menu_dishes", "priority": 3 },
+    { "keyword": "bangladeshi vorta london", "intent": "transactional", "used": false, "cluster": "menu_dishes", "priority": 4 },
+    { "keyword": "shutki vorta", "intent": "informational", "used": false, "cluster": "menu_dishes", "priority": 3 },
+    { "keyword": "beef haleem london", "intent": "transactional", "used": false, "cluster": "menu_dishes", "priority": 4 },
+    { "keyword": "daal chocchori", "intent": "informational", "used": false, "cluster": "menu_dishes", "priority": 2 },
+
+    { "keyword": "chotpoti london", "intent": "transactional", "used": false, "cluster": "menu_street_food", "priority": 4 },
+    { "keyword": "fuchka london", "intent": "transactional", "used": false, "cluster": "menu_street_food", "priority": 4 },
+    { "keyword": "pakon pitha london", "intent": "transactional", "used": false, "cluster": "menu_street_food", "priority": 4 },
+    { "keyword": "bangladeshi pitha recipe and where to buy", "intent": "informational", "used": false, "cluster": "menu_street_food", "priority": 3 },
+    { "keyword": "shami kebab and fish chop order london", "intent": "transactional", "used": false, "cluster": "menu_street_food", "priority": 3 },
+    { "keyword": "bangladeshi snacks for guests", "intent": "informational", "used": false, "cluster": "menu_street_food", "priority": 2 },
+
+    { "keyword": "shahi jorda", "intent": "informational", "used": false, "cluster": "menu_sweets", "priority": 3 },
+    { "keyword": "nawabi shemai", "intent": "informational", "used": false, "cluster": "menu_sweets", "priority": 3 },
+    { "keyword": "firni vs payesh", "intent": "informational", "used": false, "cluster": "menu_sweets", "priority": 3 },
+    { "keyword": "bangladeshi desserts london", "intent": "commercial", "used": false, "cluster": "menu_sweets", "priority": 4 },
+    { "keyword": "milk egg pudding bangladeshi", "intent": "informational", "used": false, "cluster": "menu_sweets", "priority": 2 },
+
+    { "keyword": "bangladeshi catering bethnal green", "intent": "commercial", "used": false, "cluster": "local_e2", "priority": 5 },
+    { "keyword": "halal catering shoreditch", "intent": "commercial", "used": false, "cluster": "local_e2", "priority": 4 },
+    { "keyword": "bangladeshi food whitechapel", "intent": "commercial", "used": false, "cluster": "local_e2", "priority": 4 },
+    { "keyword": "bangladeshi food stepney green", "intent": "commercial", "used": false, "cluster": "local_e2", "priority": 3 },
+    { "keyword": "bangladeshi food mile end", "intent": "commercial", "used": false, "cluster": "local_e2", "priority": 3 },
+    { "keyword": "bangladeshi food bow", "intent": "commercial", "used": false, "cluster": "local_e2", "priority": 3 },
+    { "keyword": "bangladeshi food hackney", "intent": "commercial", "used": false, "cluster": "local_e2", "priority": 3 },
+    { "keyword": "bangladeshi catering stratford", "intent": "commercial", "used": false, "cluster": "local_e2", "priority": 3 },
+    { "keyword": "halal office catering canary wharf", "intent": "commercial", "used": false, "cluster": "local_e2", "priority": 3 },
+    { "keyword": "bangladeshi food globe town", "intent": "commercial", "used": false, "cluster": "local_e2", "priority": 3 },
+
+    { "keyword": "what is chotpoti", "intent": "informational", "used": false, "cluster": "questions", "priority": 3 },
+    { "keyword": "what is fuchka", "intent": "informational", "used": false, "cluster": "questions", "priority": 3 },
+    { "keyword": "what is pakon pitha", "intent": "informational", "used": false, "cluster": "questions", "priority": 3 },
+    { "keyword": "what is tehari", "intent": "informational", "used": false, "cluster": "questions", "priority": 3 },
+    { "keyword": "difference between polao and biryani", "intent": "informational", "used": false, "cluster": "questions", "priority": 4 },
+    { "keyword": "what is vorta", "intent": "informational", "used": false, "cluster": "questions", "priority": 3 },
+
+    { "keyword": "bonnas catering e2", "intent": "commercial", "used": false, "cluster": "brand", "priority": 3 },
+    { "keyword": "bonnas menu", "intent": "transactional", "used": false, "cluster": "brand", "priority": 3 }
+  ],
+  "spelling_variants": {
+    "biryani": ["biriyani", "biriani", "briyani"],
+    "vorta": ["bhorta", "bharta", "bhurta"],
+    "fuchka": ["phuchka", "puchka", "pani puri"],
+    "chotpoti": ["chotpoti", "chotpotti", "chatpati"],
+    "polao": ["pulao", "polau"],
+    "pitha": ["pithe", "pitha cake"],
+    "payesh": ["payesh", "payash", "kheer"],
+    "haleem": ["haleem", "halim"],
+    "bangladeshi": ["bangla", "bengali", "desi"]
+  }
 }
