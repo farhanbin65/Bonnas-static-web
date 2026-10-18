@@ -26,7 +26,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install groq feedparser requests
+          pip install groq feedparser requests pillow python-dotenv
 
       - name: Run blog generator
         env:
@@ -36,6 +36,7 @@ jobs:
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
         run: |
           python scripts/generate_blog.py
+        id: blog_gen
 
       - name: Commit updated index files
         run: |
@@ -44,3 +45,43 @@ jobs:
           git add scripts/topics.json scripts/post_index.json
           git diff --staged --quiet || git commit -m "chore: update topic usage and post index [skip ci]"
           git push
+
+      - name: Extract latest blog data
+        id: extract_blog
+        run: |
+          python scripts/social-blogs/extract_latest_blog.py
+
+      - name: Generate social media content
+        env:
+          UNSPLASH_ACCESS_KEY: ${{ secrets.UNSPLASH_ACCESS_KEY }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+        run: |
+          python scripts/social-blogs/social_media_orchestrator.py \
+            --blog-data latest_blog.json \
+            --output-dir output/social_posts
+        id: social_gen
+
+      - name: Upload to Facebook
+        env:
+          FACEBOOK_PAGE_ID: ${{ secrets.FACEBOOK_PAGE_ID }}
+          FACEBOOK_ACCESS_TOKEN: ${{ secrets.FACEBOOK_ACCESS_TOKEN }}
+        run: |
+          python scripts/social-blogs/publish/facebook_uploader.py \
+            --manifest ${{ steps.social_gen.outputs.manifest_path }}
+        continue-on-error: true
+
+      - name: Upload to Instagram
+        env:
+          INSTAGRAM_BUSINESS_ACCOUNT_ID: ${{ secrets.INSTAGRAM_BUSINESS_ACCOUNT_ID }}
+          INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
+        run: |
+          python scripts/social-blogs/publish/instagram_uploader.py \
+            --manifest ${{ steps.social_gen.outputs.manifest_path }}
+        continue-on-error: true
+
+      - name: Upload social media assets to GitHub
+        uses: actions/upload-artifact@v3
+        with:
+          name: social-media-assets
+          path: output/social_posts/
+          retention-days: 30
