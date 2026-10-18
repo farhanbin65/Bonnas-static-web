@@ -949,7 +949,8 @@
         "winter bangladeshi dishes"
       ],
       "season": "winter",
-      "used": false
+      "used": true,
+      "used_year": 2026
     }
   ],
   "deep_dives": [
