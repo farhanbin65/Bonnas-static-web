@@ -1,55 +1,49 @@
-import json
-import sys
-import os
-from pathlib import Path
+"""Generate photo cards + captions for a blog post. Entry point for GitHub Actions."""
 import argparse
+import json
+import os
+import sys
+from pathlib import Path
 
-# Add parent to path
-sys.path.insert(0, str(Path(__file__).parent))
+# Add parent directory to path for imports
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from social_media_orchestrator import orchestrate_blog_post
 
+
 def main():
     parser = argparse.ArgumentParser(description="Generate social media content from blog data")
-    parser.add_argument("--blog-data", required=True, help="Path to blog data JSON file")
-    parser.add_argument("--output-dir", default="output/social_posts", help="Output directory")
-    
+    parser.add_argument("--blog-data", required=True, help="Path to latest_blog.json")
+    parser.add_argument("--output-dir", required=True, help="Output directory for social posts")
     args = parser.parse_args()
-    
+
     # Load blog data
-    if not os.path.exists(args.blog_data):
-        print(f"❌ Blog data file not found: {args.blog_data}")
-        sys.exit(1)
-    
-    with open(args.blog_data, "r") as f:
+    with open(args.blog_data) as f:
         blog_data = json.load(f)
-    
-    # Ensure required fields
-    required = ["title", "slug", "keywords"]
-    missing = [k for k in required if k not in blog_data]
-    if missing:
-        print(f"❌ Missing required fields: {missing}")
+
+    # Validate required fields
+    if not blog_data.get("image_url"):
+        print("❌ Blog has no image_url. Exiting.")
         sys.exit(1)
-    
-    # Add defaults if missing
-    if "excerpt" not in blog_data:
-        blog_data["excerpt"] = blog_data.get("body", "")[:160]
-    
-    if "featured_image_url" not in blog_data:
-        print("⚠️  No featured_image_url provided, using placeholder")
-        blog_data["featured_image_url"] = "https://images.unsplash.com/photo-1568150950473-9546926281c2?w=1200"
-    
-    # Run orchestrator
-    result = orchestrate_blog_post(blog_data, args.output_dir)
-    
-    if result:
-        # Output manifest path for next steps
-        print(f"::set-output name=manifest_path::{result['manifest_path']}")
-        print(f"::set-output name=post_id::{result['post_id']}")
+
+    if not blog_data.get("excerpt"):
+        print("⚠️  Blog has no excerpt; using empty string")
+        blog_data["excerpt"] = ""
+
+    # Orchestrate social content generation
+    try:
+        manifest_path = orchestrate_blog_post(blog_data, args.output_dir)
+        print(f"✅ Social content generated: {manifest_path}")
+        
+        # Output manifest path for GitHub Actions
+        print(f"::set-output name=manifest_path::{manifest_path}")
         sys.exit(0)
-    else:
-        print("❌ Failed to generate social content")
+    except Exception as e:
+        print(f"❌ Social content generation failed: {e}")
+        import traceback
+        traceback.print_exc()
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

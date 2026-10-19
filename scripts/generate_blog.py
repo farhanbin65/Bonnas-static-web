@@ -678,6 +678,22 @@ def post_to_sanity(data, image, slug):
         print(f"Sanity error: {res.text}")
         res.raise_for_status()
 
+def save_latest_blog(blog_data):
+    """Save blog metadata for social media pipeline."""
+    import json
+    latest = {
+        "title": blog_data.get("title"),
+        "slug": blog_data.get("slug"),
+        "keywords": blog_data.get("keywords"),
+        "excerpt": blog_data.get("excerpt", ""),
+        "image_url": blog_data.get("image_url")
+    }
+    with open("latest_blog.json", "w") as f:
+        json.dump(latest, f, indent=2)
+    print(f"✅ latest_blog.json saved")
+
+# In your main() function, after Sanity post succeeds:
+# save_latest_blog(blog_data)
 
 # ---------------------------------------------------------------
 # MAIN

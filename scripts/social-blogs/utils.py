@@ -1,176 +1,158 @@
+"""Utilities for photo card generation."""
 import os
+from io import BytesIO
+from pathlib import Path
+
 from PIL import Image, ImageDraw, ImageFont
 import requests
-from io import BytesIO
-from config import LOGO_PATH, BRAND_PRIMARY, BRAND_TEXT, BRAND_SECONDARY
 
-# ─── Image Helpers ──────────────────────────────────────────────
+from config import (
+    BRAND_ACCENT,
+    BRAND_PRIMARY,
+    BRAND_SECONDARY,
+    BRAND_TEXT,
+    get_padding,
+    get_text_sizes,
+)
+
+
 def hex_to_rgb(hex_color):
     """Convert hex color to RGB tuple."""
     hex_color = hex_color.lstrip("#")
-    return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+    return tuple(int(hex_color[i : i + 2], 16) for i in (0, 2, 4))
 
-def crop_to_square_center(image):
-    """Crop image to square from center, maintaining aspect ratio."""
-    w, h = image.size
-    if w == h:
-        return image
-    
-    size = min(w, h)
-    left = (w - size) // 2
-    top = (h - size) // 2
-    return image.crop((left, top, left + size, top + size))
 
 def fetch_image_from_url(url):
-    """Fetch image from URL and return PIL Image object."""
+    """Fetch image from URL and return PIL Image."""
     try:
-        response = requests.get(url, timeout=10)
-        response.raise_for_status()
-        img = Image.open(BytesIO(response.content))
-        return img
+        r = requests.get(url, timeout=10)
+        r.raise_for_status()
+        return Image.open(BytesIO(r.content))
     except Exception as e:
-        print(f"⚠️  Failed to fetch image: {e}")
-        return None
+        print(f"❌ Failed to fetch image: {e}")
+        raise
+
 
 def resize_image_to_card(image, card_width, card_height):
-    """
-    Resize and center image to fill card without distortion.
-    Crops excess if aspect ratio differs.
-    """
-    img_w, img_h = image.size
-    card_ratio = card_width / card_height
-    img_ratio = img_w / img_h
+    """Resize and center-crop image to card dimensions."""
+    image.thumbnail((card_width, card_height), Image.Resampling.LANCZOS)
     
-    if img_ratio > card_ratio:
-        # Image is wider than card, crop width
-        new_h = img_h
-        new_w = int(img_h * card_ratio)
-        left = (img_w - new_w) // 2
-        image = image.crop((left, 0, left + new_w, img_h))
-    else:
-        # Image is taller than card, crop height
-        new_w = img_w
-        new_h = int(img_w / card_ratio)
-        top = (img_h - new_h) // 2
-        image = image.crop((0, top, img_w, top + new_h))
+    if image.width < card_width or image.height < card_height:
+        # Pad if too small
+        canvas = Image.new("RGB", (card_width, card_height), hex_to_rgb(BRAND_PRIMARY))
+        x = (card_width - image.width) // 2
+        y = (card_height - image.height) // 2
+        canvas.paste(image, (x, y))
+        return canvas
     
-    return image.resize((card_width, card_height), Image.LANCZOS)
+    # Crop center if too large
+    x = (image.width - card_width) // 2
+    y = (image.height - card_height) // 2
+    return image.crop((x, y, x + card_width, y + card_height))
 
-def load_font(size, bold=False):
-    """Load system font with fallback."""
+
+def load_font(size):
+    """Load font with fallbacks."""
     paths = [
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" if bold else "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-        "C:/Windows/Fonts/arialbd.ttf" if bold else "C:/Windows/Fonts/arial.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+        "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
         "/System/Library/Fonts/Helvetica.ttc",
     ]
     for path in paths:
         if os.path.exists(path):
             try:
                 return ImageFont.truetype(path, size)
-            except:
-                continue
+            except Exception:
+                pass
     return ImageFont.load_default()
 
-# ─── Logo & Branding ────────────────────────────────────────────
-def load_logo(size):
-    """Load and resize logo for placement."""
-    if not os.path.exists(LOGO_PATH):
-        print(f"⚠️  Logo not found at {LOGO_PATH}")
+
+def load_logo(width):
+    """Load logo from public/logo.png and scale to width."""
+    logo_path = Path("public/logo.png")
+    if not logo_path.exists():
+        print(f"⚠️  Logo not found at {logo_path}")
         return None
     
-    try:
-        logo = Image.open(LOGO_PATH).convert("RGBA")
-        logo.thumbnail((size, size), Image.LANCZOS)
-        return logo
-    except Exception as e:
-        print(f"⚠️  Failed to load logo: {e}")
-        return None
+    logo = Image.open(logo_path).convert("RGBA")
+    # Scale logo to 12% of card width
+    logo_size = max(int(width * 0.12), 60)
+    logo.thumbnail((logo_size, logo_size), Image.Resampling.LANCZOS)
+    return logo
 
-def wrap_text(text, font, max_width, draw):
-    """
-    Wrap text to fit within max_width.
-    Returns list of lines.
-    """
+
+def wrap_text(text, max_width, font):
+    """Wrap text to fit within max_width pixels."""
     words = text.split()
     lines = []
     current_line = []
     
     for word in words:
         test_line = " ".join(current_line + [word])
-        bbox = draw.textbbox((0, 0), test_line, font=font)
-        if bbox[2] <= max_width:
-            current_line.append(word)
-        else:
-            if current_line:
-                lines.append(" ".join(current_line))
+        bbox = ImageDraw.Draw(Image.new("RGB", (1, 1))).textbbox((0, 0), test_line, font=font)
+        if bbox[2] > max_width and current_line:
+            lines.append(" ".join(current_line))
             current_line = [word]
+        else:
+            current_line.append(word)
     
     if current_line:
         lines.append(" ".join(current_line))
     
     return lines
 
-# ─── Overlay & Text ─────────────────────────────────────────────
-def draw_text_overlay(image, title, website_text, card_config):
-    """
-    Draw semi-transparent white box with title and website at bottom.
-    """
+
+def draw_text_overlay(image, title, website, card_width, card_height):
+    """Draw semi-transparent overlay + title + website at bottom."""
+    sizes = get_text_sizes(card_width)
+    padding = get_padding(card_width)
+    
     draw = ImageDraw.Draw(image, "RGBA")
+    title_font = load_font(sizes["title"])
+    website_font = load_font(sizes["website"])
     
-    width, height = image.size
-    padding = card_config["padding"]
-    text_sizes = card_config["text_sizes"]
+    # Wrap title to max 3 lines
+    title_lines = wrap_text(title, card_width - 2 * padding, title_font)[:3]
     
-    # Title font
-    title_font = load_font(text_sizes["title"], bold=True)
-    website_font = load_font(text_sizes["website"])
+    # Calculate text height
+    title_height = sum(
+        ImageDraw.Draw(Image.new("RGB", (1, 1))).textbbox((0, 0), line, font=title_font)[3]
+        for line in title_lines
+    ) + padding
+    website_height = ImageDraw.Draw(Image.new("RGB", (1, 1))).textbbox((0, 0), website, font=website_font)[3]
     
-    # Wrap title text
-    max_text_width = width - (padding["horizontal"] * 2)
-    title_lines = wrap_text(title, title_font, max_text_width, draw)
+    overlay_height = title_height + website_height + padding * 2
     
-    # Limit to 2 lines max
-    title_lines = title_lines[:2]
-    
-    # Calculate overlay box height
-    line_height = int(text_sizes["title"] * 1.4)
-    overlay_height = (len(title_lines) * line_height) + (padding["vertical"] * 2)
-    website_height = int(text_sizes["website"] * 1.3)
-    
-    overlay_height += website_height + padding["vertical"]
-    
-    # Draw semi-transparent white box at bottom
-    overlay_y = height - overlay_height
+    # Semi-transparent overlay
+    overlay_y = card_height - overlay_height
     draw.rectangle(
-        [(0, overlay_y), (width, height)],
-        fill=(255, 255, 255, 220)  # 86% opacity white
+        [(0, overlay_y), (card_width, card_height)],
+        fill=(*hex_to_rgb(BRAND_ACCENT), 200)
     )
     
-    # Draw title text
-    y_pos = overlay_y + padding["vertical"]
+    # Draw title (max 3 lines)
+    y = overlay_y + padding
     for line in title_lines:
         draw.text(
-            (padding["horizontal"], y_pos),
+            (padding, y),
             line,
             font=title_font,
             fill=hex_to_rgb(BRAND_TEXT)
         )
-        y_pos += line_height
+        y += ImageDraw.Draw(Image.new("RGB", (1, 1))).textbbox((0, 0), line, font=title_font)[3]
     
-    # Draw website text
-    y_pos += padding["vertical"] // 2
+    # Draw website
     draw.text(
-        (padding["horizontal"], y_pos),
-        website_text,
+        (padding, y),
+        website,
         font=website_font,
-        fill=hex_to_rgb(BRAND_ACCENT)
+        fill=hex_to_rgb(BRAND_TEXT)
     )
 
-def paste_logo_top_left(image, logo, padding=20):
-    """
-    Paste logo in top-left corner with padding.
-    """
-    if logo is None:
-        return
-    
-    image.paste(logo, (padding, padding), logo)
+
+def paste_logo_top_left(image, card_width):
+    """Paste logo in top-left corner with padding."""
+    logo = load_logo(card_width)
+    if logo:
+        padding = get_padding(card_width)
+        image.paste(logo, (padding, padding), logo)

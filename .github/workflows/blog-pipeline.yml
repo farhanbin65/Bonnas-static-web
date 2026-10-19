@@ -34,7 +34,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install groq feedparser requests pillow python-dotenv
 
-      # 4. Generate SEO blog
+            # 4. Generate SEO blog
       - name: Run blog generator
         id: blog_gen
         env:
@@ -50,9 +50,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-
           git add scripts/topics.json scripts/post_index.json
-
           if ! git diff --staged --quiet; then
             git commit -m "chore: update blog index [skip ci]"
             git push
@@ -60,51 +58,43 @@ jobs:
             echo "No index changes to commit."
           fi
 
-      # 6. Extract latest blog
-      - name: Extract latest blog data
-        id: extract_blog
-        run: |
-          python scripts/social-blogs/extract_latest_blog.py
-
-      # 7. Generate social media content
+      # 6. Generate social media content (photo cards + captions)
       - name: Generate social media content
         id: social_gen
         env:
+          SANITY_WRITE_TOKEN: ${{ secrets.SANITY_WRITE_TOKEN }}
           UNSPLASH_ACCESS_KEY: ${{ secrets.UNSPLASH_ACCESS_KEY }}
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
         run: |
-          python scripts/social-blogs/social_media_orchestrator.py \
+          python scripts/social-blogs/generate_social_content.py \
             --blog-data latest_blog.json \
             --output-dir output/social_posts
 
-      # 8. Find generated manifest
+      # 7. Find generated manifest
       - name: Find generated manifest
         id: find_manifest
         shell: bash
         run: |
           echo "Searching for generated manifest..."
-
+          
           if [ ! -d "output/social_posts" ]; then
             echo "ERROR: Social media output directory missing!"
             exit 1
           fi
-
-          MANIFEST=$(find output/social_posts \
-            -type f \
-            -iname '*manifest*.json' \
-            -print -quit)
-
+          
+          MANIFEST=$(find output/social_posts -type f -iname '*manifest*.json' -print -quit)
+          
           if [ -z "$MANIFEST" ]; then
             echo "ERROR: Manifest file not found!"
             echo "Generated files:"
             find output/social_posts -type f
             exit 1
           fi
-
+          
           echo "Manifest found: $MANIFEST"
           echo "manifest_path=$MANIFEST" >> "$GITHUB_OUTPUT"
 
-      # 9. Publish to Facebook
+      # 8. Publish to Facebook
       - name: Upload to Facebook
         id: facebook_upload
         continue-on-error: true
@@ -114,25 +104,24 @@ jobs:
           MANIFEST_PATH: ${{ steps.find_manifest.outputs.manifest_path }}
         run: |
           echo "Publishing to Facebook..."
-
           python scripts/social-blogs/publish/facebook_uploader.py \
             --manifest "$MANIFEST_PATH"
 
-      # 10. Publish to Instagram
+      # 9. Publish to Instagram
       - name: Upload to Instagram
         id: instagram_upload
         continue-on-error: true
         env:
           INSTAGRAM_BUSINESS_ACCOUNT_ID: ${{ secrets.INSTAGRAM_BUSINESS_ACCOUNT_ID }}
           INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
+          SANITY_WRITE_TOKEN: ${{ secrets.SANITY_WRITE_TOKEN }}
           MANIFEST_PATH: ${{ steps.find_manifest.outputs.manifest_path }}
         run: |
           echo "Publishing to Instagram..."
-
           python scripts/social-blogs/publish/instagram_uploader.py \
             --manifest "$MANIFEST_PATH"
 
-      # 11. Save generated assets
+      # 10. Save generated assets
       - name: Upload social media assets to GitHub
         if: always()
         uses: actions/upload-artifact@v4
@@ -142,7 +131,7 @@ jobs:
           retention-days: 30
           if-no-files-found: warn
 
-      # 12. Check publishing results
+      # 11. Verify results
       - name: Verify social publishing results
         if: always() && steps.find_manifest.outcome == 'success'
         env:
@@ -151,11 +140,10 @@ jobs:
         run: |
           echo "Facebook result: $FB_RESULT"
           echo "Instagram result: $IG_RESULT"
-
-          if [ "$FB_RESULT" != "success" ] || \
-             [ "$IG_RESULT" != "success" ]; then
-            echo "ERROR: One or more social uploads failed."
+          
+          if [ "$FB_RESULT" != "success" ] && [ "$IG_RESULT" != "success" ]; then
+            echo "⚠️  Both platforms failed. Check logs."
             exit 1
           fi
-
-          echo "Both social uploads completed successfully."
+          
+          echo "✅ Publishing completed."

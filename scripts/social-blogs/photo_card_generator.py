@@ -1,156 +1,60 @@
-import os
-from PIL import Image
-from io import BytesIO
-import requests
+"""Generate branded photo cards for social media."""
+import json
+from pathlib import Path
 
-# Change these from relative to absolute imports
-from config import CARD_SIZES, OUTPUT_DIR, WEBSITE, get_text_sizes, get_padding
+from PIL import Image
+
+from config import CARD_SIZES, OUTPUT_DIR
 from utils import (
-    resize_image_to_card,
-    load_logo,
     draw_text_overlay,
+    fetch_image_from_url,
     paste_logo_top_left,
-    fetch_image_from_url
+    resize_image_to_card,
 )
 
+
 class PhotoCardGenerator:
-    """
-    Generate photo cards for Bonna's blog posts.
-    Outputs 3 sizes: Instagram square, Facebook square, Instagram Stories.
-    """
-    
-    def __init__(self, blog_title, featured_image_url, output_base=None):
-        """
-        Args:
-            blog_title (str): Blog post title (2-3 words ideal)
-            featured_image_url (str): URL to featured image
-            output_base (str): Optional base path for output files
-        """
+    def __init__(self, blog_title, featured_image_url, output_base):
         self.blog_title = blog_title
         self.featured_image_url = featured_image_url
-        self.output_base = output_base or OUTPUT_DIR
-        os.makedirs(self.output_base, exist_ok=True)
-        
-        # Fetch and prepare base image
-        self.base_image = self._load_image()
-    
+        self.output_base = Path(output_base)
+        self.output_base.mkdir(parents=True, exist_ok=True)
+
     def _load_image(self):
-        """Fetch and load featured image."""
-        try:
-            response = requests.get(self.featured_image_url, timeout=10)
-            response.raise_for_status()
-            img = Image.open(BytesIO(response.content)).convert("RGB")
-            print(f"✅ Loaded image: {self.featured_image_url}")
-            return img
-        except Exception as e:
-            print(f"❌ Failed to load image: {e}")
-            return None
-    
+        """Fetch and prepare base image."""
+        return fetch_image_from_url(self.featured_image_url)
+
     def _generate_card(self, size_key):
-        """Generate a single card for given size."""
-        if self.base_image is None:
-            print(f"⚠️  Cannot generate {size_key} — image not loaded")
-            return None
+        """Generate card for a specific size."""
+        if size_key not in CARD_SIZES:
+            raise ValueError(f"Unknown size: {size_key}")
         
         width, height = CARD_SIZES[size_key]
+        image = self._load_image()
+        image = resize_image_to_card(image, width, height)
         
-        # Resize image to card dimensions
-        card_image = resize_image_to_card(self.base_image, width, height)
+        draw_text_overlay(image, self.blog_title, "bonnas.co.uk", width, height)
+        paste_logo_top_left(image, width)
         
-        # Convert to RGBA for overlay
-        card_image = card_image.convert("RGBA")
-        
-        # Prepare config for this size
-        card_config = {
-            "width": width,
-            "height": height,
-            "text_sizes": get_text_sizes(width),
-            "padding": get_padding(width),
-        }
-        
-        # Load logo (size relative to card)
-        logo_size = int(width * 0.12)  # 130px for 1080w
-        logo = load_logo(logo_size)
-        
-        # Add overlays
-        if logo:
-            paste_logo_top_left(card_image, logo, padding=int(width * 0.03))
-        
-        draw_text_overlay(card_image, self.blog_title, WEBSITE, card_config)
-        
-        # Convert back to RGB for PNG save
-        card_image = card_image.convert("RGB")
-        
-        return card_image
-    
+        output_path = self.output_base / f"{size_key}.jpg"
+        image = image.convert("RGB")
+        image.save(output_path, "JPEG", quality=95)
+        print(f"✅ Card generated: {output_path}")
+        return str(output_path)
+
     def generate_all(self):
-        """Generate all three card sizes. Returns dict with file paths."""
-        output_files = {}
-        
-        for size_key in CARD_SIZES.keys():
-            print(f"\n🎨 Generating {size_key}...")
-            card = self._generate_card(size_key)
-            
-            if card is None:
-                continue
-            
-            # Save to file
-            filename = f"{size_key}.png"
-            filepath = os.path.join(self.output_base, filename)
-            card.save(filepath, "PNG", quality=95)
-            output_files[size_key] = filepath
-            print(f"✅ Saved: {filepath}")
-        
-        return output_files
-    
+        """Generate all card sizes."""
+        cards = {}
+        for size_key in CARD_SIZES:
+            cards[size_key] = self._generate_card(size_key)
+        return cards
+
     def generate_single(self, size_key):
-        """Generate a single card size."""
-        if size_key not in CARD_SIZES:
-            print(f"❌ Unknown size: {size_key}. Options: {list(CARD_SIZES.keys())}")
-            return None
-        
-        card = self._generate_card(size_key)
-        if card is None:
-            return None
-        
-        filename = f"{size_key}.png"
-        filepath = os.path.join(self.output_base, filename)
-        card.save(filepath, "PNG", quality=95)
-        print(f"✅ Saved: {filepath}")
-        
-        return filepath
+        """Generate single card size."""
+        return self._generate_card(size_key)
 
 
-# ─── Standalone Function ────────────────────────────────────────
-def generate_blog_cards(blog_title, featured_image_url, output_base=None):
-    """
-    Quick function to generate all card sizes for a blog post.
-    
-    Args:
-        blog_title (str): Blog post title
-        featured_image_url (str): URL to featured image
-        output_base (str): Optional output directory
-    
-    Returns:
-        dict: {size_key: filepath}
-    
-    Example:
-        cards = generate_blog_cards(
-            "Chicken Biryani Recipe",
-            "https://bonnas.co.uk/images/biryani.jpg"
-        )
-    """
+def generate_blog_cards(blog_title, featured_image_url, output_base):
+    """Standalone function to generate all cards."""
     generator = PhotoCardGenerator(blog_title, featured_image_url, output_base)
     return generator.generate_all()
-
-
-if __name__ == "__main__":
-    # Test example
-    test_title = "Chicken Biryani Recipe"
-    test_image_url = "https://images.unsplash.com/photo-1568150950473-9546926281c2?w=1200"
-    
-    print("🚀 Testing Photo Card Generator...\n")
-    cards = generate_blog_cards(test_title, test_image_url)
-    
-    print("\n✅ Generation complete!")
-    print(f"Output files: {cards}")
