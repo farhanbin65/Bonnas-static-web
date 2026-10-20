@@ -6,14 +6,12 @@ import time
 
 import requests
 
+from dotenv import load_dotenv
 
+load_dotenv(override=True)
 GRAPH = "https://graph.facebook.com/v25.0"
 SANITY_ASSETS = "https://u5i02ojt.api.sanity.io/v2024-01-01/assets/images/production"
 
-# DEBUG: Print what we got
-print(f"DEBUG: IG_ID from env: {os.getenv('INSTAGRAM_BUSINESS_ACCOUNT_ID')}")
-print(f"DEBUG: IG_TOKEN from env: {os.getenv('INSTAGRAM_ACCESS_TOKEN')[:20] if os.getenv('INSTAGRAM_ACCESS_TOKEN') else 'MISSING'}...")
-print(f"DEBUG: SANITY_TOKEN from env: {'SET' if os.getenv('SANITY_WRITE_TOKEN') else 'MISSING'}")
 
 
 def host_image(path, sanity_token):
