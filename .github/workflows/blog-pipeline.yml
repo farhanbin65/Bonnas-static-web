@@ -147,3 +147,31 @@ jobs:
           fi
           
           echo "✅ Publishing completed."
+
+    - name: Verify Instagram credentials
+  env:
+    INSTAGRAM_BUSINESS_ACCOUNT_ID: ${{ secrets.INSTAGRAM_BUSINESS_ACCOUNT_ID }}
+    INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
+  run: |
+    echo "Testing Instagram API..."
+    python3 << 'EOF'
+    import os
+    import requests
+    
+    ig_id = os.getenv("INSTAGRAM_BUSINESS_ACCOUNT_ID")
+    token = os.getenv("INSTAGRAM_ACCESS_TOKEN")
+    
+    print(f"Account ID: {ig_id[:10]}..." if ig_id else "❌ No Account ID")
+    print(f"Token: {token[:20]}..." if token else "❌ No Token")
+    
+    if ig_id and token:
+        r = requests.get(
+            f"https://graph.facebook.com/v25.0/{ig_id}",
+            params={"fields": "name,biography,website", "access_token": token}
+        )
+        print(f"\n✓ API Response: {r.status_code}")
+        if r.ok:
+            print(f"  Account: {r.json()}")
+        else:
+            print(f"  Error: {r.json()}")
+    EOF
