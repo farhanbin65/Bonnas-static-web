@@ -4,10 +4,12 @@ import os
 import sys
 
 import requests
+from dotenv import load_dotenv
+
+# Load .env file
+load_dotenv(override=True)
 
 GRAPH = "https://graph.facebook.com/v25.0"
-
-
 def upload_to_facebook(manifest_path):
     page_id = os.getenv("FACEBOOK_PAGE_ID")
     token = os.getenv("FACEBOOK_ACCESS_TOKEN")
