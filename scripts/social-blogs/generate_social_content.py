@@ -26,17 +26,9 @@ def main():
     output_dir.mkdir(parents=True, exist_ok=True)
     print(f"📁 Output directory ready: {output_dir.absolute()}")
     
-    # Step 1: Extract latest blog with image resolution
-    print("📝 Extracting latest blog post...")
-    
-    # Try to load from --blog-data argument first, then fall back to extraction
-    blog_data_path = project_root / args.blog_data
-    if blog_data_path.exists():
-        with open(blog_data_path, "r") as f:
-            blog_data = json.load(f)
-        print(f"✅ Loaded blog data from: {blog_data_path}")
-    else:
-        blog_data = extract_latest_blog()
+    # Step 1: Always call extract_latest_blog() to enrich with image
+    print("📝 Enriching blog post with image data...")
+    blog_data = extract_latest_blog()
     
     if not blog_data:
         print("❌ No blog post found.")
@@ -45,8 +37,10 @@ def main():
     # Step 2: Verify image exists
     image_url = blog_data.get("image_url")
     if not image_url:
-        print("❌ Blog has no image_url. Exiting.")
+        print("❌ Blog has no image_url after enrichment. Exiting.")
         sys.exit(1)
+    
+    print(f"✅ Image URL ready: {image_url[:80]}...")
     
     # Step 3: Generate photo cards
     print("🎨 Generating photo cards...")
@@ -72,7 +66,7 @@ def main():
         traceback.print_exc()
         sys.exit(1)
     
-    # Step 4: Post to social media (orchestrator also needs to be updated)
+    # Step 4: Post to social media (orchestrator)
     print("📱 Orchestrating social media content...")
     try:
         orchestrate_blog_post(blog_data, cards)
