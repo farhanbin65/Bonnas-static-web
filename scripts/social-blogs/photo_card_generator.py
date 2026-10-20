@@ -37,9 +37,14 @@ class PhotoCardGenerator:
         paste_logo_top_left(image, width)
         
         output_path = self.output_base / f"{size_key}.jpg"
+        
+        # Make sure parent directory exists
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        
         image = image.convert("RGB")
         image.save(output_path, "JPEG", quality=95)
         print(f"✅ Card generated: {output_path}")
+        
         return str(output_path)
 
     def generate_all(self):

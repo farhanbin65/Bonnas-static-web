@@ -9,9 +9,13 @@ from extract_latest_blog import extract_latest_blog
 from photo_card_generator import generate_blog_cards
 from social_media_orchestrator import orchestrate_blog_post
 
-
 def main():
     """Main flow: extract blog → generate cards → post to socials."""
+    
+    # Step 0: Ensure output directory exists
+    output_dir = Path("output/cards")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    print(f"📁 Output directory ready: {output_dir}")
     
     # Step 1: Extract latest blog with image resolution
     print("📝 Extracting latest blog post...")
@@ -29,16 +33,25 @@ def main():
     
     # Step 3: Generate photo cards
     print("🎨 Generating photo cards...")
-    output_dir = "output/cards"
     try:
         cards = generate_blog_cards(
             blog_title=blog_data.get("title", "Bonnas Blog"),
             featured_image_url=image_url,
-            output_base=output_dir
+            output_base=str(output_dir)
         )
-        print(f"✅ Cards generated!")
+        print(f"✅ Cards generated: {list(cards.keys())}")
+        
+        # Verify cards actually exist
+        for size_key, card_path in cards.items():
+            if Path(card_path).exists():
+                print(f"   ✓ {size_key}: {card_path}")
+            else:
+                print(f"   ✗ {size_key}: NOT FOUND at {card_path}")
+    
     except Exception as e:
         print(f"❌ Card generation failed: {e}")
+        import traceback
+        traceback.print_exc()
         sys.exit(1)
     
     # Step 4: Post to social media
@@ -48,9 +61,7 @@ def main():
         print("✅ Social media posting complete!")
     except Exception as e:
         print(f"⚠️  Social posting failed: {e}")
+        import traceback
+        traceback.print_exc()
     
     print("\n✨ Pipeline complete!")
-
-
-if __name__ == "__main__":
-    main()
