@@ -1,5 +1,11 @@
 """Brand constants and card configuration."""
+from pathlib import Path
 
+# Logo path - points to public/logo.PNG
+BASE_DIR = Path(__file__).parent.parent.parent  # Goes to project root
+LOGO_PATH = BASE_DIR / "public" / "logo.PNG"
+
+# Brand colors
 BRAND_PRIMARY = "#E8C5C5"      # Soft pink
 BRAND_SECONDARY = "#FFFFFF"    # White
 BRAND_TEXT = "#2C1B1B"         # Dark brown
