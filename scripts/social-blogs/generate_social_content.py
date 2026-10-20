@@ -12,10 +12,11 @@ from social_media_orchestrator import orchestrate_blog_post
 def main():
     """Main flow: extract blog → generate cards → post to socials."""
     
-    # Step 0: Ensure output directory exists
-    output_dir = Path("output/cards")
+    # Step 0: Set absolute output directory (relative to project root)
+    project_root = Path(__file__).parent.parent.parent  # Goes up from scripts/social-blogs/
+    output_dir = project_root / "output" / "cards"
     output_dir.mkdir(parents=True, exist_ok=True)
-    print(f"📁 Output directory ready: {output_dir}")
+    print(f"📁 Output directory ready: {output_dir.absolute()}")
     
     # Step 1: Extract latest blog with image resolution
     print("📝 Extracting latest blog post...")
@@ -43,10 +44,11 @@ def main():
         
         # Verify cards actually exist
         for size_key, card_path in cards.items():
-            if Path(card_path).exists():
-                print(f"   ✓ {size_key}: {card_path}")
+            card_path_obj = Path(card_path)
+            if card_path_obj.exists():
+                print(f"   ✓ {size_key}: {card_path_obj.absolute()}")
             else:
-                print(f"   ✗ {size_key}: NOT FOUND at {card_path}")
+                print(f"   ✗ {size_key}: NOT FOUND at {card_path_obj.absolute()}")
     
     except Exception as e:
         print(f"❌ Card generation failed: {e}")
@@ -64,4 +66,13 @@ def main():
         import traceback
         traceback.print_exc()
     
-    print("\n✨ Pipeline complete!")
+    # Step 5: Verify output exists before finishing
+    if output_dir.exists() and list(output_dir.glob("*.jpg")):
+        print(f"\n✨ Pipeline complete!")
+        print(f"📊 Cards saved to: {output_dir.absolute()}")
+    else:
+        print(f"\n❌ ERROR: Cards were not saved to {output_dir.absolute()}")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()
