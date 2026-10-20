@@ -1044,7 +1044,8 @@
         "bangladeshi pitha london"
       ],
       "season": "winter",
-      "used": false
+      "used": true,
+      "used_year": 2026
     },
     {
       "title": "Shahi Jorda — Bangladesh's Royal Sweet Rice",
