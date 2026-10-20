@@ -2,7 +2,7 @@
 import os
 from io import BytesIO
 from pathlib import Path
-
+from config import LOGO_PATH, BRAND_PRIMARY, BRAND_TEXT, BRAND_SECONDARY, BRAND_ACCENT
 from PIL import Image, ImageDraw, ImageFont
 import requests
 

@@ -26,6 +26,10 @@ def main():
         print("❌ Blog has no image_url. Exiting.")
         sys.exit(1)
 
+    if "featured_image_url" not in blog_data:
+        print("❌ No featured_image_url, skipping social post")
+        sys.exit(1)
+
     if not blog_data.get("excerpt"):
         print("⚠️  Blog has no excerpt; using empty string")
         blog_data["excerpt"] = ""

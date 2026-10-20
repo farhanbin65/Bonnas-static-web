@@ -472,6 +472,7 @@ def generate_post(headlines, topic, content_type, season=None, related_posts=Non
     if kw_ctx["variants"]:
         extras += f'\nSPELLING: use the main spelling most often, and mention one alternative spelling once naturally: {"; ".join(kw_ctx["variants"])}'
     if kw_ctx["area"]:
+        name, angle = kw_ctx["area"]
         extras += (f'\nAREA FOCUS: {name.title()}. Angle: {angle}. Mention the area naturally 2-3 times. '
             f'Always say "collect from E2 0RB on Roman Road" (that is where the kitchen is). Do not invent landmarks, distances or travel times.')
     extras += "\n" + cta_for_intent(kw_ctx["intent"])
@@ -678,22 +679,19 @@ def post_to_sanity(data, image, slug):
         print(f"Sanity error: {res.text}")
         res.raise_for_status()
 
-def save_latest_blog(blog_data):
-    """Save blog metadata for social media pipeline."""
-    import json
+def save_latest_blog(post_data, slug, image):
+    """Hand the new post to the social pipeline (read by generate_social_content.py)."""
     latest = {
-        "title": blog_data.get("title"),
-        "slug": blog_data.get("slug"),
-        "keywords": blog_data.get("keywords"),
-        "excerpt": blog_data.get("excerpt", ""),
-        "image_url": blog_data.get("image_url")
+        "title": post_data["title"],
+        "slug": slug,
+        "keywords": post_data["keywords"],
+        "excerpt": post_data["excerpt"],
     }
-    with open("latest_blog.json", "w") as f:
-        json.dump(latest, f, indent=2)
-    print(f"✅ latest_blog.json saved")
+    if image:  # key left out on purpose: the social step then stops instead of using a stock photo
+        latest["featured_image_url"] = image["url"]
+    save_json("latest_blog.json", latest)
 
-# In your main() function, after Sanity post succeeds:
-# save_latest_blog(blog_data)
+
 
 # ---------------------------------------------------------------
 # MAIN
@@ -726,5 +724,6 @@ if __name__ == "__main__":
 
     post_to_sanity(post_data, image, slug)
     update_post_index(post_data["title"], slug, post_data["keywords"], content_type)
+    save_latest_blog(post_data, slug, image)
     mark_keyword_used(topic["keywords"][0])
     print("Done!")
