@@ -54,14 +54,18 @@ INTENT_BY_TYPE = {
 
 BUSINESS_FACTS = """BUSINESS FACTS (always true, never contradict them):
 - Bonna's is a home cooked Bangladeshi food and catering kitchen in London E2. Customers collect from E2 0RB.
-- COLLECTION ONLY. There is NO delivery. Never write that food is delivered and never offer delivery.
+- STRICTLY COLLECTION ONLY. Bonna's NEVER provides delivery, shipping, or courier services.
+- Never claim that Bonna's delivers food, offers home delivery, or brings food to customers.
+- Never encourage customers to request delivery.
+- If discussing fulfilment, clearly state that customers collect their orders from E2 0RB.
+- You may say "We do not offer delivery" or "Collection only".
 - Pre-order only, with at least 2 days notice. Everything is cooked fresh to order.
 - 100 percent halal.
 - Caters for all events, small and large: weddings, aqiqah, walima, gaye holud, milad, Eid, iftar, birthdays, office lunches.
 - Menu includes: Biya Bari platters, polao, chicken roast, korma, dum biriyani, tehari, vorta, fish curries, daal, bhaji, kebabs and chops, chotpoti, fuchka, haleem, pakon pitha, milk egg pudding, shahi jorda, nawabi shemai, rice pudding.
 - Customers order at bonnas.co.uk/menu, by WhatsApp, or at orders@bonnas.co.uk.
-- Do NOT invent prices, minimum order values, opening hours, distances, travel times, awards, years in business or reviews."""
-
+- Do NOT invent prices, minimum order values, opening hours, distances, travel times, awards, years in business or reviews.
+"""
 AREA_ANGLES = {
     "stepney green":   "customers in the area can pre-order and collect from E2 0RB, bethnal green",
     "mile end":        "customers in the area can pre-order and collect from E2 0RB, bethnal green",
@@ -523,28 +527,64 @@ CRITICAL: Valid JSON only. Body must be a single-line string. Use [PARA] for all
     client = Groq(api_key=GROQ_API_KEY)
 
     last_error = None
+
     for attempt in range(1, max_attempts + 1):
         print(f"Groq attempt {attempt}/{max_attempts}...")
+
         try:
+            retry_feedback = ""
+
+            if last_error:
+                retry_feedback = f"""
+
+    IMPORTANT CORRECTION FROM PREVIOUS ATTEMPT:
+    Your previous response was rejected because:
+    {last_error}
+
+    You MUST correct this issue.
+
+    Remember:
+    - Bonna's offers COLLECTION ONLY.
+    - No delivery services are available.
+    - Do not invent business information.
+    - Follow every rule in BUSINESS FACTS.
+    - Return valid JSON only.
+    """
+
             response = client.chat.completions.create(
                 model="openai/gpt-oss-20b",
                 messages=[
-                    {"role": "system", "content": "You are an SEO content writer. Always respond with valid JSON only. No markdown, no explanations, just the JSON object."},
-                    {"role": "user", "content": prompt},
+                    {
+                        "role": "system",
+                        "content": (
+                            "You are a professional SEO content writer "
+                            "for Bonna's, a Bangladeshi catering business. "
+                            "Always respond with valid JSON only. "
+                            "No markdown, no explanations. "
+                            "Never contradict the business facts.\n\n"
+                            + BUSINESS_FACTS
+                        ),
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt + retry_feedback,
+                    },
                 ],
-                temperature=0.65,
+                temperature=0.4,
                 max_tokens=4000,
                 reasoning_effort="low",
             )
+
             choice = response.choices[0]
             print(f"Finish reason: {choice.finish_reason}")
+
             raw = (choice.message.content or "").strip()
+
             raw = re.sub(r"^```json\s*", "", raw)
             raw = re.sub(r"^```\s*", "", raw)
             raw = re.sub(r"\s*```$", "", raw).strip()
 
             data = json.loads(raw, strict=False)
-
             for field in ["title", "excerpt", "body", "keywords"]:
                 if not data.get(field):
                     raise ValueError(f"Missing field: {field}")
