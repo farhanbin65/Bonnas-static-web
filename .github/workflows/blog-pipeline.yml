@@ -148,4 +148,14 @@ jobs:
           
           echo "✅ Publishing completed."
 
+            - name: Debug Instagram token
+        run: |
+          echo "Token length: ${#INSTAGRAM_ACCESS_TOKEN}"
+          echo "Token first 20 chars: ${INSTAGRAM_ACCESS_TOKEN:0:20}"
+          echo "IG Account ID: $INSTAGRAM_BUSINESS_ACCOUNT_ID"
+          curl -s "https://graph.facebook.com/v25.0/$INSTAGRAM_BUSINESS_ACCOUNT_ID?access_token=$INSTAGRAM_ACCESS_TOKEN" | jq '.'
+        env:
+          INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
+          INSTAGRAM_BUSINESS_ACCOUNT_ID: ${{ secrets.INSTAGRAM_BUSINESS_ACCOUNT_ID }}
+
      
