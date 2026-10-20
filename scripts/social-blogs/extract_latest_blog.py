@@ -1,12 +1,11 @@
 import json
-import os
-import sys
+import random
 from pathlib import Path
 
 def extract_latest_blog():
     """
     Extract the most recently published blog from post_index.json.
-    Enriches it with image data.
+    Enriches it with image data from images.json or falls back to local images.
     """
     index_path = Path("scripts/post_index.json")
     
@@ -32,42 +31,25 @@ def extract_latest_blog():
     if not latest_post.get("image_url"):
         print("📸 Resolving image for blog post...")
         
-        # Add scripts directory to path for imports
-        scripts_dir = Path("scripts")
-        sys.path.insert(0, str(scripts_dir))
-        
-        try:
-            # Import get_image from generate_blog.py
-            from generate_blog import get_image
+        # Try to get image from images.json (local images)
+        images_path = Path("scripts/images.json")
+        if images_path.exists():
+            with open(images_path, "r") as f:
+                images_data = json.load(f)
             
-            image_data = get_image(latest_post, "blog")
-            if image_data:
-                latest_post["image_url"] = image_data["url"]
-                latest_post["image_alt"] = image_data.get("alt", "Blog featured image")
-                latest_post["image_source"] = image_data.get("source", "unknown")
-                print(f"✅ Image resolved ({image_data.get('source', 'unknown')})")
-                print(f"   URL: {image_data['url'][:80]}...")
+            local_images = images_data.get("local_images", [])
+            if local_images:
+                # Pick random image from local_images
+                selected_image = random.choice(local_images)
+                image_url = f"https://www.bonnas.co.uk{selected_image['path']}"
+                latest_post["image_url"] = image_url
+                latest_post["image_alt"] = selected_image.get("alt", "Bonnas food image")
+                latest_post["image_source"] = "local"
+                print(f"✅ Image resolved (local): {selected_image['path']}")
             else:
-                print("⚠️  Could not resolve image from get_image()")
-                # Provide a fallback
-                latest_post["image_url"] = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=1200"
-                latest_post["image_alt"] = "Bangladeshi Food"
-                latest_post["image_source"] = "fallback"
-                print("   Using fallback image")
-        
-        except ImportError as e:
-            print(f"⚠️  Could not import get_image: {e}")
-            print("   Using fallback image")
-            latest_post["image_url"] = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=1200"
-            latest_post["image_alt"] = "Bangladeshi Food"
-            latest_post["image_source"] = "fallback"
-        
-        except Exception as e:
-            print(f"⚠️  Error resolving image: {e}")
-            print("   Using fallback image")
-            latest_post["image_url"] = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=1200"
-            latest_post["image_alt"] = "Bangladeshi Food"
-            latest_post["image_source"] = "fallback"
+                print("⚠️  No local images found in images.json")
+        else:
+            print(f"⚠️  images.json not found at {images_path}")
     
     # Save enriched data
     with open("latest_blog.json", "w") as f:
