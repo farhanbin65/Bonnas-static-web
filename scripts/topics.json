@@ -1063,7 +1063,8 @@
         "bangladeshi sweet rice"
       ],
       "season": "all",
-      "used": false
+      "used": true,
+      "used_year": 2026
     },
     {
       "title": "Nawabi Shemai — The Festive Vermicelli Dessert",
