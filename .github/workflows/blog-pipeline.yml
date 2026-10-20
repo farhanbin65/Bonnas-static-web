@@ -93,45 +93,37 @@ jobs:
           echo "Manifest found: $MANIFEST"
           echo "manifest_path=$MANIFEST" >> "$GITHUB_OUTPUT"
 
-      # 8. Debug Instagram token
-      - name: Debug Instagram token
-        run: |
-          echo "Token length: ${#INSTAGRAM_ACCESS_TOKEN}"
-          echo "Token first 20 chars: ${INSTAGRAM_ACCESS_TOKEN:0:20}"
-          echo "IG Account ID: $INSTAGRAM_BUSINESS_ACCOUNT_ID"
-          curl -s "https://graph.facebook.com/v25.0/$INSTAGRAM_BUSINESS_ACCOUNT_ID?access_token=$INSTAGRAM_ACCESS_TOKEN" | jq '.'
-        env:
-          INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
-          INSTAGRAM_BUSINESS_ACCOUNT_ID: ${{ secrets.INSTAGRAM_BUSINESS_ACCOUNT_ID }}
-
-      # 9. Publish to Facebook
+      # 8. Publish to Facebook
       - name: Upload to Facebook
         id: facebook_upload
         continue-on-error: true
+        run: |
+          echo "Publishing to Facebook..."
+          FACEBOOK_PAGE_ID="${{ secrets.FACEBOOK_PAGE_ID }}" \
+          FACEBOOK_ACCESS_TOKEN="${{ secrets.FACEBOOK_ACCESS_TOKEN }}" \
+          python scripts/social-blogs/publish/facebook_uploader.py \
+            --manifest "${{ steps.find_manifest.outputs.manifest_path }}"
         env:
           FACEBOOK_PAGE_ID: ${{ secrets.FACEBOOK_PAGE_ID }}
           FACEBOOK_ACCESS_TOKEN: ${{ secrets.FACEBOOK_ACCESS_TOKEN }}
-          MANIFEST_PATH: ${{ steps.find_manifest.outputs.manifest_path }}
-        run: |
-          echo "Publishing to Facebook..."
-          python scripts/social-blogs/publish/facebook_uploader.py \
-            --manifest "$MANIFEST_PATH"
 
-      # 10. Publish to Instagram
+      # 9. Publish to Instagram
       - name: Upload to Instagram
         id: instagram_upload
         continue-on-error: true
+        run: |
+          echo "Publishing to Instagram..."
+          INSTAGRAM_BUSINESS_ACCOUNT_ID="${{ secrets.INSTAGRAM_BUSINESS_ACCOUNT_ID }}" \
+          INSTAGRAM_ACCESS_TOKEN="${{ secrets.INSTAGRAM_ACCESS_TOKEN }}" \
+          SANITY_WRITE_TOKEN="${{ secrets.SANITY_WRITE_TOKEN }}" \
+          python scripts/social-blogs/publish/instagram_uploader.py \
+            --manifest "${{ steps.find_manifest.outputs.manifest_path }}"
         env:
           INSTAGRAM_BUSINESS_ACCOUNT_ID: ${{ secrets.INSTAGRAM_BUSINESS_ACCOUNT_ID }}
           INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
           SANITY_WRITE_TOKEN: ${{ secrets.SANITY_WRITE_TOKEN }}
-          MANIFEST_PATH: ${{ steps.find_manifest.outputs.manifest_path }}
-        run: |
-          echo "Publishing to Instagram..."
-          python scripts/social-blogs/publish/instagram_uploader.py \
-            --manifest "$MANIFEST_PATH"
 
-      # 11. Save generated assets
+      # 10. Save generated assets
       - name: Upload social media assets to GitHub
         if: always()
         uses: actions/upload-artifact@v4
@@ -141,7 +133,7 @@ jobs:
           retention-days: 30
           if-no-files-found: warn
 
-      # 12. Verify results
+      # 11. Verify results
       - name: Verify social publishing results
         if: always() && steps.find_manifest.outcome == 'success'
         env:
