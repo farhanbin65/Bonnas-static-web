@@ -81,21 +81,24 @@ def main():
         "post_id": blog_data.get("slug"),
         "title": blog_data.get("title"),
         "excerpt": blog_data.get("excerpt"),
-        "photos": {size_key: str(Path(path).name) for size_key, path in cards.items()},
+        "photos": {
+            "facebook": str(output_dir / "facebook.jpg"),
+            "instagram_square": str(output_dir / "instagram_square.jpg"),
+        },
         "facebook": {
-            "caption": blog_data.get("facebook_caption", blog_data.get("excerpt", "")),
-            "link": f"https://www.bonnas.co.uk/blog/{blog_data.get('slug')}"
+            "caption_standard": blog_data.get("excerpt", ""),
+            "caption_extended": f"{blog_data.get('excerpt', '')}\n\n🔗 https://www.bonnas.co.uk/blog/{blog_data.get('slug')}",
         },
         "instagram": {
-            "caption": blog_data.get("instagram_caption", blog_data.get("excerpt", "")),
-            "hashtags": blog_data.get("hashtags", [])
+            "caption_main": f"{blog_data.get('excerpt', '')}\n\n#BonnasFood #BangladeshiCuisine #AuthenticFood",
+            "hashtags": ["#BonnasFood", "#BangladeshiCuisine", "#AuthenticFood"]
         }
     }
-    
+
     manifest_path = output_dir / "manifest.json"
     with open(manifest_path, "w") as f:
         json.dump(manifest, f, indent=2)
-    
+
     print(f"\n✅ Manifest created: {manifest_path.name}")
     print(f"✨ Pipeline complete! Output: {output_dir.absolute()}")
 
