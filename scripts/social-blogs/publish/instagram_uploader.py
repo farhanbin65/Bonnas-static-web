@@ -36,7 +36,10 @@ def upload_to_instagram(manifest_path):
     image = manifest.get("photos", {}).get("instagram_square")
     caption = manifest.get("instagram", {}).get("caption_main")
     if not (image and caption and os.path.exists(image)):
-        print("❌ Manifest has no Instagram card or caption")
+        print(f"❌ Manifest has no Instagram card or caption")
+        print(f"   Image file: {image}")
+        print(f"   Image exists: {os.path.exists(image) if image else False}")
+        print(f"   Caption length: {len(caption) if caption else 0}")
         return None
 
     image_url = host_image(image, sanity_token)
