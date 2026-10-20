@@ -1,11 +1,15 @@
 import json
 import os
+import sys
 from pathlib import Path
+
+# Add scripts directory to path
+sys.path.insert(0, str(Path(__file__).parent))
 
 def extract_latest_blog():
     """
     Extract the most recently published blog from post_index.json.
-    This was just created by generate_blog.py.
+    Enriches it with image data by calling get_image() from generate_blog.
     """
     index_path = Path("scripts/post_index.json")
     
@@ -27,7 +31,21 @@ def extract_latest_blog():
     print(f"✅ Extracted latest blog: {latest_post['title']}")
     print(f"   Slug: {latest_post['slug']}")
     
-    # Save for next step
+    # Step 2: Resolve image if not already present
+    if not latest_post.get("image_url"):
+        print("📸 Resolving image for blog post...")
+        from generate_blog import get_image
+        
+        image_data = get_image(latest_post, "blog")
+        if image_data:
+            latest_post["image_url"] = image_data["url"]
+            latest_post["image_alt"] = image_data["alt"]
+            latest_post["image_source"] = image_data["source"]
+            print(f"✅ Image resolved ({image_data['source']}): {image_data['url']}")
+        else:
+            print("⚠️  Could not resolve image - social cards may fail")
+    
+    # Save enriched data for next step
     with open("latest_blog.json", "w") as f:
         json.dump(latest_post, f, indent=2)
     
