@@ -9,39 +9,15 @@ class InstagramCaptionGenerator:
         self.excerpt = blog_data.get("excerpt", "")
 
     def generate_caption_main(self):
-        """Main feed caption with link-in-bio CTA."""
-        caption = f"{self.title}\n\n{self.excerpt}\n\n"
-        caption += "🔗 Link in bio for full recipe!\n\n"
+        """Generate caption from blog excerpt + hashtags."""
+        excerpt = self.blog_data.get("excerpt", "")
         
-        hashtags = " ".join([
-            "#BonnasKitchen",
-            "#TraditionalBiryani",
-            "#AuthenticCuisine",
-            "#BethinalGreen",
-            "#LondonFood",
-            "#HomeCooked",
-            "#RecipeOfTheDay",
-            "#FoodBlogger",
-            "#EasyRecipes",
-            "#FamilyRecipes",
-            "#CozyFood",
-            "#FoodPhotography",
-            "#InstafoodDaily",
-            "#YumRecipes",
-            "#HealthyEating",
-            "#ComfortFood",
-            "#FoodCulture",
-            "#TraditionalFood",
-            "#CookingAtHome",
-            "#FoodLovers",
-            "#BiryaniBest",
-            "#AuthenticFlavors",
-            "#KitchenStories",
-            "#FoodIsLife",
-            "#ShareYourMeal",
-        ])
+        caption = f"{excerpt}\n\n"
+        caption += "🔗 Link in bio to read the full recipe & pre-order fresh!\n\n"
+        caption += "#BonnasFood #BangladeshiCuisine #AuthenticFood #BethnalGreen\n"
+        caption += "@bonnas_cuisine"
         
-        return caption + hashtags
+        return caption
 
     def generate_caption_story(self):
         """Story caption with brand narrative."""
@@ -49,9 +25,13 @@ class InstagramCaptionGenerator:
 
 
 def generate_instagram_caption(blog_data):
-    """Standalone function."""
-    gen = InstagramCaptionGenerator(blog_data)
+    """Generate Instagram captions (called by orchestrator)."""
+    generator = InstagramCaptionGenerator(blog_data)
+    
     return {
-        "caption_main": gen.generate_caption_main(),
-        "caption_story": gen.generate_caption_story(),
+        "caption": generator.generate_caption_main(),
+        "caption_story": generator.generate_caption_story(),
+        "hashtags": "#BonnasFood #BangladeshiCuisine #AuthenticFood #BethnalGreen",
+        "cta": "🔗 Link in bio to read the full recipe & pre-order fresh!",
+        "emoji": "🍲",
     }
