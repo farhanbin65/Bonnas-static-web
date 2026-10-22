@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { useEffect } from "react";
+import { Analytics } from "@vercel/analytics/react";
 import { CartProvider } from "./context/CartContext";
 import Navbar from "./components/navbar";
 import Toast from "./components/Toast";
@@ -40,6 +41,7 @@ export default function App() {
           <Route path="/invoice" element={<Invoice />} />
         </Routes>
         <Footer />
+        <Analytics />
       </BrowserRouter>
     </CartProvider>
   );
