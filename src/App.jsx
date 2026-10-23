@@ -8,7 +8,7 @@ import Home from "./components/Home";
 import Menu from "./components/menu";
 import Blog from "./components/Blog";
 import BlogPost from "./components/BlogPost";
-import Invoice from "./components/Invoice";
+import Invoice from "./components/invoice/Invoice";
 import Footer from "./components/footer";
 import OrderingFlowchart from "./components/OrderingFlowchart"; // Import it
 
