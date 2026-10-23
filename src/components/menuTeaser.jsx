@@ -144,7 +144,7 @@ export default function OrderingFlowchart() {
           transition={{ duration: 0.6, delay: 0.5 }}
         >
           <p className="text-sand text-sm mb-4">
-            Ready to order? Minimum order <span className="text-pink-bonnas font-bold">£20</span>
+            Ready to order? Message us on <span className="text-pink-bonnas font-bold">WhatsApp</span>
           </p>
           <a
             href={`https://wa.me/447912795556?text=Hello,%20I'd%20like%20to%20order%20from%20Bonna's`}
