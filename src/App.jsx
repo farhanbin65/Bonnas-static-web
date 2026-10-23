@@ -9,8 +9,14 @@ import Menu from "./components/menu";
 import Blog from "./components/Blog";
 import BlogPost from "./components/BlogPost";
 import Invoice from "./components/invoice/Invoice";
+import BusinessSheet from "./components/records/BusinessSheet";
 import Footer from "./components/footer";
 import OrderingFlowchart from "./components/OrderingFlowchart"; // Import it
+
+function SiteChrome({ children }) {
+  const { pathname } = useLocation();
+  return pathname === "/records" ? null : children;
+}
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -23,8 +29,7 @@ export default function App() {
     <CartProvider>
       <BrowserRouter>
         <ScrollToTop />
-        <Navbar />
-        <Toast />
+        <SiteChrome><Navbar /><Toast /></SiteChrome>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route 
@@ -39,8 +44,9 @@ export default function App() {
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:slug" element={<BlogPost />} />
           <Route path="/invoice" element={<Invoice />} />
+          <Route path="/records" element={<BusinessSheet />} />
         </Routes>
-        <Footer />
+        <SiteChrome><Footer /></SiteChrome>
         <Analytics />
       </BrowserRouter>
     </CartProvider>

@@ -25,3 +25,7 @@ dist-ssr
 .env
 .venv/
 .env
+
+# Environment-specific configuration
+.env.*
+!.env.example

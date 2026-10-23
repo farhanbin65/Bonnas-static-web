@@ -12,13 +12,15 @@ function download(blob, filename) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 export function invoiceCsv(invoices) {
-  const headers = ['Invoice #', 'Type', 'Date', 'Customer', 'Phone', 'Email', 'Items Count', 'Subtotal', 'Discount', 'Order Total', 'Deposit Required', 'Amount Paid', 'Total Due', 'Customer Credit', 'Notes'];
+  const headers = ['Invoice #', 'Type', 'Date', 'Customer', 'Phone', 'Email', 'Items Count', 'Subtotal', 'Discount', 'Order Total', 'Deposit Required', 'Amount Paid', 'Total Due', 'Customer Credit', 'Order Status', 'Found Through', 'Ordered Through', 'Collection Date', 'Collection Time', 'Notes'];
   const rows = Object.values(invoices).map((invoice) => {
     const totals = calculateInvoice(invoice);
     return [invoice.invoiceNumber, invoice.docType, invoice.invoiceDate, invoice.customerName,
       invoice.customerPhone, invoice.customerEmail, invoice.items.length,
       ...[totals.subtotal, totals.discountAmount, totals.orderTotal, totals.finalDepositAmount,
-        totals.finalAmountPaid, totals.outstandingBalance, totals.credit].map((value) => value.toFixed(2)), invoice.notes];
+        totals.finalAmountPaid, totals.outstandingBalance, totals.credit].map((value) => value.toFixed(2)),
+      invoice.orderStatus || 'confirmed', invoice.foundThrough || 'unknown', invoice.orderedThrough || 'unknown',
+      invoice.collectionDate || '', invoice.collectionTime || '', invoice.notes];
   });
   // Quoting alone does not prevent spreadsheet formula execution.
   const escape = (value) => {

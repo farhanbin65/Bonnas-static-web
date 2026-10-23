@@ -34,6 +34,7 @@ const styles = {
   },
   tabs: {
     display: 'flex',
+    flexWrap: 'wrap',
     gap: '8px',
     marginBottom: '20px',
     borderBottom: '2px solid #EFEBE9',

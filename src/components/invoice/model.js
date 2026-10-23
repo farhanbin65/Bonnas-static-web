@@ -15,6 +15,8 @@ export function newInvoice(existing = {}) {
     docType: 'invoice', invoiceNumber: documentNumber('invoice', existing), invoiceDate: today(),
     customerName: '', customerPhone: '', customerEmail: '', customerAddress: '',
     eventAddress: '', eventDate: '', guestCount: '', notes: '',
+    orderStatus: 'confirmed', foundThrough: 'unknown', orderedThrough: 'unknown',
+    collectionDate: '', collectionTime: '', internalNotes: '', paymentLedgerManaged: false,
     items: [{ id: crypto.randomUUID(), description: '', qty: '1', unitPrice: '0' }],
     discount: '', useDiscount: false, depositAmount: '', useDeposit: false,
     amountPaid: '', useAmountPaid: false,
@@ -42,6 +44,7 @@ export function validateInvoice(form, totals) {
 export function duplicateInvoice(saved, existing = {}) {
   return {
     ...normalizeInvoice(saved), invoiceNumber: documentNumber(saved.docType, existing),
-    invoiceDate: today(), amountPaid: '', useAmountPaid: false,
+    invoiceDate: today(), amountPaid: '', useAmountPaid: false, paymentLedgerManaged: false,
+    orderStatus: 'confirmed', collectionDate: '', collectionTime: '', internalNotes: '',
   };
 }

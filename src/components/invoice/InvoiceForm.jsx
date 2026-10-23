@@ -172,39 +172,16 @@ export default function InvoiceForm({ form, onChange, totals, isExporting, handl
 
     <div style={styles.row}>
       <div style={styles.fullWidth}>
-        <label
-          style={{
-            ...styles.label,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            cursor: 'pointer',
-          }}
-        >
-          <input
-            type="checkbox"
-            checked={useAmountPaid}
-            onChange={(e) => onChange('useAmountPaid', e.target.checked)}
-          />
+        <label style={{ ...styles.label, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <input type="checkbox" checked={useAmountPaid} onChange={(event) => onChange('useAmountPaid', event.target.checked)} />
           Amount Paid (including any deposit received)
         </label>
-
-        <input
-          type="text"
-          inputMode="decimal"
-          value={amountPaid}
-          disabled={!useAmountPaid}
-          onChange={(e) => onChange('amountPaid', e.target.value)}
-          placeholder="Amount paid by customer"
-          style={{
-            ...styles.input,
-            ...(useAmountPaid ? {} : { opacity: 0.5 }),
-          }}
-        />
+        <input type="text" inputMode="decimal" value={amountPaid} disabled={!useAmountPaid}
+          onChange={(event) => onChange('amountPaid', event.target.value)} placeholder="Amount paid by customer" style={styles.input} />
       </div>
     </div>
 
-    <div style={styles.sectionTitle}>Notes</div>
+    <div style={styles.sectionTitle}>Notes shown on invoice</div>
     <textarea
       value={notes}
       onChange={(e) => onChange('notes', e.target.value)}
