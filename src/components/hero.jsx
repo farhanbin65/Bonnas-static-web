@@ -1,14 +1,8 @@
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion as Motion, AnimatePresence } from "framer-motion";
 import { X, Download } from "lucide-react";
 import { staggerContainer, staggerItem } from "../lib/motion";
-
-const images = [
-  "/photos/cover1.jpeg",
-  "/photos/cover2.jpeg",
-  "/photos/cover3.jpeg",
-  "/photos/cover4.jpeg",
-];
+import HeroImageWall from "./HeroImageWall";
 
 const menuPreviews = [
   "/photos/menu1.jpg",
@@ -17,21 +11,12 @@ const menuPreviews = [
 ];
 
 export default function Hero() {
-  const [current, setCurrent] = useState(0);
 
   // Menu image preview
   const [selectedMenu, setSelectedMenu] = useState(null);
 
   // PDF preview
   const [showPdfPreview, setShowPdfPreview] = useState(false);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrent((prev) => (prev + 1) % images.length);
-    }, 4000);
-
-    return () => clearInterval(interval);
-  }, []);
 
   // Close modals with Escape key
   useEffect(() => {
@@ -76,22 +61,22 @@ export default function Hero() {
             {/* ======================================================
                 MENU PANEL
             ======================================================= */}
-            <motion.aside
+            <Motion.aside
               className="w-full lg:w-[42%] flex flex-col justify-center px-5 sm:px-8 md:px-10 lg:px-12 xl:px-14 py-10 sm:py-12 lg:py-14"
               variants={staggerContainer}
               initial="hidden"
               animate="visible"
             >
               {/* Label */}
-              <motion.span
+              <Motion.span
                 variants={staggerItem}
                 className="inline-block self-start bg-pink-bonnas/20 border border-pink-bonnas/40 text-pink-bonnas text-xs font-semibold tracking-widest uppercase px-4 py-1.5 rounded-full"
               >
                 Our Menu
-              </motion.span>
+              </Motion.span>
 
               {/* Heading */}
-              <motion.h2
+              <Motion.h2
                 variants={staggerItem}
                 className="mt-5 text-3xl sm:text-4xl lg:text-[2.7rem] xl:text-5xl font-bold text-cream leading-[1.1]"
               >
@@ -100,21 +85,21 @@ export default function Hero() {
                   Bangladeshi
                 </span>{" "}
                 Flavours
-              </motion.h2>
+              </Motion.h2>
 
               {/* Description */}
-              <motion.p
+              <Motion.p
                 variants={staggerItem}
                 className="mt-4 text-sand text-sm sm:text-base leading-relaxed max-w-lg"
               >
                 Home-made catering prepared with love, from biryani to
                 desserts, for every occasion.
-              </motion.p>
+              </Motion.p>
 
               {/* ======================================================
                   THREE MENU PREVIEW IMAGES
               ======================================================= */}
-              <motion.div
+              <Motion.div
                 variants={staggerItem}
                 className="mt-7 sm:mt-8 grid grid-cols-3 gap-2.5 sm:gap-3"
               >
@@ -140,20 +125,20 @@ export default function Hero() {
                     </div>
                   </button>
                 ))}
-              </motion.div>
+              </Motion.div>
 
               {/* Small helper text */}
-              <motion.p
+              <Motion.p
                 variants={staggerItem}
                 className="mt-3 text-sand/70 text-xs"
               >
                 Tap or click a menu to view it larger.
-              </motion.p>
+              </Motion.p>
 
               {/* ======================================================
                   ACTION BUTTONS
               ======================================================= */}
-              <motion.div
+              <Motion.div
                 variants={staggerItem}
                 className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4"
               >
@@ -174,25 +159,15 @@ export default function Hero() {
                 >
                    Menu
                 </button>
-              </motion.div>
-            </motion.aside>
+              </Motion.div>
+            </Motion.aside>
 
             {/* ======================================================
-                FOOD CAROUSEL
+                THREE-ROW FOOD IMAGE WALL
             ======================================================= */}
             <div className="relative w-full lg:w-[58%] h-[55vh] min-h-[400px] lg:h-[650px] xl:h-[700px] overflow-hidden">
 
-              {/* Carousel Images */}
-              {images.map((img, i) => (
-                <img
-                  key={i}
-                  src={img}
-                  alt="Bonna's food"
-                  className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
-                    i === current ? "opacity-100" : "opacity-0"
-                  }`}
-                />
-              ))}
+              <HeroImageWall />
 
               {/* Dark Overlay */}
               <div className="absolute inset-0 bg-black/50" />
@@ -214,21 +189,6 @@ export default function Hero() {
                 </p>
               </div>
 
-              {/* Carousel Indicators */}
-              <div className="absolute bottom-7 sm:bottom-9 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
-                {images.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setCurrent(i)}
-                    aria-label={`Show image ${i + 1}`}
-                    className={`rounded-full transition-all duration-300 ${
-                      i === current
-                        ? "bg-pink-bonnas w-6 h-2"
-                        : "bg-white/30 w-2 h-2 hover:bg-white/60"
-                    }`}
-                  />
-                ))}
-              </div>
             </div>
           </div>
         </div>
@@ -239,14 +199,14 @@ export default function Hero() {
       =========================================================== */}
       <AnimatePresence>
         {selectedMenu !== null && (
-          <motion.div
+          <Motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6"
             onClick={() => setSelectedMenu(null)}
           >
-            <motion.div
+            <Motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
@@ -270,8 +230,8 @@ export default function Hero() {
                 alt={`Menu ${selectedMenu + 1}`}
                 className="max-w-full max-h-[90vh] object-contain rounded-xl shadow-2xl"
               />
-            </motion.div>
-          </motion.div>
+            </Motion.div>
+          </Motion.div>
         )}
       </AnimatePresence>
 
@@ -280,14 +240,14 @@ export default function Hero() {
       =========================================================== */}
       <AnimatePresence>
         {showPdfPreview && (
-          <motion.div
+          <Motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6"
             onClick={() => setShowPdfPreview(false)}
           >
-            <motion.div
+            <Motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
@@ -337,8 +297,8 @@ export default function Hero() {
                   className="w-full h-full rounded-lg bg-white"
                 />
               </div>
-            </motion.div>
-          </motion.div>
+            </Motion.div>
+          </Motion.div>
         )}
       </AnimatePresence>
     </>

@@ -378,8 +378,10 @@ def get_image(topic, content_type):
 
     if best_image:
         print(f"Local image matched (score {best_score}): {best_image['path']}")
-        return {"url": f"https://www.bonnas.co.uk{best_image['path']}",
-                "alt": best_image["alt"], "source": "local"}
+        image_path = best_image["path"]
+        image_url = image_path if image_path.startswith("https://") else f"https://www.bonnas.co.uk{image_path}"
+        return {"url": image_url,
+                "alt": best_image["alt"], "source": "sanity" if best_image.get("sanity_id") else "local"}
 
     search_query = topic_keywords[0] if topic_keywords else "bangladeshi food"
     if UNSPLASH_ACCESS_KEY:

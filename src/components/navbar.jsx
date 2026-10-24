@@ -7,7 +7,7 @@ const NAV_ITEMS = [
   { label: "Services",     href: "/#services",     route: false },
   { label: "Menu",         href: "/menu",           route: true  },
   { label: "Blog",         href: "/blog",           route: true  },
-  { label: "Gallery",      href: "/#gallery",      route: false },
+  { label: "Gallery",      href: "/gallery",       route: true },
   { label: "Reservations", href: "/#reservations", route: false },
   { label: "Games",        href: "/#interactive",  route: false },
 ];

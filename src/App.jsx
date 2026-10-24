@@ -5,6 +5,7 @@ import { CartProvider } from "./context/CartContext";
 import Navbar from "./components/navbar";
 import Toast from "./components/Toast";
 import Home from "./components/Home";
+import Gallery from "./components/gallery";
 import Menu from "./components/menu";
 import Blog from "./components/Blog";
 import BlogPost from "./components/BlogPost";
@@ -41,6 +42,7 @@ export default function App() {
               </>
             } 
           />
+          <Route path="/gallery" element={<Gallery />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:slug" element={<BlogPost />} />
           <Route path="/invoice" element={<Invoice />} />

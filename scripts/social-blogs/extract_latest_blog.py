@@ -41,7 +41,8 @@ def extract_latest_blog():
             if local_images:
                 # Pick random image from local_images
                 selected_image = random.choice(local_images)
-                image_url = f"https://www.bonnas.co.uk{selected_image['path']}"
+                image_path = selected_image["path"]
+                image_url = image_path if image_path.startswith("https://") else f"https://www.bonnas.co.uk{image_path}"
                 latest_post["image_url"] = image_url
                 latest_post["image_alt"] = selected_image.get("alt", "Bonnas food image")
                 latest_post["image_source"] = "local"

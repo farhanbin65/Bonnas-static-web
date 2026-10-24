@@ -11,7 +11,7 @@ const SOCIALS = [
 const LINKS = [
   { label: "About",        href: "/#about" },
   { label: "Services",     href: "/#services" },
-  { label: "Gallery",      href: "/#gallery" },
+  { label: "Gallery",      href: "/gallery" },
   { label: "Reservations", href: "/#reservations" },
   { label: "Contact",      href: "/#contact" },
 ];
