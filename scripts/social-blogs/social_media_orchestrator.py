@@ -5,7 +5,7 @@ from pathlib import Path
 from datetime import datetime
 from typing import Dict, List, Optional
 
-from photo_card_generator import generate_blog_cards
+from original_photos import select_original_photo
 from facebook.facebook_post_generator import generate_facebook_caption
 from instagram.instagram_post_generator import generate_instagram_caption
 
@@ -13,7 +13,7 @@ from instagram.instagram_post_generator import generate_instagram_caption
 class SocialMediaOrchestrator:
     """
     Main orchestrator for automating blog-to-social-media publishing.
-    Generates photo cards + captions for Facebook & Instagram.
+    Selects unchanged original photos + generates captions for Facebook & Instagram.
     """
     
     def __init__(self, blog_data: Dict, output_dir: Optional[str] = None):
@@ -33,7 +33,7 @@ class SocialMediaOrchestrator:
     
     def _validate_blog_data(self) -> bool:
         """Validate required fields in blog data."""
-        required = ["title", "excerpt", "featured_image_url", "keywords", "slug"]
+        required = ["title", "excerpt", "keywords", "slug"]
         missing = [f for f in required if f not in self.blog_data]
         
         if missing:
@@ -42,26 +42,11 @@ class SocialMediaOrchestrator:
         return True
     
     def _generate_photos(self) -> Dict[str, str]:
-        """Generate all photo card sizes."""
-        print("\n📸 Generating photo cards...")
-        
-        try:
-            cards = generate_blog_cards(
-                blog_title=self.blog_data["title"],
-                featured_image_url=self.blog_data["featured_image_url"],
-                output_base=os.path.join(self.output_dir, self.post_id, "cards")
-            )
-            
-            if cards:
-                print(f"✅ Generated {len(cards)} photo cards")
-                return cards
-            else:
-                print("⚠️  No photo cards generated (image fetch failed)")
-                return {}
-        except Exception as e:
-            print(f"❌ Photo generation failed: {e}")
-            return {}
-    
+        """Use one original library photo on both platforms without editing it."""
+        photos = select_original_photo(self.blog_data)
+        print(f"\n📸 Using original photo: {photos['facebook']}")
+        return photos
+
     def _generate_facebook_post(self) -> Dict:
         """Generate Facebook caption and metadata."""
         print("\n📱 Generating Facebook post...")
@@ -71,12 +56,12 @@ class SocialMediaOrchestrator:
             
             facebook_post = {
                 "platform": "facebook",
-                "caption_standard": caption_data["standard"],
-                "caption_extended": caption_data["extended"],
-                "hashtags": caption_data["hashtags"],
-                "blog_url": caption_data["blog_url"],
-                "cta": caption_data["cta"],
-                "image_size": "facebook",  # 1200×1200
+                "caption_standard": caption_data["caption_standard"],
+                "caption_extended": caption_data["caption_extended"],
+                "hashtags": caption_data.get("hashtags", []),
+                "blog_url": f"https://www.bonnas.co.uk/blog/{self.blog_data['slug']}",
+                "cta": caption_data.get("cta", "Read the full blog"),
+                "image_size": "original",
             }
             
             print(f"✅ Facebook post generated")
@@ -99,7 +84,7 @@ class SocialMediaOrchestrator:
                 "hashtags": caption_data["hashtags"],
                 "cta": caption_data["cta"],
                 "emoji": caption_data["emoji"],
-                "image_size": "instagram_square",  # 1080×1080
+                "image_size": "original",
             }
             
             print(f"✅ Instagram post generated")
@@ -152,6 +137,9 @@ class SocialMediaOrchestrator:
         fb_post = self._generate_facebook_post()
         ig_post = self._generate_instagram_post()
         
+        if not fb_post or not ig_post:
+            return None
+
         # Save manifest
         manifest_path = self._save_post_manifest(photos, fb_post, ig_post)
         

@@ -1,106 +1,32 @@
-"""Main orchestrator for generating and posting social content."""
-import json
-import sys
+"""Prepare captions and original-photo URLs; publishing runs in separate steps."""
 import argparse
+import json
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent))
-
 from extract_latest_blog import extract_latest_blog
-from photo_card_generator import generate_blog_cards
 from social_media_orchestrator import orchestrate_blog_post
 
 
 def main():
-    """Main flow: extract blog → generate cards → post to socials."""
-    
-    # Parse command-line arguments (from workflow)
-    parser = argparse.ArgumentParser(description="Generate social media content")
-    parser.add_argument("--blog-data", default="latest_blog.json", help="Path to blog data JSON")
-    parser.add_argument("--output-dir", default="output/social_posts", help="Output directory for social posts")
+    parser = argparse.ArgumentParser(description="Prepare social posts using unchanged photos")
+    parser.add_argument("--blog-data", default="latest_blog.json")
+    parser.add_argument("--output-dir", default="output/social_posts")
     args = parser.parse_args()
-    
-    # Set output directory (absolute path from project root)
-    project_root = Path(__file__).parent.parent.parent
-    output_dir = project_root / args.output_dir
-    output_dir.mkdir(parents=True, exist_ok=True)
-    print(f"📁 Output directory ready: {output_dir.absolute()}")
-    
-    # Step 1: Always call extract_latest_blog() to enrich with image
-    print("📝 Enriching blog post with image data...")
-    blog_data = extract_latest_blog()
-    
+    project_root = Path(__file__).resolve().parents[2]
+    blog_path = project_root / args.blog_data
+    if blog_path.exists():
+        with open(blog_path, encoding="utf-8") as file:
+            blog_data = json.load(file)
+    else:
+        blog_data = extract_latest_blog()
     if not blog_data:
-        print("❌ No blog post found.")
-        sys.exit(1)
-    
-    # Step 2: Verify image exists
-    image_url = blog_data.get("image_url")
-    if not image_url:
-        print("❌ Blog has no image_url after enrichment. Exiting.")
-        sys.exit(1)
-    
-    print(f"✅ Image URL ready: {image_url[:80]}...")
-    
-    # Step 3: Generate photo cards
-    print("🎨 Generating photo cards...")
-    try:
-        cards = generate_blog_cards(
-            blog_title=blog_data.get("title", "Bonnas Blog"),
-            featured_image_url=image_url,
-            output_base=str(output_dir)
-        )
-        print(f"✅ Cards generated: {list(cards.keys())}")
-        
-        # Verify cards actually exist
-        for size_key, card_path in cards.items():
-            card_path_obj = Path(card_path)
-            if card_path_obj.exists():
-                print(f"   ✓ {size_key}: {card_path_obj.name}")
-            else:
-                print(f"   ✗ {size_key}: NOT FOUND")
-    
-    except Exception as e:
-        print(f"❌ Card generation failed: {e}")
-        import traceback
-        traceback.print_exc()
-        sys.exit(1)
-    
-    # Step 4: Post to social media (orchestrator)
-    print("📱 Orchestrating social media content...")
-    try:
-        orchestrate_blog_post(blog_data, cards)
-        print("✅ Social media orchestration complete!")
-    except Exception as e:
-        print(f"⚠️  Social orchestration failed: {e}")
-        import traceback
-        traceback.print_exc()
-    
-    # Step 5: Create manifest.json (required by workflow)
-    manifest = {
-        "post_id": blog_data.get("slug"),
-        "title": blog_data.get("title"),
-        "excerpt": blog_data.get("excerpt"),
-        "photos": {
-            "facebook": str(output_dir / "facebook.jpg"),
-            "instagram_square": str(output_dir / "instagram_square.jpg"),
-        },
-        "facebook": {
-            "caption_standard": blog_data.get("excerpt", ""),
-            "caption_extended": f"{blog_data.get('excerpt', '')}\n\n🔗 https://www.bonnas.co.uk/blog/{blog_data.get('slug')}",
-        },
-        "instagram": {
-            "caption_main": f"{blog_data.get('excerpt', '')}\n\n#BonnasFood #BangladeshiCuisine #AuthenticFood",
-            "hashtags": ["#BonnasFood", "#BangladeshiCuisine", "#AuthenticFood"]
-        }
-    }
-
-    manifest_path = output_dir / "manifest.json"
-    with open(manifest_path, "w") as f:
-        json.dump(manifest, f, indent=2)
-
-    print(f"\n✅ Manifest created: {manifest_path.name}")
-    print(f"✨ Pipeline complete! Output: {output_dir.absolute()}")
+        raise SystemExit("No blog post available")
+    blog_data.setdefault("excerpt", "")
+    blog_data.setdefault("keywords", [])
+    result = orchestrate_blog_post(blog_data, str(project_root / args.output_dir))
+    if not result or not result["facebook"] or not result["instagram"]:
+        raise SystemExit("Social content preparation failed")
+    print(f"Manifest ready: {result['manifest_path']}")
 
 
 if __name__ == "__main__":

@@ -31,22 +31,28 @@ def upload_to_instagram(manifest_path):
     ig_id = os.getenv("INSTAGRAM_BUSINESS_ACCOUNT_ID")
     token = os.getenv("INSTAGRAM_ACCESS_TOKEN")
     sanity_token = os.getenv("SANITY_WRITE_TOKEN")
-    if not (ig_id and token and sanity_token):
-        print("❌ Missing INSTAGRAM_BUSINESS_ACCOUNT_ID, INSTAGRAM_ACCESS_TOKEN or SANITY_WRITE_TOKEN")
+    if not (ig_id and token):
+        print("❌ Missing INSTAGRAM_BUSINESS_ACCOUNT_ID or INSTAGRAM_ACCESS_TOKEN")
         return None
 
     with open(manifest_path) as f:
         manifest = json.load(f)
     image = manifest.get("photos", {}).get("instagram_square")
     caption = manifest.get("instagram", {}).get("caption_main")
-    if not (image and caption and os.path.exists(image)):
-        print(f"❌ Manifest has no Instagram card or caption")
+    if not (image and caption and (image.startswith("https://") or os.path.exists(image))):
+        print(f"❌ Manifest has no Instagram photo or caption")
         print(f"   Image file: {image}")
         print(f"   Image exists: {os.path.exists(image) if image else False}")
         print(f"   Caption length: {len(caption) if caption else 0}")
         return None
 
-    image_url = host_image(image, sanity_token)
+    if image.startswith("https://"):
+        image_url = image
+    else:
+        if not sanity_token:
+            print("❌ SANITY_WRITE_TOKEN is required only for local image uploads")
+            return None
+        image_url = host_image(image, sanity_token)
     r = requests.post(
         f"{GRAPH}/{ig_id}/media",
         data={"image_url": image_url, "caption": caption, "access_token": token},

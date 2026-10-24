@@ -57,7 +57,7 @@ jobs:
             echo "No index changes to commit."
           fi
 
-      # 6. Generate social media content (photo cards + captions)
+      # 6. Prepare social media content (original photos + captions)
       - name: Generate social media content
         id: social_gen
         env:

@@ -21,18 +21,25 @@ def upload_to_facebook(manifest_path):
     image = manifest.get("photos", {}).get("facebook")
     fb = manifest.get("facebook", {})
     caption = fb.get("caption_extended") or fb.get("caption_standard")
-    if not (image and caption and os.path.exists(image)):
-        print("❌ Manifest has no Facebook card or caption")
+    if not (image and caption and (image.startswith("https://") or os.path.exists(image))):
+        print("❌ Manifest has no Facebook photo or caption")
         return None
 
     # One call posts photo + caption together; needs a Page token, not a user token
-    with open(image, "rb") as f:
+    if image.startswith("https://"):
         r = requests.post(
             f"{GRAPH}/{page_id}/photos",
-            data={"caption": caption, "access_token": token},
-            files={"source": f},
+            data={"url": image, "caption": caption, "access_token": token},
             timeout=60,
         )
+    else:
+        with open(image, "rb") as f:
+            r = requests.post(
+                f"{GRAPH}/{page_id}/photos",
+                data={"caption": caption, "access_token": token},
+                files={"source": f},
+                timeout=60,
+            )
     if not r.ok:
         print(f"❌ Facebook post failed: {r.text}")
         return None
