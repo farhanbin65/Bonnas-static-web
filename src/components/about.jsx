@@ -19,7 +19,7 @@ export default function About() {
           >
             <TiltCard className="rounded-2xl overflow-hidden border border-gold-dust">
               <img
-                src="/photos/f1.jpeg"
+                src="/photos/c2.jpeg"
                 alt="Bonna's home cooking"
                 className="w-full h-80 object-cover"
               />

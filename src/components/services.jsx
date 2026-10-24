@@ -7,13 +7,13 @@ const SERVICES = [
   {
     title: "Home Catering",
     description: "Freshly prepared meals delivered straight to your door for any occasion.",
-    img: "/photos/a6.jpeg",
+    img: "/photos/a7.jpeg",
     Icon: Home,
   },
   {
     title: "Party Orders",
     description: "Feeding a crowd? Our party packages cover starters, mains, biryani and desserts.",
-    img: "/photos/a7.jpeg",
+    img: "/photos/p1.jpeg",
     Icon: PartyPopper,
   },
   {
