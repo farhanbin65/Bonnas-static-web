@@ -1,21 +1,18 @@
-"""Prepare captions and original-photo URLs; publishing runs in separate steps."""
-import argparse
-from contextlib import redirect_stdout
-import sys
-import json
-from pathlib import Path
+# scripts/social-blogs/generate_social_content.py
 
+import argparse
+import json
+import os
+from pathlib import Path
 from extract_latest_blog import extract_latest_blog
 from social_media_orchestrator import orchestrate_blog_post
 
-
-# In scripts/social-blogs/generate_social_content.py
 
 def main():
     parser = argparse.ArgumentParser(description="Prepare social posts using unchanged photos")
     parser.add_argument("--blog-data", default="latest_blog.json")
     parser.add_argument("--output-dir", default="output/social_posts")
-    parser.add_argument("--manifest-out", default=None)  # ADD THIS
+    parser.add_argument("--manifest-out", default=None)
     args = parser.parse_args()
     
     project_root = Path(__file__).resolve().parents[2]
@@ -33,13 +30,14 @@ def main():
     blog_data.setdefault("excerpt", "")
     blog_data.setdefault("keywords", [])
     
-    result = orchestrate_blog_post(blog_data, str(project_root / args.output_dir))
+    # ONLY 1 argument: blog_data (remove the output_dir argument)
+    result = orchestrate_blog_post(blog_data)
     
     if not result or not result["facebook"] or not result["instagram"]:
         raise SystemExit("Social content preparation failed")
     
-    # CHANGE: Write manifest to specified path instead of nested dir
-    manifest_path = args.manifest_out or result['manifest_path']
+    # Write manifest to predictable path
+    manifest_path = args.manifest_out or (project_root / args.output_dir / "manifest.json")
     os.makedirs(os.path.dirname(manifest_path), exist_ok=True)
     
     with open(manifest_path, 'w') as f:
