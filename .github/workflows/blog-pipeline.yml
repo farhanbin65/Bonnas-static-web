@@ -70,8 +70,8 @@ jobs:
           FACEBOOK_ACCESS_TOKEN: ${{ secrets.FACEBOOK_ACCESS_TOKEN }}
         run: |
           echo "Publishing to Facebook..."
-          python scripts/social-blogs/publish/facebook_uploader.py \
-            --manifest "output/social_posts/manifest.json"
+          export SOCIAL_MANIFEST_JSON="$(cat output/social_posts/manifest.json)"
+          python scripts/social-blogs/publish/facebook_uploader.py
 
       - name: Upload to Instagram
         id: instagram_upload
@@ -82,8 +82,8 @@ jobs:
           SANITY_WRITE_TOKEN: ${{ secrets.SANITY_WRITE_TOKEN }}
         run: |
           echo "Publishing to Instagram..."
-          python scripts/social-blogs/publish/instagram_uploader.py \
-            --manifest "output/social_posts/manifest.json"
+          export SOCIAL_MANIFEST_JSON="$(cat output/social_posts/manifest.json)"
+          python scripts/social-blogs/publish/instagram_uploader.py
 
       - name: Upload social media assets to GitHub
         if: always()
