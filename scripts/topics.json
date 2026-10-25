@@ -1055,7 +1055,8 @@
         "phuchka bangladeshi"
       ],
       "season": "all",
-      "used": false
+      "used": true,
+      "used_year": 2026
     },
     {
       "title": "Pakon Pitha — The Bangladeshi Winter Treat Explained",
@@ -1097,7 +1098,8 @@
         "bangladeshi rice pudding"
       ],
       "season": "all",
-      "used": false
+      "used": true,
+      "used_year": 2026
     },
     {
       "title": "Polao vs Biryani vs Tehari — What Is the Difference?",
@@ -1148,7 +1150,8 @@
         "bangladeshi dum biryani"
       ],
       "season": "all",
-      "used": false
+      "used": true,
+      "used_year": 2026
     },
     {
       "title": "Shab-e-Barat Food Traditions — Halwa and Ruti",
