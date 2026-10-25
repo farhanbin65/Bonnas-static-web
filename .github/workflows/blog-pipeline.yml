@@ -2,7 +2,9 @@ name: Bonna's Blog Generator
 
 on:
   schedule:
+    # Monday, Wednesday, Friday at 08:00 UTC
     - cron: '0 8 * * 1,3,5'
+
   workflow_dispatch: {}
 
 permissions:
@@ -35,7 +37,8 @@ jobs:
           SANITY_WRITE_TOKEN: ${{ secrets.SANITY_WRITE_TOKEN }}
           UNSPLASH_ACCESS_KEY: ${{ secrets.UNSPLASH_ACCESS_KEY }}
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
-        run: python scripts/generate_blog.py
+        run: |
+          python scripts/generate_blog.py
 
       - name: Commit updated index files
         run: |
@@ -48,64 +51,3 @@ jobs:
           else
             echo "No index changes to commit."
           fi
-
-      - name: Generate social media content
-        id: social_gen
-        env:
-          SANITY_WRITE_TOKEN: ${{ secrets.SANITY_WRITE_TOKEN }}
-          UNSPLASH_ACCESS_KEY: ${{ secrets.UNSPLASH_ACCESS_KEY }}
-          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
-        run: |
-          mkdir -p output/social_posts
-          python scripts/social-blogs/generate_social_content.py \
-            --blog-data latest_blog.json \
-            --output-dir output/social_posts \
-            --manifest-out output/social_posts/manifest.json
-
-      - name: Upload to Facebook
-        id: facebook_upload
-        continue-on-error: true
-        env:
-          FACEBOOK_PAGE_ID: ${{ secrets.FACEBOOK_PAGE_ID }}
-          FACEBOOK_ACCESS_TOKEN: ${{ secrets.FACEBOOK_ACCESS_TOKEN }}
-        run: |
-          echo "Publishing to Facebook..."
-          export SOCIAL_MANIFEST_JSON="$(cat output/social_posts/manifest.json)"
-          python scripts/social-blogs/publish/facebook_uploader.py
-
-      - name: Upload to Instagram
-        id: instagram_upload
-        continue-on-error: true
-        env:
-          INSTAGRAM_BUSINESS_ACCOUNT_ID: ${{ secrets.INSTAGRAM_BUSINESS_ACCOUNT_ID }}
-          INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
-          SANITY_WRITE_TOKEN: ${{ secrets.SANITY_WRITE_TOKEN }}
-        run: |
-          echo "Publishing to Instagram..."
-          export SOCIAL_MANIFEST_JSON="$(cat output/social_posts/manifest.json)"
-          python scripts/social-blogs/publish/instagram_uploader.py
-
-      - name: Upload social media assets to GitHub
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: social-media-assets
-          path: output/social_posts/
-          retention-days: 30
-          if-no-files-found: warn
-
-      - name: Verify social publishing results
-        if: always()
-        env:
-          FB_RESULT: ${{ steps.facebook_upload.outcome }}
-          IG_RESULT: ${{ steps.instagram_upload.outcome }}
-        run: |
-          echo "Facebook result: $FB_RESULT"
-          echo "Instagram result: $IG_RESULT"
-          
-          if [ "$FB_RESULT" != "success" ] && [ "$IG_RESULT" != "success" ]; then
-            echo "⚠️  Both platforms failed."
-            exit 1
-          fi
-          
-          echo "✅ Publishing completed."
