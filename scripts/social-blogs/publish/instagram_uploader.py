@@ -1,4 +1,3 @@
-import argparse
 import json
 import os
 import sys
@@ -8,7 +7,7 @@ import requests
 
 from dotenv import load_dotenv
 
-load_dotenv(override=True)
+load_dotenv(override=False)
 GRAPH = "https://graph.facebook.com/v25.0"
 SANITY_ASSETS = "https://u5i02ojt.api.sanity.io/v2024-01-01/assets/images/production"
 
@@ -27,7 +26,7 @@ def host_image(path, sanity_token):
     return r.json()["document"]["url"]
 
 
-def upload_to_instagram(manifest_path):
+def upload_to_instagram(manifest=None):
     ig_id = os.getenv("INSTAGRAM_BUSINESS_ACCOUNT_ID")
     token = os.getenv("INSTAGRAM_ACCESS_TOKEN")
     sanity_token = os.getenv("SANITY_WRITE_TOKEN")
@@ -35,8 +34,15 @@ def upload_to_instagram(manifest_path):
         print("❌ Missing INSTAGRAM_BUSINESS_ACCOUNT_ID or INSTAGRAM_ACCESS_TOKEN")
         return None
 
-    with open(manifest_path) as f:
-        manifest = json.load(f)
+    if manifest is None:
+        try:
+            manifest = json.loads(os.environ["SOCIAL_MANIFEST_JSON"])
+        except (KeyError, ValueError):
+            print("❌ Missing or invalid SOCIAL_MANIFEST_JSON")
+            return None
+    if not isinstance(manifest, dict) or not isinstance(manifest.get("photos"), dict) or not isinstance(manifest.get("instagram"), dict):
+        print("❌ Invalid social manifest structure")
+        return None
     image = manifest.get("photos", {}).get("instagram_square")
     caption = manifest.get("instagram", {}).get("caption_main")
     if not (image and caption and (image.startswith("https://") or os.path.exists(image))):
@@ -94,9 +100,7 @@ def upload_to_instagram(manifest_path):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Upload blog to Instagram")
-    parser.add_argument("--manifest", required=True, help="Path to manifest.json")
-    result = upload_to_instagram(parser.parse_args().manifest)
+    result = upload_to_instagram()
     if not result:
         sys.exit(1)
     print(json.dumps(result, indent=2))

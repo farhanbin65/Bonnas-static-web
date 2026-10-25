@@ -16,8 +16,7 @@ blog = {
 
 result = orchestrate_blog_post(blog)
 if result:
-    with open(result['manifest_path']) as f:
-        manifest = json.load(f)
+    manifest = result
     print("\n📸 Photos in manifest:")
     print(json.dumps(manifest['photos'], indent=2))
 else:

@@ -1,4 +1,3 @@
-import argparse
 import json
 import os
 import sys
@@ -7,17 +6,24 @@ import requests
 
 from dotenv import load_dotenv
 
-load_dotenv(override=True)
+load_dotenv(override=False)
 GRAPH = "https://graph.facebook.com/v25.0"
-def upload_to_facebook(manifest_path):
+def upload_to_facebook(manifest=None):
     page_id = os.getenv("FACEBOOK_PAGE_ID")
     token = os.getenv("FACEBOOK_ACCESS_TOKEN")
     if not page_id or not token:
         print("❌ Missing FACEBOOK_PAGE_ID or FACEBOOK_ACCESS_TOKEN")
         return None
 
-    with open(manifest_path) as f:
-        manifest = json.load(f)
+    if manifest is None:
+        try:
+            manifest = json.loads(os.environ["SOCIAL_MANIFEST_JSON"])
+        except (KeyError, ValueError):
+            print("❌ Missing or invalid SOCIAL_MANIFEST_JSON")
+            return None
+    if not isinstance(manifest, dict) or not isinstance(manifest.get("photos"), dict) or not isinstance(manifest.get("facebook"), dict):
+        print("❌ Invalid social manifest structure")
+        return None
     image = manifest.get("photos", {}).get("facebook")
     fb = manifest.get("facebook", {})
     caption = fb.get("caption_extended") or fb.get("caption_standard")
@@ -51,9 +57,7 @@ def upload_to_facebook(manifest_path):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Upload blog to Facebook")
-    parser.add_argument("--manifest", required=True, help="Path to manifest.json")
-    result = upload_to_facebook(parser.parse_args().manifest)
+    result = upload_to_facebook()
     if not result:
         sys.exit(1)
     print(json.dumps(result, indent=2))

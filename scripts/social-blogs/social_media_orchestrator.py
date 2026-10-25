@@ -1,9 +1,6 @@
 import json
-import os
-import sys
-from pathlib import Path
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
 from original_photos import select_original_photo
 from facebook.facebook_post_generator import generate_facebook_caption
@@ -16,18 +13,8 @@ class SocialMediaOrchestrator:
     Selects unchanged original photos + generates captions for Facebook & Instagram.
     """
     
-    def __init__(self, blog_data: Dict, output_dir: Optional[str] = None):
-        """
-        Args:
-            blog_data: Dict with title, excerpt, featured_image_url, keywords, slug
-            output_dir: Optional custom output directory
-        """
+    def __init__(self, blog_data: Dict):
         self.blog_data = blog_data
-        self.output_dir = output_dir or os.path.join(
-            Path(__file__).parent, "..", "..", "output", "social_posts"
-        )
-        os.makedirs(self.output_dir, exist_ok=True)
-        
         self.timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         self.post_id = f"{self.blog_data['slug']}_{self.timestamp}"
     
@@ -93,9 +80,9 @@ class SocialMediaOrchestrator:
             print(f"❌ Instagram post generation failed: {e}")
             return {}
     
-    def _save_post_manifest(self, photos: Dict, fb_post: Dict, ig_post: Dict) -> str:
-        """Save a manifest file with all post data."""
-        manifest = {
+    def _build_manifest(self, photos: Dict, fb_post: Dict, ig_post: Dict) -> Dict:
+        """Return the payload directly; no output files or directories are needed."""
+        return {
             "post_id": self.post_id,
             "timestamp": self.timestamp,
             "blog": self.blog_data,
@@ -104,16 +91,7 @@ class SocialMediaOrchestrator:
             "instagram": ig_post,
             "status": "ready_to_publish",
         }
-        
-        manifest_path = os.path.join(self.output_dir, self.post_id, "manifest.json")
-        os.makedirs(os.path.dirname(manifest_path), exist_ok=True)
-        
-        with open(manifest_path, "w") as f:
-            json.dump(manifest, f, indent=2)
-        
-        print(f"\n📋 Manifest saved: {manifest_path}")
-        return manifest_path
-    
+
     def orchestrate(self) -> Optional[Dict]:
         """
         Run the complete automation pipeline.
@@ -140,18 +118,8 @@ class SocialMediaOrchestrator:
         if not fb_post or not ig_post:
             return None
 
-        # Save manifest
-        manifest_path = self._save_post_manifest(photos, fb_post, ig_post)
-        
-        result = {
-            "success": True,
-            "post_id": self.post_id,
-            "manifest_path": manifest_path,
-            "photos": photos,
-            "facebook": fb_post,
-            "instagram": ig_post,
-        }
-        
+        result = self._build_manifest(photos, fb_post, ig_post)
+
         print("\n" + "=" * 70)
         print("✅ All content generated successfully!")
         print("=" * 70)
@@ -159,13 +127,12 @@ class SocialMediaOrchestrator:
         return result
 
 
-def orchestrate_blog_post(blog_data: Dict, output_dir: Optional[str] = None) -> Optional[Dict]:
+def orchestrate_blog_post(blog_data: Dict) -> Optional[Dict]:
     """
     Quick function to automate entire blog-to-social workflow.
     
     Args:
         blog_data: Dict with title, excerpt, featured_image_url, keywords, slug
-        output_dir: Optional custom output directory
     
     Returns:
         Dict with all generated posts, or None on error
@@ -185,7 +152,7 @@ def orchestrate_blog_post(blog_data: Dict, output_dir: Optional[str] = None) -> 
             print(f"Facebook caption: {result['facebook']['caption_standard']}")
             print(f"Instagram caption: {result['instagram']['caption_main']}")
     """
-    orchestrator = SocialMediaOrchestrator(blog_data, output_dir)
+    orchestrator = SocialMediaOrchestrator(blog_data)
     return orchestrator.orchestrate()
 
 
