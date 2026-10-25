@@ -2,9 +2,7 @@ name: Bonna's Blog Generator
 
 on:
   schedule:
-    # Monday, Wednesday, Friday at 08:00 UTC
     - cron: '0 8 * * 1,3,5'
-
   workflow_dispatch: {}
 
 permissions:
@@ -15,25 +13,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # 2. Set up Python
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      # 3. Install dependencies
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install groq feedparser requests pillow python-dotenv
 
-      # 4. Generate SEO blog
       - name: Run blog generator
         id: blog_gen
         env:
@@ -41,10 +35,8 @@ jobs:
           SANITY_WRITE_TOKEN: ${{ secrets.SANITY_WRITE_TOKEN }}
           UNSPLASH_ACCESS_KEY: ${{ secrets.UNSPLASH_ACCESS_KEY }}
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
-        run: |
-          python scripts/generate_blog.py
+        run: python scripts/generate_blog.py
 
-      # 5. Commit updated tracking files
       - name: Commit updated index files
         run: |
           git config user.name "github-actions[bot]"
@@ -57,43 +49,53 @@ jobs:
             echo "No index changes to commit."
           fi
 
-      # 6. Pass compact JSON directly between steps; no manifest files.
       - name: Generate social media content
         id: social_gen
-        shell: bash
+        env:
+          SANITY_WRITE_TOKEN: ${{ secrets.SANITY_WRITE_TOKEN }}
+          UNSPLASH_ACCESS_KEY: ${{ secrets.UNSPLASH_ACCESS_KEY }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
         run: |
-          echo "Running social pipeline from commit: $(git rev-parse HEAD)"
-          MANIFEST_JSON=$(python scripts/social-blogs/generate_social_content.py --blog-data latest_blog.json)
-          printf 'manifest=%s\n' "$MANIFEST_JSON" >> "$GITHUB_OUTPUT"
+          mkdir -p output/social_posts
+          python scripts/social-blogs/generate_social_content.py \
+            --blog-data latest_blog.json \
+            --output-dir output/social_posts \
+            --manifest-out output/social_posts/manifest.json
 
-      # 8. Publish to Facebook
       - name: Upload to Facebook
         id: facebook_upload
         continue-on-error: true
         env:
-          SOCIAL_MANIFEST_JSON: ${{ steps.social_gen.outputs.manifest }}
           FACEBOOK_PAGE_ID: ${{ secrets.FACEBOOK_PAGE_ID }}
           FACEBOOK_ACCESS_TOKEN: ${{ secrets.FACEBOOK_ACCESS_TOKEN }}
         run: |
           echo "Publishing to Facebook..."
-          python scripts/social-blogs/publish/facebook_uploader.py
+          python scripts/social-blogs/publish/facebook_uploader.py \
+            --manifest "output/social_posts/manifest.json"
 
-      # 9. Publish to Instagram
       - name: Upload to Instagram
         id: instagram_upload
         continue-on-error: true
         env:
-          SOCIAL_MANIFEST_JSON: ${{ steps.social_gen.outputs.manifest }}
           INSTAGRAM_BUSINESS_ACCOUNT_ID: ${{ secrets.INSTAGRAM_BUSINESS_ACCOUNT_ID }}
           INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
           SANITY_WRITE_TOKEN: ${{ secrets.SANITY_WRITE_TOKEN }}
         run: |
           echo "Publishing to Instagram..."
-          python scripts/social-blogs/publish/instagram_uploader.py
+          python scripts/social-blogs/publish/instagram_uploader.py \
+            --manifest "output/social_posts/manifest.json"
 
-      # 11. Verify results
+      - name: Upload social media assets to GitHub
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: social-media-assets
+          path: output/social_posts/
+          retention-days: 30
+          if-no-files-found: warn
+
       - name: Verify social publishing results
-        if: always() && steps.social_gen.outcome == 'success'
+        if: always()
         env:
           FB_RESULT: ${{ steps.facebook_upload.outcome }}
           IG_RESULT: ${{ steps.instagram_upload.outcome }}
@@ -102,7 +104,7 @@ jobs:
           echo "Instagram result: $IG_RESULT"
           
           if [ "$FB_RESULT" != "success" ] && [ "$IG_RESULT" != "success" ]; then
-            echo "⚠️  Both platforms failed. Check logs."
+            echo "⚠️  Both platforms failed."
             exit 1
           fi
           
