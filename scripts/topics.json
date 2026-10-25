@@ -170,7 +170,8 @@
         "how to make tehari"
       ],
       "season": "all",
-      "used": false
+      "used": true,
+      "used_year": 2026
     },
     {
       "title": "Begun Vorta and Alu Vorta — Two Easy Mashes",
