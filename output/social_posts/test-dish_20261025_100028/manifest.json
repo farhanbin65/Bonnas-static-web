@@ -1,0 +1,37 @@
+{
+  "post_id": "test-dish_20261025_100028",
+  "timestamp": "20261025_100028",
+  "blog": {
+    "title": "Test Bangladeshi Dish",
+    "excerpt": "A delicious test",
+    "featured_image_url": "https://www.bonnas.co.uk/photos/f1.jpeg",
+    "keywords": [
+      "bangladeshi",
+      "food"
+    ],
+    "slug": "test-dish"
+  },
+  "photos": {
+    "facebook": "https://www.bonnas.co.uk/photos/f1.jpeg",
+    "instagram_square": "https://www.bonnas.co.uk/photos/f1.jpeg"
+  },
+  "facebook": {
+    "platform": "facebook",
+    "caption_standard": "Test Bangladeshi Dish\n\nA delicious test\n\n#BonnasKitchen #TraditionalBiryani #AuthenticCuisine",
+    "caption_extended": "Test Bangladeshi Dish\n\nA delicious test\n\n\ud83d\udd17 Read full recipe: https://www.bonnas.co.uk/blog/test-dish\n\n#BonnasKitchen #TraditionalBiryani #AuthenticCuisine #BethinalGreen #LondonFood #HomeCooked",
+    "hashtags": [],
+    "blog_url": "https://www.bonnas.co.uk/blog/test-dish",
+    "cta": "Read the full blog",
+    "image_size": "original"
+  },
+  "instagram": {
+    "platform": "instagram",
+    "caption_main": "A delicious test\n\n\ud83d\udd17 Link in bio to read the full recipe & pre-order fresh!\n\n#BonnasFood #BangladeshiCuisine #AuthenticFood #BethnalGreen\n@bonnas_cuisine",
+    "caption_story": "New recipe on the blog! Check it out \ud83d\udc46 Link in bio \ud83c\udf72",
+    "hashtags": "#BonnasFood #BangladeshiCuisine #AuthenticFood #BethnalGreen",
+    "cta": "\ud83d\udd17 Link in bio to read the full recipe & pre-order fresh!",
+    "emoji": "\ud83c\udf72",
+    "image_size": "original"
+  },
+  "status": "ready_to_publish"
+}
