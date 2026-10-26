@@ -4,6 +4,7 @@ import { Analytics } from "@vercel/analytics/react";
 import { CartProvider } from "./context/CartContext";
 import Navbar from "./components/navbar";
 import Toast from "./components/Toast";
+import MarketingConsent from "./components/MarketingConsent";
 import Home from "./components/Home";
 import Gallery from "./components/gallery";
 import Menu from "./components/menu";
@@ -49,6 +50,7 @@ export default function App() {
           <Route path="/records" element={<BusinessSheet />} />
         </Routes>
         <SiteChrome><Footer /></SiteChrome>
+        <MarketingConsent />
         <Analytics />
       </BrowserRouter>
     </CartProvider>
