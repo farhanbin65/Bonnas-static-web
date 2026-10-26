@@ -13,7 +13,7 @@ export default function Toast() {
   }, [toast, clearToast]);
 
   return (
-    <div className="fixed top-20 right-4 z-[60] flex flex-col gap-2 pointer-events-none">
+    <div className="fixed top-20 right-4 max-w-[calc(100%-2rem)] z-[60] flex flex-col gap-2 pointer-events-none">
       <AnimatePresence>
         {toast && (
           <motion.div

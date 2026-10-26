@@ -1,4 +1,5 @@
-import { motion } from "framer-motion";
+import LoadingImage from "./LoadingImage";
+import { motion as Motion } from "framer-motion";
 import { scrollRevealViewport } from "../lib/motion";
 import { MessageCircle, Mail } from "lucide-react";
 
@@ -22,7 +23,7 @@ export default function OrderingFlowchart() {
           <div className="flex flex-col md:flex-row gap-6 justify-center items-center mb-8">
             {["/photos/menu1.jpg", "/photos/menu2.jpg", "/photos/menu3.jpg"].map((img, i) => (
               <div key={i} className="border border-gold-dust rounded-xl p-2 max-w-xs w-full">
-                <img src={img} alt={"Menu " + (i + 1)} className="w-full object-cover rounded-lg" />
+                <LoadingImage src={img} alt={"Menu " + (i + 1)} width="1414" height="2000" className="w-full aspect-[1414/2000] rounded-lg" />
               </div>
             ))}
           </div>
@@ -34,7 +35,7 @@ export default function OrderingFlowchart() {
         </div>
 
         {/* Header */}
-        <motion.div
+        <Motion.div
           className="text-center mb-12 mt-16"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -43,14 +44,14 @@ export default function OrderingFlowchart() {
         >
           <h2 className="text-3xl md:text-4xl font-bold text-cream mb-2">How to Order</h2>
           <p className="text-sand text-sm">Simple steps to enjoy delicious Bonna's food</p>
-        </motion.div>
+        </Motion.div>
 
         {/* Flowchart */}
-        <div className="flex flex-col md:flex-row items-stretch justify-between gap-6 md:gap-2">
+        <div className="flex flex-col xl:flex-row items-stretch justify-between gap-6 xl:gap-2">
           {steps.map((step, idx) => (
-            <motion.div
+            <Motion.div
               key={step.number}
-              className="flex-1 flex flex-col items-center relative"
+              className="min-w-0 flex-1 flex flex-col items-center relative"
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={scrollRevealViewport}
@@ -101,7 +102,7 @@ export default function OrderingFlowchart() {
               {/* Arrow (except for last step) */}
               {idx < steps.length - 1 && (
                 <svg
-                  className="w-8 h-12 text-gold-dust hidden md:block absolute -right-16 top-1/2 transform -translate-y-1/2"
+                  className="w-8 h-12 text-gold-dust hidden xl:block absolute -right-16 top-1/2 transform -translate-y-1/2"
                   fill="none"
                   viewBox="0 0 24 48"
                 >
@@ -131,12 +132,12 @@ export default function OrderingFlowchart() {
                   />
                 </svg>
               )}
-            </motion.div>
+            </Motion.div>
           ))}
         </div>
 
         {/* CTA section */}
-        <motion.div
+        <Motion.div
           className="mt-12 text-center"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
@@ -154,7 +155,7 @@ export default function OrderingFlowchart() {
           >
             Message on WhatsApp
           </a>
-        </motion.div>
+        </Motion.div>
       </div>
     </section>
   );

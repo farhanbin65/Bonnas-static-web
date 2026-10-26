@@ -17,25 +17,6 @@ module.exports = {
       },
     },
   },
-  plugins: [require("daisyui")],
-  daisyui: {
-    themes: [
-      {
-        bonnas: {
-          primary:        "#F2A8B5",
-          secondary:      "#E8879A",
-          accent:         "#F2A8B5",
-          neutral:        "#1E160D",
-          "base-100":     "#0D0A07",
-          "base-200":     "#1E160D",
-          "base-300":     "#2A1E0D",
-          "base-content": "#F5ECD7",
-          info:    "#60a5fa",
-          success: "#4ade80",
-          warning: "#fbbf24",
-          error:   "#f87171",
-        },
-      },
-    ],
-  },
+  // Components use Tailwind utilities; avoid shipping unused daisyUI themes.
+  plugins: [],
 };

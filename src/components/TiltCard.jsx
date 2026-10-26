@@ -1,8 +1,10 @@
 import { useRef } from "react";
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { motion as Motion, useReducedMotion, useMotionValue, useSpring, useTransform } from "framer-motion";
 
 export default function TiltCard({ children, className = "" }) {
   const ref = useRef(null);
+  const bounds = useRef(null);
+  const reducedMotion = useReducedMotion();
 
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -17,7 +19,8 @@ export default function TiltCard({ children, className = "" }) {
   });
 
   function handleMouseMove(e) {
-    const rect = ref.current.getBoundingClientRect();
+    if (reducedMotion || !bounds.current) return;
+    const rect = bounds.current;
     const x = (e.clientX - rect.left) / rect.width - 0.5;
     const y = (e.clientY - rect.top) / rect.height - 0.5;
     mouseX.set(x);
@@ -25,23 +28,25 @@ export default function TiltCard({ children, className = "" }) {
   }
 
   function handleMouseLeave() {
+    bounds.current = null;
     mouseX.set(0);
     mouseY.set(0);
   }
 
   return (
-    <motion.div
+    <Motion.div
       ref={ref}
+      onMouseEnter={() => { bounds.current = ref.current.getBoundingClientRect(); }}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       style={{
-        rotateX,
-        rotateY,
+        rotateX: reducedMotion ? 0 : rotateX,
+        rotateY: reducedMotion ? 0 : rotateY,
         transformPerspective: 800,
       }}
       className={className}
     >
       {children}
-    </motion.div>
+    </Motion.div>
   );
 }

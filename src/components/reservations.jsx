@@ -138,7 +138,7 @@ export default function Reservations() {
           <p className="text-sand text-xs mb-4">Leave your email and we'll let you know first</p>
 
           <div className="flex gap-2">
-            <input
+            <input aria-label="Email for reservation notifications"
               type="email"
               placeholder="your@email.com"
               value={email}

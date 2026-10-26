@@ -1,19 +1,21 @@
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { Analytics } from "@vercel/analytics/react";
 import { CartProvider } from "./context/CartContext";
 import Navbar from "./components/navbar";
 import Toast from "./components/Toast";
 import MarketingConsent from "./components/MarketingConsent";
 import Home from "./components/Home";
-import Gallery from "./components/gallery";
-import Menu from "./components/menu";
-import Blog from "./components/Blog";
-import BlogPost from "./components/BlogPost";
-import Invoice from "./components/invoice/Invoice";
-import BusinessSheet from "./components/records/BusinessSheet";
+const Gallery = lazy(() => import("./components/gallery"));
+const Menu = lazy(() => import("./components/menu"));
+const Blog = lazy(() => import("./components/Blog"));
+const BlogPost = lazy(() => import("./components/BlogPost"));
+const Invoice = lazy(() => import("./components/invoice/Invoice"));
+const BusinessSheet = lazy(() => import("./components/records/BusinessSheet"));
 import Footer from "./components/footer";
 import OrderingFlowchart from "./components/OrderingFlowchart"; // Import it
+
+import LoadingSkeleton from "./components/LoadingSkeleton";
 
 function SiteChrome({ children }) {
   const { pathname } = useLocation();
@@ -32,7 +34,7 @@ export default function App() {
       <BrowserRouter>
         <ScrollToTop />
         <SiteChrome><Navbar /><Toast /></SiteChrome>
-        <Routes>
+        <Suspense fallback={<LoadingSkeleton />}><Routes>
           <Route path="/" element={<Home />} />
           <Route 
             path="/menu" 
@@ -48,7 +50,7 @@ export default function App() {
           <Route path="/blog/:slug" element={<BlogPost />} />
           <Route path="/invoice" element={<Invoice />} />
           <Route path="/records" element={<BusinessSheet />} />
-        </Routes>
+        </Routes></Suspense>
         <SiteChrome><Footer /></SiteChrome>
         <MarketingConsent />
         <Analytics />

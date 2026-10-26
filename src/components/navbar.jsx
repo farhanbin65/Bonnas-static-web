@@ -54,7 +54,7 @@ export default function Navbar() {
             <span className="text-lg font-bold text-cream tracking-wide">Bonna's</span>
           </a>
 
-          <div className="hidden md:flex items-center gap-7">
+          <div className="hidden xl:flex items-center gap-7">
             {NAV_ITEMS.map((l) => l.route
               ? <Link key={l.href} to={l.href} className={linkClass}>
                   {l.label === "Games" && <GamePadIcon />}
@@ -67,7 +67,7 @@ export default function Navbar() {
             )}
           </div>
 
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden xl:flex items-center gap-3">
             <Link to="/menu" className="inline-flex items-center bg-pink-bonnas text-night px-5 py-2 rounded-full text-sm font-semibold hover:bg-pink-dark transition-colors">
               Order Now
             </Link>
@@ -84,15 +84,15 @@ export default function Navbar() {
             </a>
           </div>
 
-          <button onClick={() => setOpen(true)} className="md:hidden text-cream text-xl p-1" aria-label="Open menu">
+          <button onClick={() => setOpen(true)} className="xl:hidden text-cream text-xl p-1" aria-label="Open menu">
             <FaBars />
           </button>
         </div>
       </nav>
 
       {open && (
-        <div className="fixed inset-0 z-50 bg-night flex flex-col items-center justify-center gap-8">
-          <button onClick={() => setOpen(false)} className="absolute top-5 right-6 text-cream text-2xl">
+        <div className="fixed inset-0 z-50 bg-night flex flex-col items-center justify-start gap-4 overflow-y-auto py-16">
+          <button aria-label="Close menu" onClick={() => setOpen(false)} className="absolute top-5 right-6 text-cream text-2xl">
             <FaTimes />
           </button>
 

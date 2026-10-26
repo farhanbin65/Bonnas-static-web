@@ -1,3 +1,5 @@
+import { Helmet } from "react-helmet-async";
+import LoadingImage from "./LoadingImage";
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingCart, X, Send } from "lucide-react";
@@ -97,7 +99,13 @@ export default function Menu() {
   const handleAddMoreClick = () => setCartOpen(false);
 
   return (
-    <section id="menu" className="py-20 px-6 md:px-20 bg-night">
+    <section id="menu" className="py-12 px-4 sm:px-6 md:px-20 bg-night">
+      <Helmet>
+        <title>Menu | Bonna’s — Bangladeshi Catering London</title>
+        <meta name="description" content="Browse Bonna’s Bangladeshi catering menu and download our full menu. Contact us on WhatsApp to order homemade food in London." />
+        <link rel="canonical" href="https://www.bonnas.co.uk/menu" />
+      </Helmet>
+      <h1 className="sr-only">Bonna’s food menu</h1>
 {/*
       <motion.div
         className="flex items-center justify-between mb-10 max-w-7xl mx-auto"
@@ -190,7 +198,7 @@ export default function Menu() {
         <div className="flex flex-col md:flex-row gap-6 justify-center items-center mb-8">
           {["/photos/menu1.jpg", "/photos/menu2.jpg", "/photos/menu3.jpg"].map((img, i) => (
             <div key={i} className="border border-gold-dust rounded-xl p-2 max-w-xs w-full">
-              <img src={img} alt={"Menu " + (i + 1)} className="w-full object-cover rounded-lg" />
+              <LoadingImage src={img} alt={"Menu " + (i + 1)} width="1414" height="2000" className="w-full aspect-[1414/2000] rounded-lg" />
             </div>
           ))}
         </div>

@@ -1,12 +1,14 @@
+import { lazy } from "react";
+import DeferredSection from "./DeferredSection";
 import { Helmet } from "react-helmet-async";
 import Hero from "./hero";
 import About from "./about";
 import Services from "./services";
 import MenuTeaser from "./menuTeaser";
-import Gallery from "./gallery";
+const Gallery = lazy(() => import("./gallery"));
 import Reservations from "./reservations";
-import Social from "./social";
-import Contact from "./contact";
+const Social = lazy(() => import("./social"));
+const Contact = lazy(() => import("./contact"));
 
 export default function Home() {
   return (
@@ -41,10 +43,10 @@ export default function Home() {
       <About />
       <Services />
       <MenuTeaser />
-      <Gallery />
+      <DeferredSection id="gallery" label="Loading gallery"><Gallery /></DeferredSection>
       <Reservations />
-      <Social />
-      <Contact />
+      <DeferredSection id="social" label="Loading social"><Social /></DeferredSection>
+      <DeferredSection id="interactive" label="Loading contact"><Contact /></DeferredSection>
     </>
   );
 }

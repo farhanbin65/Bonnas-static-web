@@ -64,7 +64,7 @@ export default function Hero() {
             <Motion.aside
               className="w-full lg:w-[42%] flex flex-col justify-center px-5 sm:px-8 md:px-10 lg:px-12 xl:px-14 py-10 sm:py-12 lg:py-14"
               variants={staggerContainer}
-              initial="hidden"
+              initial={false}
               animate="visible"
             >
               {/* Label */}
@@ -76,7 +76,7 @@ export default function Hero() {
               </Motion.span>
 
               {/* Heading */}
-              <Motion.h2
+              <Motion.h1
                 variants={staggerItem}
                 className="mt-5 text-3xl sm:text-4xl lg:text-[2.7rem] xl:text-5xl font-bold text-cream leading-[1.1]"
               >
@@ -85,7 +85,7 @@ export default function Hero() {
                   Bangladeshi
                 </span>{" "}
                 Flavours
-              </Motion.h2>
+              </Motion.h1>
 
               {/* Description */}
               <Motion.p
@@ -113,6 +113,7 @@ export default function Hero() {
                   >
                     <img
                       src={img}
+                      width="1414" height="2000" decoding="async"
                       alt={`Menu ${i + 1}`}
                       className="w-full aspect-[3/4] object-cover rounded-lg transition-transform duration-500 group-hover:scale-110"
                     />
@@ -177,12 +178,12 @@ export default function Hero() {
 
               {/* Brand Content */}
               <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-6">
-                <h1 className="text-4xl sm:text-5xl md:text-6xl xl:text-7xl font-bold text-white leading-tight">
+                <h2 className="text-4xl sm:text-5xl md:text-6xl xl:text-7xl font-bold text-white leading-tight">
                   Welcome to{" "}
                   <span className="text-pink-bonnas">
                     Bonna's
                   </span>
-                </h1>
+                </h2>
 
                 <p className="mt-4 text-sand text-base sm:text-lg max-w-md leading-relaxed">
                   Prepared with love and shared with family.

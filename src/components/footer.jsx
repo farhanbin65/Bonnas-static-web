@@ -13,7 +13,7 @@ const LINKS = [
   { label: "Services",     href: "/#services" },
   { label: "Gallery",      href: "/gallery" },
   { label: "Reservations", href: "/#reservations" },
-  { label: "Contact",      href: "/#contact" },
+  { label: "Contact",      href: "/#interactive" },
 ];
 
 export default function Footer() {
