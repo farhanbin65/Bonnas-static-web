@@ -1050,7 +1050,8 @@
         "bangladeshi chotpoti"
       ],
       "season": "all",
-      "used": false
+      "used": true,
+      "used_year": 2026
     },
     {
       "title": "What Is Fuchka? Bangladeshi Phuchka Explained",
