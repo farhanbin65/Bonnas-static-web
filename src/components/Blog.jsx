@@ -4,15 +4,28 @@ import { Link, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { client } from "../lib/sanityClient";
 
-export default function Blog() {
-  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
+function readInitialPosts() {
+  if (typeof document === "undefined" || window.location.pathname !== "/blog") return null;
+  const element = document.getElementById("blog-initial-data");
+  if (!element) return null;
+  try { return JSON.parse(element.textContent); } catch { return null; }
+}
+const visiblePosts = (posts) => posts.filter(post => post.slug?.current && post.slug.current !== retiredBlogSlug);
+
+export default function Blog({ initialPosts }) {
+  const [seed] = useState(() => initialPosts ?? readInitialPosts());
+  const [posts, setPosts] = useState(() => seed ? visiblePosts(seed) : []);
+  const [loading, setLoading] = useState(!seed);
   const [searchParams, setSearchParams] = useSearchParams();
   const [error, setError] = useState(false);
 
   const postsPerPage = 9;
 
   useEffect(() => {
+    if (seed) {
+      document.getElementById("blog-initial-data")?.remove();
+      return;
+    }
     client
       .fetch(`*[_type == "blogPost"] | order(publishedAt desc, _id asc) {
         _id, title, slug, excerpt, publishedAt, keywords
@@ -22,7 +35,7 @@ export default function Blog() {
         setLoading(false);
       })
       .catch(() => { setError(true); setLoading(false); });
-  }, []);
+  }, [seed]);
 
   // Pagination calculations
   const totalPages = Math.max(1, Math.ceil(posts.length / postsPerPage));

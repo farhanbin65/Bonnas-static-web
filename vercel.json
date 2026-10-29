@@ -5,6 +5,10 @@
       "destination": "/api/sitemap"
     },
     {
+      "source": "/blog",
+      "destination": "/api/blog"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
@@ -26,5 +30,10 @@
       "destination": "/blog/bringing-a-taste-of-bengal-to-your-table-authentic-bangladeshi-catering-in-londo",
       "permanent": true
     }
-  ]
+  ],
+  "functions": {
+    "api/blog.js": {
+      "includeFiles": "{dist/index.html,dist-ssr/**}"
+    }
+  }
 }

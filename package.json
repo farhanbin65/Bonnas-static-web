@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && vite build --ssr server/blog-entry.jsx --outDir dist-ssr",
     "lint": "eslint .",
     "preview": "vite preview"
   },

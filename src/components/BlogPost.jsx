@@ -1,3 +1,4 @@
+import { socialImage } from "../lib/socialImage";
 import { canonicalBlogSlug } from "../lib/blogRedirects";
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
@@ -36,6 +37,8 @@ useEffect(() => {
   );
 
   const canonicalUrl = `https://www.bonnas.co.uk/blog/${post.slug.current}`;
+  const shareImage = socialImage(post.featuredImageUrl);
+  const shareImageAlt = post.featuredImageAlt || post.title;
   const publishedDate = new Date(post.publishedAt).toISOString();
 
   // Parses body text and converts [LINK: slug | anchor] markers
@@ -47,7 +50,7 @@ function renderBody(body) {
 
   return paragraphs.map((para, pIndex) => {
     // Split paragraph by [LINK: slug | anchor] markers
-    const linkPattern = /\[LINK:\s*([^\|]+)\|([^\]]+)\]/g;
+    const linkPattern = /\[LINK:\s*([^|]+)\|([^\]]+)\]/g;
     const parts = [];
     let lastIndex = 0;
     let match;
@@ -106,7 +109,8 @@ function renderBody(body) {
         <meta property="og:title" content={`${post.title} | Bonna's`} />
         <meta property="og:description" content={post.excerpt} />
         <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:image" content="https://www.bonnas.co.uk/logo.PNG" />
+        <meta property="og:image" content={shareImage} />
+        <meta property="og:image:alt" content={shareImageAlt} />
         <meta property="og:site_name" content="Bonna's" />
         <meta property="article:published_time" content={publishedDate} />
         <meta property="article:author" content="Bonna's Kitchen" />
@@ -118,7 +122,8 @@ function renderBody(body) {
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={post.title} />
         <meta name="twitter:description" content={post.excerpt} />
-        <meta name="twitter:image" content="https://www.bonnas.co.uk/logo.PNG" />
+        <meta name="twitter:image" content={shareImage} />
+        <meta name="twitter:image:alt" content={shareImageAlt} />
 
         {/* ✅ JSON-LD BlogPosting Schema — richest SEO signal possible */}
         <script type="application/ld+json">{`

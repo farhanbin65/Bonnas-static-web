@@ -1,4 +1,4 @@
-import { Helmet } from "react-helmet-async";
+import PageMetadata from "./PageMetadata";
 import LoadingImage from "./LoadingImage";
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -100,11 +100,7 @@ export default function Menu() {
 
   return (
     <section id="menu" className="py-12 px-4 sm:px-6 md:px-20 bg-night">
-      <Helmet>
-        <title>Menu | Bonna’s — Bangladeshi Catering London</title>
-        <meta name="description" content="Browse Bonna’s Bangladeshi catering menu and download our full menu. Contact us on WhatsApp to order homemade food in London." />
-        <link rel="canonical" href="https://www.bonnas.co.uk/menu" />
-      </Helmet>
+      <PageMetadata path="/menu" title="Menu | Bonna’s — Bangladeshi Catering London" description="Browse Bonna’s halal Bangladeshi catering menu. Collection only from E2 0RB, East London. Pre-order at least two days ahead via WhatsApp." />
       <h1 className="sr-only">Bonna’s food menu</h1>
 {/*
       <motion.div

@@ -22,13 +22,13 @@ Use [backlog.md](backlog.md) for outstanding work. Documentation does not implem
 
 ## Architecture and routes
 
-The installed package manifest declares React 19, Vite 7, React Router 7, Tailwind CSS and DaisyUI. The site is a client-rendered React application hosted on Vercel, with Sanity content and Supabase-backed administrative features. `react-helmet-async` manages page metadata after rendering. `vercel.json` rewrites paths to the shared HTML shell.
+The installed package manifest declares React 19, Vite 7, React Router 7, Tailwind CSS and DaisyUI. The site is a React application hosted on Vercel, with first-page blog server rendering implemented locally and other routes client-rendered, with Sanity content and Supabase-backed administrative features. `react-helmet-async` manages page metadata after rendering. `vercel.json` routes the sitemap and blog listing to functions before the shared HTML fallback.
 
 | Route | Purpose | SEO treatment |
 | --- | --- | --- |
 | `/` | Brand, services, food imagery and contact entry points | Primary local catering landing page |
 | `/menu` | Food menu and WhatsApp ordering entry | High-intent organic landing page |
-| `/gallery` | Food photography, search and lightbox | Supporting public page; dedicated metadata still needed |
+| `/gallery` | Food photography, search and lightbox | Supporting public page; dedicated metadata implemented, live verification pending |
 | `/blog` | Sanity articles, nine per displayed page | Linked query pagination implemented; browser/deployment checks pending |
 | `/blog/:slug` | Individual articles | Unique metadata and article schema exist |
 | `/invoice` | Invoice/quote administration and PDF export | Exclude from search; preserve access controls |
@@ -77,7 +77,7 @@ Completed pipeline capabilities include scheduled GitHub Actions runs, a manual 
 
 - `HelmetProvider` is installed in `src/main.jsx`; `react-helmet-async` is used on home, menu, the blog list and individual posts.
 - These routes already set page titles, descriptions and canonical URLs; article metadata comes from the selected Sanity post.
-- The blog list and articles include Open Graph and Twitter Card metadata. Article-specific images are a remaining improvement because previews currently use the logo.
+- The blog list and articles include Open Graph and Twitter Card metadata. Article social tags now use the featured image with a logo fallback; live preview verification remains pending.
 - JSON-LD already describes the food business, blog and articles; article breadcrumbs are also marked up.
 - `robots.txt`, a starter XML sitemap and a Google Search Console verification tag are present.
 - Article bodies convert generated related-post link markers into real React Router links, and articles include a menu CTA.
@@ -178,3 +178,54 @@ SEO-03 validation (29 October 2026): production build, sitemap fixture checks, g
 ## Pagination and deployment update — 29 October 2026
 
 Owner reports pushing the prior sitemap/canonical-host work; deployment and live acceptance remain unverified. SEO-05 now uses `/blog?page=N` links with nine posts per page, page-specific titles/canonicals, URL-based navigation, deterministic date/ID ordering and invalid-page normalisation after loading. CMS failures show a separate retry message. Production build, Blog.jsx ESLint and diff checks passed. Browser refresh/back/direct-load checks and live verification remain pending. These pagination changes have not been committed or pushed by the agent.
+
+## SEO-06 rendering assessment — 29 October 2026
+
+Assessment complete; rendering implementation is not complete. The working tree was clean at the start of this review, including the earlier pagination changes. Production deployment is not independently verified.
+
+### Decision
+
+Use request-time rendering for public CMS routes, with shared React components and data supplied before rendering. Keep the existing English routes and www origin. Language expansion is unconfirmed and will not block this work. Prefer an established Vite/React Router SSR integration over a bespoke HTML renderer; validate the integration in a preview before switching production routing. Preserve client-only admin tools and current consent behaviour.
+
+| Option | Benefit | Cost / limitation for this project |
+| --- | --- | --- |
+| Build-time prerendering | Static HTML served without a CMS request per visit | Needs authenticated CMS-triggered rebuilds for manual publish/update/delete; query-based pagination needs routing support beyond static files; new posts can appear in the dynamic sitemap before HTML is rebuilt |
+| Request-time SSR | Current CMS data and query pagination can render on direct requests | Requires server/client entry points, preloaded data, hydration checks, explicit status handling and CMS failure behaviour |
+
+### Repository findings
+
+- App.jsx owns BrowserRouter; server routing must be separated from shared routes.
+- main.jsx uses createRoot; server markup needs hydrateRoot and matching initial data.
+- Blog.jsx, BlogPost.jsx and gallery.jsx fetch in effects. Rendering them unchanged on the server produces loading placeholders, not content.
+- DeferredSection initially omits its children; essential contact/business information must render independently of intersection observers (SEO-09).
+- Helmet is client-managed today. The server must emit one route-specific title, description and canonical without leaving default home metadata on other routes.
+- The Vercel SPA catch-all must be changed only after public response handling is verified; preserve sitemap and permanent redirects ahead of page routing.
+
+### Implementation sequence and acceptance checks
+
+1. Establish shared public route definitions and Sanity loaders; preserve ordering, retired-slug handling and pagination normalisation.
+2. Add server/client rendering entries with request-scoped metadata/data. Escape embedded JSON and reuse the same initial data for hydration. Keep browser-only effects, consent and admin dependencies out of server execution where required.
+3. Render home, menu, gallery, blog pages and articles with visible content and route-specific metadata. Preload data before rendering; do not make a crawler-only content variant.
+4. Return real 404 for missing routes/articles and 503 for temporary CMS failures; keep existing redirects and query parameters. Define cache freshness explicitly before enabling caching.
+5. Validate raw HTTP HTML for home/menu/gallery, blog pages 1/2, an article and missing URLs; check one canonical, real article links, status codes and CMS update/delete propagation. Verify hydration, refresh/back navigation, menu/cart/WhatsApp actions and consent in a browser at mobile and desktop sizes.
+6. Deploy a preview, verify the above, then switch production and inspect Google-rendered HTML. Do not mark SEO-06 complete on a successful Vite build alone.
+
+References: https://vite.dev/guide/ssr and https://vercel.com/docs/frameworks/frontend/vite. Both describe Vite SSR as a low-level integration and point to higher-level integrations. This assessment changes documentation only; no rendering implementation or hosting settings were changed.
+
+## First-page blog rendering — 29 October 2026
+
+Implemented the owner-approved limited SEO-06 scope: `/blog` (including `?page=1`) now routes to `api/blog.js`. The build generates `dist-ssr/blog-entry.js` from the existing Blog React component. The server reads published Sanity listing data, renders the latest nine visible posts, pagination links and route-specific metadata into the built HTML. Embedded initial listing data is escaped and reused by React; the server metadata is removed when React takes ownership. This is server-rendered initial content followed by a client mount, not full-app hydration. Blog is eagerly imported to avoid replacing the initial listing with a lazy-route spinner. Site chrome appears when the client mounts.
+
+Vercel CDN freshness is 300 seconds with 600 seconds stale-while-revalidate; browser responses use no-store. CMS changes can remain stale during that window. CMS failures return uncached 503 with Retry-After. Later page queries retain the SPA response; individual articles, gallery, home and menu rendering are unchanged. The function bundles the built HTML and server renderer using includeFiles. No CMS writes or deployment were performed.
+
+Validation: client/server builds and fixture checks for nine posts, next-page links, escaped text, one canonical, later-page fallback and method handling. Pending: Vercel deployment/package verification, live Sanity response and cache headers, browser takeover/navigation checks and Search Console rendered HTML. SEO-06 remains partially complete; broader rendering requirements are still open.
+
+## Metadata progress — 29 October 2026
+
+SEO-07 implementation: shared PageMetadata now supplies coherent title/description/canonical, Open Graph and Twitter tags for home, menu and standalone gallery. Gallery has an h1 on its own route and retains an h2 with no page metadata when embedded on home. Article social cards use the actual featuredImageUrl, normalise relative paths to the www HTTPS origin, reject non-HTTPS protocols and fall back to the logo. Added image alt metadata. Fixed an unnecessary regex escape reported by lint in BlogPost without changing link parsing behaviour.
+
+Validation: production client/server builds, focused metadata component lint and social-image URL/fallback checks; diff whitespace check passed. Pending: deployed metadata uniqueness and preview checks, image availability and raw HTML for crawlers that do not run JavaScript. Most routes still need SEO-06 rendering work before reliable social previews can be claimed. SEO-07 remains partially complete. These changes and the preceding first-page rendering work remain uncommitted locally; no deployment was performed.
+
+## Release preparation — 29 October 2026
+
+Prepared the first-page blog rendering and page/social metadata changes for the owner-requested commit and push. Prior build, focused lint and fixture checks passed. SEO-06 and SEO-07 remain unchecked pending live verification; production availability and ranking effects are not established. Git publication result will be reported separately.

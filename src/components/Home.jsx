@@ -1,3 +1,4 @@
+import PageMetadata from "./PageMetadata";
 import { lazy } from "react";
 import DeferredSection from "./DeferredSection";
 import { Helmet } from "react-helmet-async";
@@ -13,10 +14,8 @@ const Contact = lazy(() => import("./contact"));
 export default function Home() {
   return (
     <>
+      <PageMetadata path="/" title="Bonna's | Authentic Bangladeshi Catering & Home Cooked Food in London" description="Halal Bangladeshi home catering in East London. Collection only from E2 0RB. Please pre-order at least two days ahead." />
       <Helmet>
-        <title>Bonna's | Authentic Bangladeshi Catering & Home Cooked Food in London</title>
-        <meta name="description" content="Halal Bangladeshi home catering in East London. Collection only from E2 0RB. Please pre-order at least two days ahead." />
-        <link rel="canonical" href="https://www.bonnas.co.uk/" />
         <script type="application/ld+json">{`
           {
             "@context": "https://schema.org",

@@ -1,3 +1,4 @@
+import PageMetadata from "./PageMetadata";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useReducedMotion } from "framer-motion";
 import { Search, X, ZoomIn } from "lucide-react";
@@ -17,7 +18,7 @@ const fallback = imageLibrary.local_images.filter((image) => image.sanity_id).ma
   tags: image.tags, src: `${image.path}?w=640&h=480&fit=crop&auto=format`, full: `${image.path}?w=1600&auto=format`,
 }));
 
-export default function Gallery() {
+export default function Gallery({ standalone = false }) {
   const [photos, setPhotos] = useState([...originalPhotos, ...fallback]);
   const [query, setQuery] = useState("");
   const [interacting, setInteracting] = useState(false);
@@ -59,13 +60,16 @@ export default function Gallery() {
     else if (dialog.current?.open) dialog.current.close();
   }, [lightbox]);
 
+  const Heading = standalone ? "h1" : "h2";
+
   return (
     <section id="gallery" className="py-20 px-5 md:px-12 bg-night min-h-[650px]">
+      {standalone && <PageMetadata path="/gallery" title="Food Gallery | Bonna’s — Bengali Catering in East London" description="Explore Bonna’s home-cooked Bengali dishes and catering photos. Halal food for collection from E2 0RB, East London; pre-order at least two days ahead." />}
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
           <div>
             <p className="text-pink-bonnas text-xs font-semibold tracking-[0.25em] uppercase mb-3">From the BONNAS kitchen</p>
-            <h2 className="text-3xl md:text-4xl font-bold text-cream">A taste of home</h2>
+            <Heading className="text-3xl md:text-4xl font-bold text-cream">A taste of home</Heading>
             <p className="text-sand text-sm mt-3">Explore our food gallery. A little inspiration for your next gathering.</p>
           </div>
           <label className="flex items-center gap-2 border border-gold-dust rounded-full px-4 py-2.5 text-sand bg-white/5 focus-within:border-pink-bonnas md:w-72">
