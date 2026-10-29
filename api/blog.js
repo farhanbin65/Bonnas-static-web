@@ -1,6 +1,5 @@
 import { readFile } from 'node:fs/promises';
 import { createClient } from '@sanity/client';
-import { renderBlog } from '../dist-ssr/blog-entry.js';
 
 const template = () => readFile(new URL('../dist/index.html', import.meta.url), 'utf8');
 export default async function handler(req, res) {
@@ -25,6 +24,7 @@ export default async function handler(req, res) {
     });
     const posts = await client.fetch(`*[_type == "blogPost" && defined(slug.current) && !(_id in path("drafts.**")) && !(_id in path("versions.**"))] | order(publishedAt desc, _id asc) {_id,title,slug,excerpt,publishedAt,keywords}`);
     if (!Array.isArray(posts)) throw new Error('Invalid response');
+    const { renderBlog } = await import('../dist-ssr/blog-entry.js');
     const rendered = renderBlog(posts);
     // Remove the home metadata before inserting the listing's Helmet output.
     html = html.replace(/<title>[\s\S]*?<\/title>/g, '')
@@ -36,9 +36,15 @@ export default async function handler(req, res) {
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.setHeader('Vercel-CDN-Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
     return res.status(200).end(req.method === 'HEAD' ? undefined : html);
-  } catch {
+  } catch (error) {
+    console.error("Blog rendering failed:", error);
     res.setHeader('Retry-After', '300');
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    // Keep the interactive blog accessible if server rendering is unavailable.
+    try {
+      const fallback = await template();
+      return res.status(503).end(req.method === 'HEAD' ? undefined : fallback);
+    } catch { /* Fall through when even the built template is missing. */ }
     return res.status(503).end(req.method === 'HEAD' ? undefined : '<!doctype html><html lang="en"><title>Blog temporarily unavailable | Bonna’s</title><h1>Blog temporarily unavailable</h1><p>Please try again shortly.</p><a href="/menu">Browse our menu</a></html>');
   }
 }

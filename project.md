@@ -229,3 +229,11 @@ Validation: production client/server builds, focused metadata component lint and
 ## Release preparation — 29 October 2026
 
 Prepared the first-page blog rendering and page/social metadata changes for the owner-requested commit and push. Prior build, focused lint and fixture checks passed. SEO-06 and SEO-07 remain unchecked pending live verification; production availability and ranking effects are not established. Git publication result will be reported separately.
+
+## Live verification and blog repair — 29 October 2026
+
+Independent HTTP checks: `/sitemap.xml` returned 200 XML with 108 URLs, all using HTTPS www, including gallery and excluding the retired article. `/robots.txt` returned 200 and the correct www sitemap URL. `/blog` and `/blog?page=2` returned HTTP 500 with Vercel FUNCTION_INVOCATION_FAILED, so first-page rendering is NOT verified working in production. Canonical and retired-article requests returned permanent redirects; end-to-end destination verification remains pending.
+
+Prepared a defensive repair: bundle server renderer dependencies explicitly (Vite SSR noExternal), load the renderer inside the handler only for page one, log server errors and serve the client app with an uncached 503 when rendering fails. Later pages no longer import the renderer at startup. The precise startup exception requires Vercel runtime logs; packaging is a suspected cause, not proven. Client/server build, local bundled rendering and page-two handler checks passed. Repair is not committed/deployed. Retest live function, caching, metadata and browser navigation after deployment; SEO-06 remains incomplete.
+
+Confirmed runtime diagnosis (29 October 2026): owner supplied ERR_MODULE_NOT_FOUND for react-router-dom/dist/index.js imported by the deployed SSR bundle. This confirms missing packaged renderer dependencies. The prepared `ssr.noExternal: true` repair bundles React Router and other renderer packages. Verified the rebuilt renderer from an isolated temporary directory outside the repository without project node_modules; article content and canonical rendered successfully. Commit/deployment and live recheck remain pending.
