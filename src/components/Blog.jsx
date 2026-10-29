@@ -1,30 +1,48 @@
 import { retiredBlogSlug } from "../lib/blogRedirects";
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { client } from "../lib/sanityClient";
 
 export default function Blog() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [error, setError] = useState(false);
 
   const postsPerPage = 9;
 
   useEffect(() => {
     client
-      .fetch(`*[_type == "blogPost"] | order(publishedAt desc) {
+      .fetch(`*[_type == "blogPost"] | order(publishedAt desc, _id asc) {
         _id, title, slug, excerpt, publishedAt, keywords
       }`)
       .then((data) => {
         setPosts(data.filter((post) => post.slug?.current && post.slug.current !== retiredBlogSlug));
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(() => { setError(true); setLoading(false); });
   }, []);
 
   // Pagination calculations
-  const totalPages = Math.ceil(posts.length / postsPerPage);
+  const totalPages = Math.max(1, Math.ceil(posts.length / postsPerPage));
+  const rawPage = searchParams.get("page");
+  const parsedPage = /^[1-9]\d*$/.test(rawPage || "") && Number.isSafeInteger(Number(rawPage)) ? Number(rawPage) : 1;
+  const currentPage = loading || error ? parsedPage : Math.min(parsedPage, totalPages);
+  const pageUrl = (page) => page === 1 ? "/blog" : `/blog?page=${page}`;
+  const canonicalUrl = `https://www.bonnas.co.uk${pageUrl(currentPage)}`;
+  const pageTitle = `Blog${currentPage > 1 ? ` — Page ${currentPage}` : ""} | Bonna's — Authentic Bangladeshi Food London`;
+
+  useEffect(() => {
+    if (loading || error || rawPage === null) return;
+    const expected = currentPage === 1 ? null : String(currentPage);
+    if (rawPage !== expected || searchParams.getAll("page").length > 1) {
+      const next = new URLSearchParams(searchParams);
+      next.delete("page");
+      if (expected) next.set("page", expected);
+      setSearchParams(next, { replace: true });
+    }
+  }, [loading, error, currentPage, rawPage, searchParams, setSearchParams]);
   const startIndex = (currentPage - 1) * postsPerPage;
   const currentPosts = posts.slice(startIndex, startIndex + postsPerPage);
 
@@ -32,7 +50,7 @@ export default function Blog() {
     <>
       {/* SEO HEAD */}
       <Helmet>
-        <title>Blog | Bonna's — Authentic Bangladeshi Food London</title>
+        <title>{pageTitle}</title>
 
         <meta
           name="description"
@@ -41,14 +59,14 @@ export default function Blog() {
 
         <meta name="robots" content="index, follow" />
 
-        <link rel="canonical" href="https://www.bonnas.co.uk/blog" />
+        <link rel="canonical" href={canonicalUrl} />
 
         {/* Open Graph */}
         <meta property="og:type" content="website" />
 
         <meta
           property="og:title"
-          content="Blog | Bonna's — Authentic Bangladeshi Food London"
+          content={pageTitle}
         />
 
         <meta
@@ -56,7 +74,7 @@ export default function Blog() {
           content="Food stories, recipes and guides from Bonna's kitchen. Collection only from E2 0RB, East London; pre-order at least two days ahead."
         />
 
-        <meta property="og:url" content="https://www.bonnas.co.uk/blog" />
+        <meta property="og:url" content={canonicalUrl} />
 
         <meta
           property="og:image"
@@ -70,7 +88,7 @@ export default function Blog() {
 
         <meta
           name="twitter:title"
-          content="Blog | Bonna's — Authentic Bangladeshi Food London"
+          content={pageTitle}
         />
 
         <meta
@@ -121,7 +139,7 @@ export default function Blog() {
             </p>
 
             <p className="text-sand text-xs mt-3">
-              {posts.length} {posts.length === 1 ? "blog post" : "blog posts"} published
+              {!loading && !error && `${posts.length} blog posts published · Page ${currentPage} of ${totalPages}`}
             </p>
           </div>
 
@@ -129,6 +147,11 @@ export default function Blog() {
           {loading ? (
             <div className="flex justify-center py-20">
               <div className="w-8 h-8 rounded-full border-2 border-pink-bonnas border-t-transparent animate-spin" />
+            </div>
+          ) : error ? (
+            <div role="alert" className="text-center text-sand py-20">
+              <p>We couldn’t load the articles. Please try again.</p>
+              <button className="mt-4 underline" onClick={() => window.location.reload()}>Retry</button>
             </div>
           ) : posts.length === 0 ? (
             /* No Posts */
@@ -188,47 +211,16 @@ export default function Blog() {
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="flex justify-center items-center gap-2 mt-10">
-                  {/* Previous */}
-                  <button
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.max(prev - 1, 1))
-                    }
-                    disabled={currentPage === 1}
-                    className="px-4 py-2 rounded-lg border border-gold-dust text-sand disabled:opacity-40 hover:border-pink-bonnas hover:text-pink-bonnas transition-colors"
-                  >
-                    ← Previous
-                  </button>
-
-                  {/* Page Numbers */}
-                  {Array.from(
-                    { length: totalPages },
-                    (_, index) => index + 1
-                  ).map((page) => (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`w-10 h-10 rounded-lg border transition-colors ${
-                        currentPage === page
-                          ? "bg-pink-bonnas text-night border-pink-bonnas"
-                          : "border-gold-dust text-sand hover:border-pink-bonnas hover:text-pink-bonnas"
-                      }`}
-                    >
+                <nav aria-label="Blog pagination" className="flex flex-wrap justify-center items-center gap-2 mt-10">
+                  {currentPage > 1 && <Link to={pageUrl(currentPage - 1)} rel="prev" className="px-4 py-2 text-sand underline">← Previous</Link>}
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                    <Link key={page} to={pageUrl(page)} aria-label={`Page ${page}`} aria-current={page === currentPage ? "page" : undefined}
+                      className={`w-10 h-10 flex items-center justify-center rounded-lg border ${page === currentPage ? "bg-pink-bonnas text-night border-pink-bonnas" : "border-gold-dust text-sand"}`}>
                       {page}
-                    </button>
+                    </Link>
                   ))}
-
-                  {/* Next */}
-                  <button
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                    }
-                    disabled={currentPage === totalPages}
-                    className="px-4 py-2 rounded-lg border border-gold-dust text-sand disabled:opacity-40 hover:border-pink-bonnas hover:text-pink-bonnas transition-colors"
-                  >
-                    Next →
-                  </button>
-                </div>
+                  {currentPage < totalPages && <Link to={pageUrl(currentPage + 1)} rel="next" className="px-4 py-2 text-sand underline">Next →</Link>}
+                </nav>
               )}
             </>
           )}

@@ -29,7 +29,7 @@ The installed package manifest declares React 19, Vite 7, React Router 7, Tailwi
 | `/` | Brand, services, food imagery and contact entry points | Primary local catering landing page |
 | `/menu` | Food menu and WhatsApp ordering entry | High-intent organic landing page |
 | `/gallery` | Food photography, search and lightbox | Supporting public page; dedicated metadata still needed |
-| `/blog` | Sanity articles, nine per displayed page | Discovery hub; crawlable pagination still needed |
+| `/blog` | Sanity articles, nine per displayed page | Linked query pagination implemented; browser/deployment checks pending |
 | `/blog/:slug` | Individual articles | Unique metadata and article schema exist |
 | `/invoice` | Invoice/quote administration and PDF export | Exclude from search; preserve access controls |
 | `/records` | Business records administration | Exclude from search; preserve access controls |
@@ -174,3 +174,7 @@ SEO-04 validation (29 October 2026): production build and `git diff --check` pas
 SEO-03 now uses `api/sitemap.js` via a Vercel rewrite for `/sitemap.xml`, before the SPA fallback. Removed the old `public/sitemap.xml`. Each request queries published Sanity content without caching, so automated and manual publish/update/delete changes need no deployment to refresh the sitemap. Public static routes include gallery; article URLs exclude drafts, release versions, invalid slugs and the retired duplicate, with deduplication and actual CMS modification dates. Static routes omit unknown modification dates. CMS failures return uncached 503 with Retry-After. No CMS documents were changed. `scripts/test-sitemap.mjs` verifies filtering, timestamps and route coverage. Deployment, live XML/count/URL checks and Search Console acceptance remain pending; Vite preview alone does not run Vercel functions.
 
 SEO-03 validation (29 October 2026): production build, sitemap fixture checks, generated XML parsing and `git diff --check` passed. Live Sanity and deployed function verification remain pending.
+
+## Pagination and deployment update — 29 October 2026
+
+Owner reports pushing the prior sitemap/canonical-host work; deployment and live acceptance remain unverified. SEO-05 now uses `/blog?page=N` links with nine posts per page, page-specific titles/canonicals, URL-based navigation, deterministic date/ID ordering and invalid-page normalisation after loading. CMS failures show a separate retry message. Production build, Blog.jsx ESLint and diff checks passed. Browser refresh/back/direct-load checks and live verification remain pending. These pagination changes have not been committed or pushed by the agent.
