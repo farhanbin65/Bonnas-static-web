@@ -8,6 +8,7 @@ import requests
 import feedparser
 from datetime import datetime, timezone, date
 from groq import Groq
+from collection_only import validate_collection_only
 
 # ---------------------------------------------------------------
 # CONFIG
@@ -92,13 +93,6 @@ VARIANT_MAP = {
     "pulao": "polao", "polau": "polao", "halim": "haleem",
     "bangla": "bangladeshi", "bengali": "bangladeshi", "desi": "bangladeshi",
 }
-
-# Blocks claims like "we deliver" / "delivered to your door"
-DELIVERY_CLAIM = re.compile(
-    r"\b(we deliver|delivered to|free delivery|home delivery|doorstep|"
-    r"delivery (?:across|to|within)|deliver(?:s|ed|ing)? (?:your|to|across|straight))\b",
-    re.I,
-)
 
 FALLBACK_DIRECT_ANSWER = {
     "question": "Where can I get authentic halal Bangladeshi food near E2?",
@@ -611,10 +605,8 @@ CRITICAL: Valid JSON only. Body must be a single-line string. Use [PARA] for all
                 print("faqs missing - using fallback")
             data["faqs"] = faqs[:3]
 
-            # Never allow delivery claims
-            all_text = " ".join([data["body"], json.dumps(data["directAnswer"]), json.dumps(data["faqs"])])
-            if DELIVERY_CLAIM.search(all_text):
-                raise ValueError("Output claims delivery (collection only)")
+            # Check every generated field, including metadata and nested answers.
+            validate_collection_only(data)
 
             if primary_keyword.lower() not in data["body"].lower():
                 print(f"Note: primary keyword '{primary_keyword}' not found verbatim in body")
@@ -708,6 +700,9 @@ def post_to_sanity(data, image, slug):
         doc["featuredImageUrl"] = image["url"]
         doc["featuredImageAlt"] = image["alt"]
         doc["imageSource"]      = image["source"]
+
+    # Final guard includes the selected image metadata and generated slug.
+    validate_collection_only(doc)
 
     url = f"https://{VITE_SANITY_PROJECT_ID}.api.sanity.io/v2024-01-01/data/mutate/{VITE_SANITY_DATASET}"
     res = requests.post(

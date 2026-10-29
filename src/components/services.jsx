@@ -6,7 +6,7 @@ import TiltCard from "./TiltCard";
 const SERVICES = [
   {
     title: "Home Catering",
-    description: "Freshly prepared meals delivered straight to your door for any occasion.",
+    description: "Freshly prepared meals for collection only from E2 0RB. Pre-order at least two days ahead.",
     img: "/photos/a7.jpeg",
     Icon: Home,
   },

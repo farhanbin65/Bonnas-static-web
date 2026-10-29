@@ -43,7 +43,7 @@ export default function About() {
               About Bonna's
             </h2>
             <p className="text-sand text-base leading-relaxed mb-4">
-              Bonna's is a home-based catering service delivering authentic, delicious meals made with love.
+              Bonna's is a home-based catering service preparing authentic, delicious meals made with love. Collection only from E2 0RB, East London; please pre-order at least two days ahead.
               From traditional biryani to desserts, we specialise in high-quality home-cooked Bangladeshi food
               for parties and special occasions.
             </p>

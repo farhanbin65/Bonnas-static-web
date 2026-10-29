@@ -15,7 +15,7 @@ export default function Home() {
     <>
       <Helmet>
         <title>Bonna's | Authentic Bangladeshi Catering & Home Cooked Food in London</title>
-        <meta name="description" content="Halal Bangladeshi home catering in London. Authentic Bengali home cooked meals, event catering and food delivery. Order online from Bonna's today." />
+        <meta name="description" content="Halal Bangladeshi home catering in East London. Collection only from E2 0RB. Please pre-order at least two days ahead." />
         <link rel="canonical" href="https://www.bonnas.co.uk/" />
         <script type="application/ld+json">{`
           {

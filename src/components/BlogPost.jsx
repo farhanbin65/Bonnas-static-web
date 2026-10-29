@@ -245,7 +245,7 @@ function renderBody(body) {
           <div className="mt-12 bg-ember border border-gold-dust rounded-2xl p-6 text-center">
             <p className="text-cream font-semibold mb-2">Ready to order?</p>
             <p className="text-sand text-sm mb-4">
-              Authentic Bangladeshi food delivered to your door in London
+              Authentic Bangladeshi food for collection only from E2 0RB, East London. Please pre-order at least two days ahead.
             </p>
             <Link
               to="/menu"

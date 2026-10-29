@@ -35,7 +35,7 @@ export default function Blog() {
 
         <meta
           name="description"
-          content="Food stories, recipes, and guides from Bonna's kitchen. Authentic Bangladeshi catering in London — halal, homemade, and delivered to your door."
+          content="Food stories, recipes, and guides from Bonna's kitchen. Halal Bangladeshi catering. Collection only from E2 0RB, East London; pre-order at least two days ahead."
         />
 
         <meta name="robots" content="index, follow" />
@@ -52,7 +52,7 @@ export default function Blog() {
 
         <meta
           property="og:description"
-          content="Food stories, recipes and guides from Bonna's kitchen. Halal Bangladeshi catering delivered across London."
+          content="Food stories, recipes and guides from Bonna's kitchen. Collection only from E2 0RB, East London; pre-order at least two days ahead."
         />
 
         <meta property="og:url" content="https://www.bonnas.co.uk/blog" />
