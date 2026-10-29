@@ -1,11 +1,26 @@
 {
   "rewrites": [
     {
+      "source": "/sitemap.xml",
+      "destination": "/api/sitemap"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
   ],
   "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "bonnas.co.uk"
+        }
+      ],
+      "destination": "https://www.bonnas.co.uk/:path*",
+      "permanent": true
+    },
     {
       "source": "/blog/savoring-the-flavors-of-bengal-in-the-heart-of-london",
       "destination": "/blog/bringing-a-taste-of-bengal-to-your-table-authentic-bangladeshi-catering-in-londo",

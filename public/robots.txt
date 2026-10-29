@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://bonnas.co.uk/sitemap.xml
+Sitemap: https://www.bonnas.co.uk/sitemap.xml

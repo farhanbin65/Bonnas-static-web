@@ -42,7 +42,7 @@ Admin tools may load heavier dependencies on their own routes. Their performance
 | --- | --- | --- |
 | Page metadata | Home, menu, blog list and posts have titles, descriptions and canonical links | Source delivery claims corrected on 29 October; published CMS content and deployment still need verification |
 | Structured data | Home `FoodEstablishment`, blog `Blog`, post `BlogPosting` and breadcrumb markup | Validate accuracy, encoding and rendered output before treating as complete |
-| Crawl files | `public/robots.txt` and `public/sitemap.xml` | Sitemap is static: home, menu, blog and three article URLs; gallery is absent |
+| Crawl files | `public/robots.txt` and `public/sitemap.xml` | Request-time Sanity sitemap implemented; deployment and live coverage verification pending |
 | Search Console | Verification meta tag in `index.html` | Ownership, submissions and indexing need account checks |
 | Route splitting | Menu, gallery, blog, invoice and records use lazy imports | Verify production network requests when measuring |
 | Deferred sections | Home gallery, social and contact mount near the viewport | Important business text must not depend on scrolling |
@@ -147,12 +147,30 @@ Review comparable 28-day periods and seasonal context. Maintain a change log wit
 - Preserve the owner’s decision to upload smaller images later; document image work as deferred until ready.
 - Keep secrets out of docs, logs, generated client bundles and commits.
 - For code changes, run `npm run build`, relevant checks and browser verification. For these documentation-only changes, review links and repository facts; no application build is required.
-- Mark backlog items complete only with evidence, and update this file when behaviour changes.
+- After every implementation or confirmed external change, update both `project.md` and `backlog.md` in the same work session. Record what changed, validation evidence, remaining work and deployment status; distinguish owner-reported results from independently verified results. Mark backlog items complete only when their acceptance criteria are met.
 
 ## Key files
 
 `index.html`, `vercel.json`, `public/robots.txt`, `public/sitemap.xml`, `src/App.jsx`, `src/components/Home.jsx`, `src/components/menu.jsx`, `src/components/Blog.jsx`, `src/components/BlogPost.jsx`, `src/components/gallery.jsx`, `src/components/DeferredSection.jsx`, `src/components/HeroImageWall.jsx`, `src/lib/metaPixel.js`, `scripts/generate_blog.py`, `scripts/topics.json`, `scripts/keywords.json`, `scripts/post_index.json`, `.github/workflows/blog-pipeline.yml`.
 
-## Article consolidation prepared — 29 October 2026
+## Article consolidation progress — 29 October 2026
 
-The overlapping June 10/12 catering articles are being consolidated into `/blog/bringing-a-taste-of-bengal-to-your-table-authentic-bangladeshi-catering-in-londo`, Google’s reported selected canonical. Local changes redirect the retired “savoring-the-flavors…” URL permanently, exclude it from the listing/sitemap and remap related links. Revised collection-only copy and a revision-guarded CMS migration are prepared in `scripts/content/east-london-catering.json` and `scripts/merge-catering-articles.mjs`. The CMS request failed on network access before mutation; publication, deployment and live verification remain pending. Original CMS documents are not deleted.
+The overlapping June 10/12 catering articles are being consolidated into `/blog/bringing-a-taste-of-bengal-to-your-table-authentic-bangladeshi-catering-in-londo`, Google’s reported selected canonical. Local changes redirect the retired “savoring-the-flavors…” URL permanently, exclude it from the listing/sitemap and remap related links. Revised collection-only copy and a revision-guarded CMS migration are prepared in `scripts/content/east-london-catering.json` and `scripts/merge-catering-articles.mjs`. The initial CMS request from the agent failed before mutation. The owner subsequently ran the migration and supplied its “Published and verified” output: the retained article is now updated in Sanity, with its URL, publication date and images preserved. Website deployment and live redirect/content verification remain unconfirmed. Original CMS documents are not deleted.
+
+## Search Console findings and generator follow-up — 29 October 2026
+
+- `/blog` had a Soft 404 classification from the 5 October crawl. The owner’s 29 October live test reports that it can be indexed, and the owner confirmed article cards appear in Google’s rendered view. This does not confirm indexing or that validation/indexing requests were submitted.
+- The June 12 “savoring-the-flavors…” article was classified as a duplicate on 3 August, with no detected user canonical. Google selected the June 10 “bringing-a-taste…” article. A live browser check confirmed the June 12 article now has a self-canonical, but its overlapping content justified consolidation.
+- Keep one shared article template. Unique page code is unnecessary; distinct search intent and useful original content matter. Generator intent/similarity checks against existing articles and an update-versus-new-post decision are planned under SEO-14/15, not implemented yet.
+
+## Canonical host progress — 29 October 2026
+
+SEO-04 retains `https://www.bonnas.co.uk` as the preferred origin. `public/robots.txt` now points to its sitemap, matching existing sitemap entries and page canonicals. `vercel.json` adds a permanent, host-scoped redirect from `bonnas.co.uk` to the same path on HTTPS www; the article consolidation redirect is preserved. No dashboard settings were changed. Deployment and live HTTP/HTTPS redirect checks, query preservation, loop checks, preview indexing controls and rendered canonical verification remain pending. The local live request failed DNS resolution, so source configuration is not evidence of production behaviour. Gallery metadata is still tracked by SEO-07.
+
+SEO-04 validation (29 October 2026): production build and `git diff --check` passed; Vercel configuration parses as JSON and built robots.txt matches source. Hosting redirect behaviour requires deployment verification.
+
+## Sitemap implementation — 29 October 2026
+
+SEO-03 now uses `api/sitemap.js` via a Vercel rewrite for `/sitemap.xml`, before the SPA fallback. Removed the old `public/sitemap.xml`. Each request queries published Sanity content without caching, so automated and manual publish/update/delete changes need no deployment to refresh the sitemap. Public static routes include gallery; article URLs exclude drafts, release versions, invalid slugs and the retired duplicate, with deduplication and actual CMS modification dates. Static routes omit unknown modification dates. CMS failures return uncached 503 with Retry-After. No CMS documents were changed. `scripts/test-sitemap.mjs` verifies filtering, timestamps and route coverage. Deployment, live XML/count/URL checks and Search Console acceptance remain pending; Vite preview alone does not run Vercel functions.
+
+SEO-03 validation (29 October 2026): production build, sitemap fixture checks, generated XML parsing and `git diff --check` passed. Live Sanity and deployed function verification remain pending.
