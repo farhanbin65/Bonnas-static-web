@@ -1,3 +1,4 @@
+import { canonicalBlogSlug } from "../lib/blogRedirects";
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
@@ -63,7 +64,7 @@ function renderBody(body) {
       parts.push(
         <Link
           key={`link-${pIndex}-${match.index}`}
-          to={`/blog/${slug}`}
+          to={`/blog/${canonicalBlogSlug(slug)}`}
           className="text-pink-bonnas underline underline-offset-2 hover:text-pink-dark transition-colors"
         >
           {anchor}

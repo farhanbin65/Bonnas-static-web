@@ -4,5 +4,12 @@
       "source": "/(.*)",
       "destination": "/index.html"
     }
+  ],
+  "redirects": [
+    {
+      "source": "/blog/savoring-the-flavors-of-bengal-in-the-heart-of-london",
+      "destination": "/blog/bringing-a-taste-of-bengal-to-your-table-authentic-bangladeshi-catering-in-londo",
+      "permanent": true
+    }
   ]
 }

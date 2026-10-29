@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { retiredBlogSlug, retainedBlogSlug } from "./lib/blogRedirects";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { lazy, Suspense, useEffect } from "react";
 import { Analytics } from "@vercel/analytics/react";
 import { CartProvider } from "./context/CartContext";
@@ -47,6 +48,7 @@ export default function App() {
           />
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/blog" element={<Blog />} />
+          <Route path={`/blog/${retiredBlogSlug}`} element={<Navigate to={`/blog/${retainedBlogSlug}`} replace />} />
           <Route path="/blog/:slug" element={<BlogPost />} />
           <Route path="/invoice" element={<Invoice />} />
           <Route path="/records" element={<BusinessSheet />} />

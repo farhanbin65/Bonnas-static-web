@@ -1,3 +1,4 @@
+import { retiredBlogSlug } from "../lib/blogRedirects";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
@@ -16,7 +17,7 @@ export default function Blog() {
         _id, title, slug, excerpt, publishedAt, keywords
       }`)
       .then((data) => {
-        setPosts(data);
+        setPosts(data.filter((post) => post.slug?.current && post.slug.current !== retiredBlogSlug));
         setLoading(false);
       })
       .catch(() => setLoading(false));

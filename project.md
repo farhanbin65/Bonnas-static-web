@@ -152,3 +152,7 @@ Review comparable 28-day periods and seasonal context. Maintain a change log wit
 ## Key files
 
 `index.html`, `vercel.json`, `public/robots.txt`, `public/sitemap.xml`, `src/App.jsx`, `src/components/Home.jsx`, `src/components/menu.jsx`, `src/components/Blog.jsx`, `src/components/BlogPost.jsx`, `src/components/gallery.jsx`, `src/components/DeferredSection.jsx`, `src/components/HeroImageWall.jsx`, `src/lib/metaPixel.js`, `scripts/generate_blog.py`, `scripts/topics.json`, `scripts/keywords.json`, `scripts/post_index.json`, `.github/workflows/blog-pipeline.yml`.
+
+## Article consolidation prepared — 29 October 2026
+
+The overlapping June 10/12 catering articles are being consolidated into `/blog/bringing-a-taste-of-bengal-to-your-table-authentic-bangladeshi-catering-in-londo`, Google’s reported selected canonical. Local changes redirect the retired “savoring-the-flavors…” URL permanently, exclude it from the listing/sitemap and remap related links. Revised collection-only copy and a revision-guarded CMS migration are prepared in `scripts/content/east-london-catering.json` and `scripts/merge-catering-articles.mjs`. The CMS request failed on network access before mutation; publication, deployment and live verification remain pending. Original CMS documents are not deleted.
