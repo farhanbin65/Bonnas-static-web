@@ -10,13 +10,13 @@ function Toast({ message, type, onClose }) {
   }, [onClose]);
 
   return (
-    <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-5 py-3 rounded-full shadow-lg text-sm font-medium transition-all ${
+    <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-md flex items-center gap-3 px-5 py-3 rounded-full shadow-lg text-sm font-medium transition-all ${
       type === "success"
         ? "bg-pink-bonnas text-night"
         : "bg-red-500 text-white"
     }`}>
       <span>{type === "success" ? "✓" : "✕"}</span>
-      <span>{message}</span>
+      <span className="min-w-0 break-words">{message}</span>
       <button onClick={onClose} className="ml-1 opacity-60 hover:opacity-100 text-xs">✕</button>
     </div>
   );
@@ -108,11 +108,11 @@ export default function Reservations() {
         {/* Contact options */}
         <div className="grid sm:grid-cols-2 gap-4 mb-10">
           <a href="mailto:orders@bonnas.co.uk"
-            className="flex items-center gap-4 bg-ember border border-gold-dust hover:border-pink-bonnas/50 rounded-2xl p-5 text-left transition-colors group">
+            className="flex items-center gap-4 bg-ember border border-gold-dust hover:border-pink-bonnas/50 rounded-2xl p-4 sm:p-5 min-w-0 text-left transition-colors group">
             <div className="w-11 h-11 rounded-full bg-pink-bonnas/10 border border-pink-bonnas/30 flex items-center justify-center text-xl shrink-0">
               ✉️
             </div>
-            <div>
+            <div className="min-w-0 break-words">
               <p className="text-cream font-semibold text-sm">Email Us</p>
               <p className="text-sand text-xs mt-0.5">orders@bonnas.co.uk</p>
               <p className="text-pink-bonnas text-xs mt-1 group-hover:underline">Send a message →</p>
@@ -120,11 +120,11 @@ export default function Reservations() {
           </a>
 
           <a href="#menu"
-            className="flex items-center gap-4 bg-ember border border-gold-dust hover:border-pink-bonnas/50 rounded-2xl p-5 text-left transition-colors group">
+            className="flex items-center gap-4 bg-ember border border-gold-dust hover:border-pink-bonnas/50 rounded-2xl p-4 sm:p-5 min-w-0 text-left transition-colors group">
             <div className="w-11 h-11 rounded-full bg-pink-bonnas/10 border border-pink-bonnas/30 flex items-center justify-center text-xl shrink-0">
               🛒
             </div>
-            <div>
+            <div className="min-w-0 break-words">
               <p className="text-cream font-semibold text-sm">Order Online</p>
               <p className="text-sand text-xs mt-0.5">Browse our full menu</p>
               <p className="text-pink-bonnas text-xs mt-1 group-hover:underline">Go to menu →</p>
@@ -133,25 +133,25 @@ export default function Reservations() {
         </div>
 
         {/* Notify me */}
-        <div className="bg-ember border border-gold-dust rounded-2xl p-6">
+        <div className="bg-ember border border-gold-dust rounded-2xl p-4 sm:p-6 min-w-0">
           <p className="text-cream font-semibold text-sm mb-1">Get notified when reservations go live</p>
           <p className="text-sand text-xs mb-4">Leave your email and we'll let you know first</p>
 
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2 min-w-0">
             <input aria-label="Email for reservation notifications"
               type="email"
               placeholder="your@email.com"
               value={email}
               onChange={(e) => { setEmail(e.target.value); setError(""); }}
               onKeyDown={(e) => e.key === "Enter" && handleNotify()}
-              className={`flex-1 bg-night border text-cream placeholder-sand rounded-full px-4 py-2.5 text-sm outline-none transition-colors ${
+              className={`w-full min-w-0 sm:flex-1 bg-night border text-cream placeholder-sand rounded-full px-4 py-2.5 text-sm outline-none transition-colors ${
                 error ? "border-red-400 focus:border-red-400" : "border-gold-dust focus:border-pink-bonnas"
               }`}
             />
             <button
               onClick={handleNotify}
               disabled={sending}
-              className="bg-pink-bonnas text-night px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-pink-dark transition-colors disabled:opacity-50 whitespace-nowrap"
+              className="w-full sm:w-auto shrink-0 bg-pink-bonnas text-night px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-pink-dark transition-colors disabled:opacity-50 whitespace-nowrap"
             >
               {sending ? "Sending…" : "Notify me"}
             </button>

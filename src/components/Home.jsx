@@ -1,3 +1,4 @@
+import ContactDetails from "./ContactDetails";
 import PageMetadata from "./PageMetadata";
 import { lazy } from "react";
 import DeferredSection from "./DeferredSection";
@@ -44,8 +45,9 @@ export default function Home() {
       <MenuTeaser />
       <DeferredSection id="gallery" label="Loading gallery"><Gallery /></DeferredSection>
       <Reservations />
+      <ContactDetails />
       <DeferredSection id="social" label="Loading social"><Social /></DeferredSection>
-      <DeferredSection id="interactive" label="Loading contact"><Contact /></DeferredSection>
+      <DeferredSection id="interactive" label="Loading games"><Contact /></DeferredSection>
     </>
   );
 }

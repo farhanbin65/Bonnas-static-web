@@ -1,3 +1,4 @@
+import NotFound from "./NotFound";
 import { socialImage } from "../lib/socialImage";
 import { canonicalBlogSlug } from "../lib/blogRedirects";
 import { useEffect, useState } from "react";
@@ -7,10 +8,17 @@ import { client } from "../lib/sanityClient";
 
 export default function BlogPost() {
   const { slug } = useParams();
+  return <BlogPostContent key={slug} slug={slug} />;
+}
+
+function BlogPostContent({ slug }) {
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [retry, setRetry] = useState(0);
 
 useEffect(() => {
+  let active = true;
   client
     .fetch(
       `*[_type == "blogPost" && slug.current == $slug][0] {
@@ -19,9 +27,10 @@ useEffect(() => {
       }`,
       { slug }
     )
-    .then((data) => { setPost(data); setLoading(false); })
-    .catch(() => setLoading(false));
-}, [slug]);
+    .then((data) => { if (active) { setPost(data); setLoading(false); } })
+    .catch(() => { if (active) { setError(true); setLoading(false); } });
+  return () => { active = false; };
+}, [slug, retry]);
 
   if (loading) return (
     <div className="min-h-screen bg-night flex items-center justify-center">
@@ -29,12 +38,15 @@ useEffect(() => {
     </div>
   );
 
-  if (!post) return (
-    <div className="min-h-screen bg-night flex flex-col items-center justify-center gap-4">
-      <p className="text-cream">Post not found.</p>
-      <Link to="/blog" className="text-pink-bonnas text-sm hover:underline">← Back to blog</Link>
-    </div>
+  if (error) return (
+    <section role="alert" className="min-h-screen py-24 px-6 text-center text-cream">
+      <Helmet><title>Article temporarily unavailable | Bonna’s</title></Helmet>
+      <h1 className="text-3xl font-bold">We couldn’t load this article</h1>
+      <p className="mt-4">Please try again shortly.</p>
+      <button className="mt-6 underline" onClick={() => { setLoading(true); setError(false); setRetry(value => value + 1); }}>Retry</button>
+    </section>
   );
+  if (!post) return <NotFound article />;
 
   const canonicalUrl = `https://www.bonnas.co.uk/blog/${post.slug.current}`;
   const shareImage = socialImage(post.featuredImageUrl);

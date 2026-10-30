@@ -13,7 +13,7 @@ const LINKS = [
   { label: "Services",     href: "/#services" },
   { label: "Gallery",      href: "/gallery" },
   { label: "Reservations", href: "/#reservations" },
-  { label: "Contact",      href: "/#interactive" },
+  { label: "Contact",      href: "/#contact" },
 ];
 
 export default function Footer() {
@@ -38,7 +38,7 @@ export default function Footer() {
             </p>
             {/* Halal badge */}
             <span className="inline-flex items-center gap-1.5 bg-pink-bonnas/10 border border-pink-bonnas/30 text-pink-bonnas text-xs font-semibold px-3 py-1.5 rounded-full w-fit">
-              ✓ Halal Certified
+              ✓ 100% halal
             </span>
           </div>
 
@@ -61,14 +61,14 @@ export default function Footer() {
           <div>
             <p className="text-cream font-semibold text-sm mb-4 tracking-wide">Contact</p>
             <div className="flex flex-col gap-3">
-              <a href="mailto:info@bonnas.co.uk" className="flex items-center gap-2 text-sand text-xs hover:text-pink-bonnas transition-colors">
-                <span className="text-pink-bonnas">✉</span> info@bonnas.co.uk
+              <a href="mailto:orders@bonnas.co.uk" className="flex items-center gap-2 text-sand text-xs hover:text-pink-bonnas transition-colors">
+                <span className="text-pink-bonnas">✉</span> orders@bonnas.co.uk
               </a>
               <p className="flex items-center gap-2 text-sand text-xs">
-                <span className="text-pink-bonnas">📍</span> London, E2, UK
+                <span className="text-pink-bonnas">📍</span> Collection only · E2 0RB, East London
               </p>
               <p className="flex items-center gap-2 text-sand text-xs">
-                <span className="text-pink-bonnas">🕐</span> Mon–Fri 12:00–21:00
+                <span className="text-pink-bonnas">🕐</span> Pre-order at least two days ahead
               </p>
 
               {/* Socials */}

@@ -1,53 +1,11 @@
-import { useEffect, useState } from "react";
-import { motion as Motion, AnimatePresence } from "framer-motion";
-import { X, Download } from "lucide-react";
+import { useState } from "react";
+import { motion as Motion } from "framer-motion";
+import MenuViewer, { MENU_PAGES } from "./menu-viewer/MenuViewer";
 import { staggerContainer, staggerItem } from "../lib/motion";
 import HeroImageWall from "./HeroImageWall";
 
-const menuPreviews = [
-  "/photos/menu1.jpg",
-  "/photos/menu2.jpg",
-  "/photos/menu3.jpg",
-];
-
 export default function Hero() {
-
-  // Menu image preview
   const [selectedMenu, setSelectedMenu] = useState(null);
-
-  // PDF preview
-  const [showPdfPreview, setShowPdfPreview] = useState(false);
-
-  // Close modals with Escape key
-  useEffect(() => {
-    const handleEscape = (event) => {
-      if (event.key === "Escape") {
-        setSelectedMenu(null);
-        setShowPdfPreview(false);
-      }
-    };
-
-    window.addEventListener("keydown", handleEscape);
-
-    return () => {
-      window.removeEventListener("keydown", handleEscape);
-    };
-  }, []);
-
-  // Prevent page scrolling while a modal is open
-  useEffect(() => {
-    const isModalOpen = selectedMenu !== null || showPdfPreview;
-
-    if (isModalOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [selectedMenu, showPdfPreview]);
 
   return (
     <>
@@ -97,13 +55,13 @@ export default function Hero() {
               </Motion.p>
 
               {/* ======================================================
-                  THREE MENU PREVIEW IMAGES
+                  FOUR MENU PREVIEW IMAGES
               ======================================================= */}
               <Motion.div
                 variants={staggerItem}
-                className="mt-7 sm:mt-8 grid grid-cols-3 gap-2.5 sm:gap-3"
+                className="mt-7 sm:mt-8 grid grid-cols-4 gap-2.5 sm:gap-3"
               >
-                {menuPreviews.map((img, i) => (
+                {MENU_PAGES.map((img, i) => (
                   <button
                     key={i}
                     type="button"
@@ -115,7 +73,7 @@ export default function Hero() {
                       src={img}
                       width="1414" height="2000" decoding="async"
                       alt={`Menu ${i + 1}`}
-                      className="w-full aspect-[3/4] object-cover rounded-lg transition-transform duration-500 group-hover:scale-110"
+                      className="w-full aspect-[1414/2000] object-contain rounded-lg transition-transform duration-500 group-hover:scale-110"
                     />
 
                     {/* Hover overlay */}
@@ -155,7 +113,7 @@ export default function Hero() {
                 {/* PDF PREVIEW BUTTON */}
                 <button
                   type="button"
-                  onClick={() => setShowPdfPreview(true)}
+                  onClick={() => setSelectedMenu(0)}
                   className="flex-1 border border-pink-bonnas text-pink-bonnas px-6 py-3.5 rounded-full text-sm font-medium text-center hover:bg-pink-bonnas hover:text-night transition-colors duration-200"
                 >
                    Menu
@@ -195,114 +153,7 @@ export default function Hero() {
         </div>
       </section>
 
-      {/* ==========================================================
-          MENU IMAGE MODAL
-      =========================================================== */}
-      <AnimatePresence>
-        {selectedMenu !== null && (
-          <Motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6"
-            onClick={() => setSelectedMenu(null)}
-          >
-            <Motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="relative max-w-5xl max-h-[95vh] w-full flex items-center justify-center"
-              onClick={(event) => event.stopPropagation()}
-            >
-              {/* Close Button */}
-              <button
-                type="button"
-                onClick={() => setSelectedMenu(null)}
-                aria-label="Close menu preview"
-                className="absolute top-2 right-2 sm:-top-4 sm:-right-4 z-20 w-10 h-10 rounded-full bg-night border border-gold-dust text-cream flex items-center justify-center hover:bg-pink-bonnas hover:text-night transition-colors duration-200"
-              >
-                <X size={20} />
-              </button>
-
-              {/* Large Menu Image */}
-              <img
-                src={menuPreviews[selectedMenu]}
-                alt={`Menu ${selectedMenu + 1}`}
-                className="max-w-full max-h-[90vh] object-contain rounded-xl shadow-2xl"
-              />
-            </Motion.div>
-          </Motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ==========================================================
-          PDF PREVIEW MODAL
-      =========================================================== */}
-      <AnimatePresence>
-        {showPdfPreview && (
-          <Motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6"
-            onClick={() => setShowPdfPreview(false)}
-          >
-            <Motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="relative w-full max-w-5xl h-[92vh] bg-night rounded-2xl overflow-hidden border border-gold-dust/60 shadow-2xl flex flex-col"
-              onClick={(event) => event.stopPropagation()}
-            >
-              {/* PDF Header */}
-              <div className="flex items-center justify-between gap-4 px-4 sm:px-6 py-3 border-b border-gold-dust/40 bg-night shrink-0">
-                <div>
-                  <h3 className="text-cream font-bold text-base sm:text-lg">
-                    BONNAS Menu
-                  </h3>
-                  <p className="text-sand text-xs sm:text-sm">
-                    Preview our menu before downloading
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  {/* Download Button */}
-                  <a
-                    href="/menu.pdf"
-                    download
-                    className="inline-flex items-center gap-2 bg-pink-bonnas text-night px-4 py-2 rounded-full text-xs sm:text-sm font-bold hover:bg-pink-dark transition-colors duration-200"
-                  >
-                    <Download size={16} />
-                    <span>Download PDF</span>
-                  </a>
-
-                  {/* Close Button */}
-                  <button
-                    type="button"
-                    onClick={() => setShowPdfPreview(false)}
-                    aria-label="Close PDF preview"
-                    className="w-9 h-9 rounded-full border border-gold-dust text-cream flex items-center justify-center hover:bg-pink-bonnas hover:text-night transition-colors duration-200"
-                  >
-                    <X size={18} />
-                  </button>
-                </div>
-              </div>
-
-              {/* PDF Viewer */}
-              <div className="flex-1 bg-black/30 p-2 sm:p-4">
-                <iframe
-                  src="/menu.pdf"
-                  title="Bonna's Menu PDF"
-                  className="w-full h-full rounded-lg bg-white"
-                />
-              </div>
-            </Motion.div>
-          </Motion.div>
-        )}
-      </AnimatePresence>
+      {selectedMenu !== null && <MenuViewer initialPage={selectedMenu} onClose={() => setSelectedMenu(null)} />}
     </>
   );
 }
-

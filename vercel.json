@@ -9,8 +9,20 @@
       "destination": "/api/blog"
     },
     {
-      "source": "/(.*)",
+      "source": "/blog/:slug",
+      "destination": "/api/article"
+    },
+    {
+      "source": "/",
       "destination": "/index.html"
+    },
+    {
+      "source": "/:page(menu|gallery|invoice|records)",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/api/not-found"
     }
   ],
   "redirects": [
@@ -34,6 +46,29 @@
   "functions": {
     "api/blog.js": {
       "includeFiles": "{dist/index.html,dist-ssr/**}"
+    },
+    "api/article.js": {
+      "includeFiles": "dist/index.html"
     }
-  }
+  },
+  "headers": [
+    {
+      "source": "/invoice/:path*",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/records/:path*",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    }
+  ]
 }

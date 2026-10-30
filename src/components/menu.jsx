@@ -1,3 +1,4 @@
+import MenuPreviewGrid from "./menu-viewer/MenuPreviewGrid";
 import PageMetadata from "./PageMetadata";
 import LoadingImage from "./LoadingImage";
 import { useState, useRef } from "react";
@@ -188,22 +189,7 @@ export default function Menu() {
       </motion.div>
       */}
       {/* PDF section */}
-      <div className="mt-16 border-t border-gold-dust pt-12 max-w-7xl mx-auto">
-        <h3 className="text-xl font-semibold text-center text-cream mb-2">Full Menu PDF</h3>
-        <p className="text-center text-sand text-sm mb-8">Download our complete menu</p>
-        <div className="flex flex-col md:flex-row gap-6 justify-center items-center mb-8">
-          {["/photos/menu1.jpg", "/photos/menu2.jpg", "/photos/menu3.jpg"].map((img, i) => (
-            <div key={i} className="border border-gold-dust rounded-xl p-2 max-w-xs w-full">
-              <LoadingImage src={img} alt={"Menu " + (i + 1)} width="1414" height="2000" className="w-full aspect-[1414/2000] rounded-lg" />
-            </div>
-          ))}
-        </div>
-        <div className="flex justify-center">
-          <a href="/menu.pdf" download className="px-8 py-3 border border-pink-bonnas text-pink-bonnas rounded-full text-sm font-medium hover:bg-pink-bonnas hover:text-night transition-colors">
-            Download Menu PDF
-          </a>
-        </div>
-      </div>
+      <MenuPreviewGrid />
 
       {/* Variant picker
       <AnimatePresence>

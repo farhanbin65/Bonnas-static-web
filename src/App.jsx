@@ -1,3 +1,5 @@
+import NotFound from "./components/NotFound";
+import AdminNoIndex from "./components/AdminNoIndex";
 import { retiredBlogSlug, retainedBlogSlug } from "./lib/blogRedirects";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { lazy, Suspense, useEffect } from "react";
@@ -50,8 +52,9 @@ export default function App() {
           <Route path="/blog" element={<Blog />} />
           <Route path={`/blog/${retiredBlogSlug}`} element={<Navigate to={`/blog/${retainedBlogSlug}`} replace />} />
           <Route path="/blog/:slug" element={<BlogPost />} />
-          <Route path="/invoice" element={<Invoice />} />
-          <Route path="/records" element={<BusinessSheet />} />
+          <Route path="/invoice" element={<AdminNoIndex><Invoice /></AdminNoIndex>} />
+          <Route path="/records" element={<AdminNoIndex><BusinessSheet /></AdminNoIndex>} />
+          <Route path="*" element={<NotFound />} />
         </Routes></Suspense>
         <SiteChrome><Footer /></SiteChrome>
         <MarketingConsent />
