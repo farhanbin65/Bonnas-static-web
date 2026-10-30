@@ -1,6 +1,18 @@
 # Bonna’s — project and SEO reference
 
-Last reviewed: 29 October 2026. Based on the local repository through `fd053ae` and agreed business requirements. This is an implementation inventory, not a live-site SEO audit: production deployment, Search Console results and analytics delivery have not been verified here.
+Last reviewed: 30 October 2026. Current source checked at local commit `b1f455f`. Implementation, independent HTTP verification and owner-reported checks are distinguished below; unverified deployment/indexing must not be assumed.
+
+## Current status — 30 October 2026
+
+This summary supersedes earlier dated progress where behaviour has changed.
+
+- Four menu PNG pages are used in hero, the menu page and a shared homepage menu section at the former teaser position. Thumbnails open the shared swipeable viewer with arrows, zoom and screen-fitting layout.
+- The menu page has one **Menu** PDF link opening in the same tab; browser Back returns to the website. Extra view/download actions were removed. Hero’s Menu button opens the image viewer.
+- Ordering flow is now **vertical at all widths**, with compact cards and SVG icons/arrows; the earlier five-column layout is superseded.
+- Reservation input/button stack on phones, contact text wraps, toast width is constrained and the document background matches the site. These address the reported 320px overflow; visual confirmation remains pending.
+- Local build, focused lint and source whitespace checks passed during implementation. Actual 320px/iPhone layout, swipe/zoom/rotation and PDF Back behaviour still need verification.
+- Repository was clean at the start of this documentation update, with latest local commit `b1f455f` (`view menu fixed, menu cahnged to 4`). Earlier implementation changes are therefore committed locally; this alone does not confirm remote push or Vercel deployment. Only this documentation update is newly uncommitted.
+- Prior live blog first-page HTML/cache checks passed, and the owner reported browser/Search Console live checks passed. Actual indexing remains unconfirmed. SEO-08/09 live routing, noindex and contact checks remain outstanding.
 
 ## Purpose
 
@@ -22,14 +34,14 @@ Use [backlog.md](backlog.md) for outstanding work. Documentation does not implem
 
 ## Architecture and routes
 
-The installed package manifest declares React 19, Vite 7, React Router 7, Tailwind CSS and DaisyUI. The site is a React application hosted on Vercel, with first-page blog server rendering implemented locally and other routes client-rendered, with Sanity content and Supabase-backed administrative features. `react-helmet-async` manages page metadata after rendering. `vercel.json` routes the sitemap and blog listing to functions before the shared HTML fallback.
+The installed package manifest declares React 19, Vite 7, React Router 7, Tailwind CSS and DaisyUI. The site is a React application hosted on Vercel, with first-page blog server rendering verified live on 29 October and other routes client-rendered, with Sanity content and Supabase-backed administrative features. `react-helmet-async` manages page metadata after rendering. `vercel.json` routes the sitemap and blog listing to functions before the shared HTML fallback.
 
 | Route | Purpose | SEO treatment |
 | --- | --- | --- |
 | `/` | Brand, services, food imagery and contact entry points | Primary local catering landing page |
 | `/menu` | Food menu and WhatsApp ordering entry | High-intent organic landing page |
 | `/gallery` | Food photography, search and lightbox | Supporting public page; dedicated metadata implemented, live verification pending |
-| `/blog` | Sanity articles, nine per displayed page | Linked query pagination implemented; browser/deployment checks pending |
+| `/blog` | Sanity articles, nine per displayed page | Linked query pagination implemented; owner-reported browser checks passed |
 | `/blog/:slug` | Individual articles | Unique metadata and article schema exist |
 | `/invoice` | Invoice/quote administration and PDF export | Exclude from search; preserve access controls |
 | `/records` | Business records administration | Exclude from search; preserve access controls |
@@ -288,3 +300,13 @@ Replaced the duplicated emoji ordering flows with one shared OrderingFlowchart u
 Owner reported a white right edge at 320px, an overflowing Notify me button, and requested a vertical ordering flow. Reservation notification controls now stack below 640px with a min-width-zero/full-width input and contained button; contact card text can wrap, card padding reduces on narrow screens and the fixed toast is constrained to viewport width. Set document/body background to the existing night theme and removed body margin. The input/button row was an identified overflow source; elimination of every live 320px overflow still requires device verification.
 
 OrderingFlowchart now uses compact top-to-bottom cards at all widths, with SVG icons and downward arrows, replacing the five-column layout. Production build, focused lint and source diff checks passed. Pending actual 320px/device verification, commit and deployment.
+
+## Menu layout simplification — 30 October 2026
+
+Removed the homepage menu teaser and its unused component; the hero menu remains available. `/menu` now owns both the compact ordering flow and menu previews: at 1024px and wider the vertical flow is on the left and the four menu thumbnails are on the right in a two-by-two grid. Smaller screens retain stacked sections. Removed the separate flowchart mount in App so it is not duplicated above the menu. Step 2 description now reads “WhatsApp us”. Existing same-tab PDF link and swipeable thumbnail viewer are preserved.
+
+Production client/server build, focused lint and source whitespace checks passed. Desktop/mobile visual verification and deployment remain pending; no commit or push performed.
+
+## Homepage menu restored — 30 October 2026
+
+Restored the current menu content to the former teaser position, after Services and before Gallery. Home and /menu now share MenuSectionContent: vertical ordering flow beside the four menu pages on large screens, stacked on smaller screens. Preserved swipeable previews and the same-tab Menu PDF link. The homepage section has id=menu, restoring /#menu navigation. Home keeps its own page metadata; the menu route metadata is not embedded. Build, focused lint and source whitespace checks passed; live visual verification and deployment remain pending.

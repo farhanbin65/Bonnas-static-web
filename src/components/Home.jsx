@@ -1,3 +1,4 @@
+import MenuSectionContent from "./menu-viewer/MenuSectionContent";
 import ContactDetails from "./ContactDetails";
 import PageMetadata from "./PageMetadata";
 import { lazy } from "react";
@@ -6,7 +7,6 @@ import { Helmet } from "react-helmet-async";
 import Hero from "./hero";
 import About from "./about";
 import Services from "./services";
-import MenuTeaser from "./menuTeaser";
 const Gallery = lazy(() => import("./gallery"));
 import Reservations from "./reservations";
 const Social = lazy(() => import("./social"));
@@ -42,7 +42,9 @@ export default function Home() {
       <Hero />
       <About />
       <Services />
-      <MenuTeaser />
+      <section id="menu" aria-label="Menu and how to order" className="py-12 px-4 sm:px-6 md:px-20 bg-night">
+        <MenuSectionContent />
+      </section>
       <DeferredSection id="gallery" label="Loading gallery"><Gallery /></DeferredSection>
       <Reservations />
       <ContactDetails />

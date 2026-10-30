@@ -16,7 +16,6 @@ const BlogPost = lazy(() => import("./components/BlogPost"));
 const Invoice = lazy(() => import("./components/invoice/Invoice"));
 const BusinessSheet = lazy(() => import("./components/records/BusinessSheet"));
 import Footer from "./components/footer";
-import OrderingFlowchart from "./components/OrderingFlowchart"; // Import it
 
 import LoadingSkeleton from "./components/LoadingSkeleton";
 
@@ -39,15 +38,7 @@ export default function App() {
         <SiteChrome><Navbar /><Toast /></SiteChrome>
         <Suspense fallback={<LoadingSkeleton />}><Routes>
           <Route path="/" element={<Home />} />
-          <Route 
-            path="/menu" 
-            element={
-              <>
-                <OrderingFlowchart />
-                <Menu />
-              </>
-            } 
-          />
+          <Route path="/menu" element={<Menu />} />
           <Route path="/gallery" element={<Gallery standalone />} />
           <Route path="/blog" element={<Blog />} />
           <Route path={`/blog/${retiredBlogSlug}`} element={<Navigate to={`/blog/${retainedBlogSlug}`} replace />} />

@@ -3,17 +3,17 @@ import { Utensils, MessageCircle, CreditCard, MapPin, Smile, ArrowDown, Mail } f
 
 const steps = [
   { title: 'Choose', desc: 'Select your dishes', icon: Utensils },
-  { title: 'Contact', desc: 'Send your order', icon: MessageCircle },
+  { title: 'Contact', desc: 'WhatsApp us', icon: MessageCircle },
   { title: 'Pay', desc: '100% upfront to confirm', icon: CreditCard },
   { title: 'Collect', desc: 'From E2 0RB', icon: MapPin },
   { title: 'Enjoy', desc: 'Fresh Bengali food', icon: Smile },
 ];
 
-export default function OrderingFlowchart() {
-  return <section aria-labelledby="order-flow-heading" className="py-8 lg:py-16 px-3 sm:px-6 lg:px-20 bg-night">
+export default function OrderingFlowchart({ compact = false }) {
+  return <section aria-labelledby="order-flow-heading" className={compact ? "min-w-0 bg-night" : "py-8 lg:py-16 px-3 sm:px-6 lg:px-20 bg-night"}>
     <div className="max-w-7xl mx-auto">
       <header className="text-center mb-5 lg:mb-10">
-        <h2 id="order-flow-heading" className="text-2xl lg:text-4xl font-bold text-cream">How to Order</h2>
+        <h2 id="order-flow-heading" className={`${compact ? "text-2xl" : "text-2xl lg:text-4xl"} font-bold text-cream`}>How to Order</h2>
         <p className="mt-2 text-xs sm:text-sm text-sand">Five simple steps. Please pre-order at least two days ahead.</p>
       </header>
       <ol className="mx-auto max-w-2xl flex flex-col gap-3">

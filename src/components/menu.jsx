@@ -1,4 +1,4 @@
-import MenuPreviewGrid from "./menu-viewer/MenuPreviewGrid";
+import MenuSectionContent from "./menu-viewer/MenuSectionContent";
 import PageMetadata from "./PageMetadata";
 import LoadingImage from "./LoadingImage";
 import { useState, useRef } from "react";
@@ -189,7 +189,7 @@ export default function Menu() {
       </motion.div>
       */}
       {/* PDF section */}
-      <MenuPreviewGrid />
+      <MenuSectionContent />
 
       {/* Variant picker
       <AnimatePresence>

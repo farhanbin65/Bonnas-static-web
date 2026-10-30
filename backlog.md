@@ -1,8 +1,28 @@
 # Bonna’s SEO backlog
 
-Last reviewed: 29 October 2026. Companion: [project.md](project.md).
+Last reviewed: 30 October 2026. Companion: [project.md](project.md).
 
 All unchecked items are pending, including verification tasks. P0 = fix factual/discovery problems first; P1 = technical and measurement foundations; P2 = content/local growth; P3 = ongoing maintenance. Effort: S = small focused change, M = several related changes, L = architectural work. These are relative estimates, not deadlines.
+
+## Current status — 30 October 2026
+
+This summary supersedes earlier dated progress where behaviour has changed.
+
+- Four menu PNG pages are used in hero, the menu page and a shared homepage menu section at the former teaser position. Thumbnails open the shared swipeable viewer with arrows, zoom and screen-fitting layout.
+- The menu page has one **Menu** PDF link opening in the same tab; browser Back returns to the website. Extra view/download actions were removed. Hero’s Menu button opens the image viewer.
+- Ordering flow is now **vertical at all widths**, with compact cards and SVG icons/arrows; the earlier five-column layout is superseded.
+- Reservation input/button stack on phones, contact text wraps, toast width is constrained and the document background matches the site. These address the reported 320px overflow; visual confirmation remains pending.
+- Local build, focused lint and source whitespace checks passed during implementation. Actual 320px/iPhone layout, swipe/zoom/rotation and PDF Back behaviour still need verification.
+- Repository was clean at the start of this documentation update, with latest local commit `b1f455f` (`view menu fixed, menu cahnged to 4`). Earlier implementation changes are therefore committed locally; this alone does not confirm remote push or Vercel deployment. Only this documentation update is newly uncommitted.
+- Prior live blog first-page HTML/cache checks passed, and the owner reported browser/Search Console live checks passed. Actual indexing remains unconfirmed. SEO-08/09 live routing, noindex and contact checks remain outstanding.
+
+## Next verification batch
+
+- [ ] Check home and menu at 320px: no right-edge overflow, Notify me stays inside its card, vertical flow is readable.
+- [ ] Check all four menu pages, swipe/arrows, zoom, Escape/close and phone rotation.
+- [ ] Confirm the single Menu PDF link stays in the same tab and browser Back returns correctly.
+- [ ] Confirm deployed unknown/missing article responses, CMS error handling and invoice/records noindex headers (SEO-08).
+- [ ] Confirm contact facts/links exist before scrolling and /#contact navigation works (SEO-09).
 
 ## Update rule
 
@@ -52,7 +72,7 @@ Checked items mean the stated implementation exists, or the external activity wa
 
 - [ ] **SEO-11 — Render the generated answers and FAQs.** Effort M; owner: developer + content reviewer. Query `directAnswer` and `faqs` in `BlogPost.jsx`, render useful answers accessibly and handle old posts without these fields. Remove repetitive or irrelevant fallback answers during review. **Done when:** CMS fields appear as readable content and keyboard-accessible controls. Do not make FAQ rich-result visibility the success criterion.
 
-- [ ] **SEO-12 — Measure and refine mobile performance.** Effort M; owner: developer. Test home/menu/article at an iPhone 14-sized viewport and narrow mobile widths. Investigate the measured LCP element, eagerly loaded hero images, layout shifts, animation/interaction cost, fonts, embeds and public JS bundles. Confirm invoice/records/PDF dependencies stay out of initial public requests. **Done when:** no horizontal overflow, core ordering actions work, and before/after measurements show whether changes helped. Preserve skeletons and consent behaviour; do not treat a Lighthouse score as a ranking guarantee.
+- [ ] **SEO-12 — Measure and refine mobile performance.** Effort M; owner: developer. Test home/menu/article at an iPhone 14-sized viewport and narrow mobile widths. Investigate the measured LCP element, eagerly loaded hero images, layout shifts, animation/interaction cost, fonts, embeds and public JS bundles. Confirm invoice/records/PDF dependencies stay out of initial public requests. **Done when:** no horizontal overflow, core ordering actions work, and before/after measurements show whether changes helped. Preserve skeletons and consent behaviour; do not treat a Lighthouse score as a ranking guarantee. **Progress (30 October):** reservation overflow fixes and compact vertical SVG order flow are committed locally; 320px/device checks and performance measurements remain pending.
 
 - [ ] **SEO-13 — Optimise images when replacements are ready.** Effort M; owner: business owner + developer. **Deferred by owner request.** Upload smaller real food photographs; generate responsive sizes and appropriate modern formats through Sanity/CDN or the build. Add `srcset`/`sizes`, reserve dimensions, retain descriptive alt text for meaningful images and empty alt text for decoration. **Done when:** mobile downloads suitably sized images with acceptable visual quality and no new layout shifts; compare transferred bytes. Existing skeletons do not complete this task.
 
@@ -196,3 +216,13 @@ Replaced the duplicated emoji ordering flows with one shared OrderingFlowchart u
 Owner reported a white right edge at 320px, an overflowing Notify me button, and requested a vertical ordering flow. Reservation notification controls now stack below 640px with a min-width-zero/full-width input and contained button; contact card text can wrap, card padding reduces on narrow screens and the fixed toast is constrained to viewport width. Set document/body background to the existing night theme and removed body margin. The input/button row was an identified overflow source; elimination of every live 320px overflow still requires device verification.
 
 OrderingFlowchart now uses compact top-to-bottom cards at all widths, with SVG icons and downward arrows, replacing the five-column layout. Production build, focused lint and source diff checks passed. Pending actual 320px/device verification, commit and deployment.
+
+## Menu layout simplification — 30 October 2026
+
+Removed the homepage menu teaser and its unused component; the hero menu remains available. `/menu` now owns both the compact ordering flow and menu previews: at 1024px and wider the vertical flow is on the left and the four menu thumbnails are on the right in a two-by-two grid. Smaller screens retain stacked sections. Removed the separate flowchart mount in App so it is not duplicated above the menu. Step 2 description now reads “WhatsApp us”. Existing same-tab PDF link and swipeable thumbnail viewer are preserved.
+
+Production client/server build, focused lint and source whitespace checks passed. Desktop/mobile visual verification and deployment remain pending; no commit or push performed.
+
+## Homepage menu restored — 30 October 2026
+
+Restored the current menu content to the former teaser position, after Services and before Gallery. Home and /menu now share MenuSectionContent: vertical ordering flow beside the four menu pages on large screens, stacked on smaller screens. Preserved swipeable previews and the same-tab Menu PDF link. The homepage section has id=menu, restoring /#menu navigation. Home keeps its own page metadata; the menu route metadata is not embedded. Build, focused lint and source whitespace checks passed; live visual verification and deployment remain pending.
